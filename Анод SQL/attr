@@ -1,0 +1,19 @@
+SELECT o.id, oprihod.id, materials.id, typerazm.id, ost_mat.id, case when o.attr_3093_ is null then materials.attr_3132_  else typerazm.attr_3132_ end  
+FROM "object_3024_" o
+LEFT JOIN registry.object_3022_ oprihod 
+ON oprihod.id = o.attr_3083_ AND
+oprihod.is_deleted = false
+LEFT JOIN registry.object_1659_ ost_mat
+ON ost_mat.attr_3952_ = (oprihod.attr_3539_ = 3)  AND
+((ost_mat.attr_1663_ = o.attr_3091_ AND
+  ost_mat.attr_1664_ = o.attr_3092_ AND
+  ost_mat.attr_1665_ = o.attr_3093_ AND
+  ost_mat.attr_2921_ = o.attr_3102_ ) OR 
+ (ost_mat.attr_1663_ = o.attr_3091_ AND
+  ost_mat.attr_1664_ is null AND
+  ost_mat.attr_1665_ is null AND
+  ost_mat.attr_2921_ = o.attr_3102_)) AND
+ost_mat.is_deleted = false
+left join registry.object_400_ materials on o.attr_3091_ =materials.id
+left join registry.object_400_ typerazm on o.attr_3093_ =typerazm.id
+GROUP BY o.id, oprihod.id, materials.id, typerazm.id, ost_mat.id
