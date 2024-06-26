@@ -45,7 +45,7 @@ WITH DATA AS (
   FROM registry.object_1227_ o
   LEFT JOIN registry.object_1409_ comp ON comp.attr_1423_ = o.ID 
             AND comp.is_deleted <> TRUE 
-            AND ( comp.attr_1421_ IS NULL OR comp.attr_1421_ != 1 ) /*без измененний или не удален из состава*/
+            AND ( comp.attr_1421_ IS NULL OR comp.attr_1421_ != 1 ) /*без изменений или не удален из состава*/
   LEFT JOIN registry.object_301_ nom_in_comp ON comp.attr_1458_ = nom_in_comp.ID 
             AND nom_in_comp.is_deleted <> TRUE 
   LEFT JOIN registry.object_369_ comp_structure ON comp.attr_3969_ = comp_structure.ID 
