@@ -25,7 +25,7 @@ tech_op AS (
     attr_1443_ AS norm_time,
     attr_2863_ AS description
   FROM 
-    registry.object_527_ /*технологические операции*/
+    registry.object_527_ /* технологические операции */
   WHERE 
     is_deleted <> TRUE)
 SELECT 
