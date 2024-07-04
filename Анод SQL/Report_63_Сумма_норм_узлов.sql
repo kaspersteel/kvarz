@@ -2003,7 +2003,7 @@ FROM
             o.attr_538_
     ) t_another ON t_another.marsh_card_id = marsh_card.id
 WHERE
-    o.is_deleted <> TRUE /*and o.attr_374_ = '{superid}'*/
+    o.is_deleted <> TRUE 
     AND nomen.attr_363_ IN (2, 9)
     AND o.attr_1455_ = (
         SELECT
