@@ -15,7 +15,7 @@
 	// 	],
 	// 	"description": "Log output to console"
 	// }
-}
+
 "Шаблон формулы": {
 	"scope": "sql",
 	"prefix": "template",
@@ -27,4 +27,5 @@
 "--GROUP BY"
 ],
 "description": "Шаблон формулы для редактора объектов"
+}
 }
