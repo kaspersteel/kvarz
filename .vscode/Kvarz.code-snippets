@@ -16,14 +16,14 @@
 	// 	"description": "Log output to console"
 	// }
 
-"Шаблон формулы": {
-	"scope": "sql",
-	"prefix": "template",
-	"body": [
+"Template attr": {
+"scope": "",
+"prefix": "template_attr",
+"body": [
 "--SELECT",
-
+"",
 "--FROM registry.object__ o",
-
+"",
 "--GROUP BY"
 ],
 "description": "Шаблон формулы для редактора объектов"
