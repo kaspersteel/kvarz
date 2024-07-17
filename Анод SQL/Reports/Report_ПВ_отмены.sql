@@ -15,7 +15,7 @@ SELECT
 ,	comp_task.attr_2102_ "Заказ"
 ,	CASE
 		WHEN comp_pos_ord.attr_1421_ = 9
-			THEN concat('По заказу № ', comp_task.attr_2102_, ' производство отменено')
+			THEN concat('По заказу № ', ord.attr_607_, ' производство отменено')
 	END "Инфо_для_ПВ"
 ,	o.attr_3207_ "Плановое_количество"
 ,	o.attr_2155_ "Номер_ПВ"
@@ -62,8 +62,11 @@ LEFT JOIN
 	registry.object_3168_ pos_task
 		ON o.attr_3193_ = pos_task.id
 LEFT JOIN
-	registry.object_1227_ ord_pos
-		ON comp_pos_ord.attr_1423_ = ord_pos.id
+	registry.object_1227_ pos_ord
+		ON comp_pos_ord.attr_1423_ = pos_ord.id
+LEFT JOIN
+	registry.object_606_ ord
+		ON pos_ord.attr_1923_ = ord.id		
 WHERE
 	o.is_deleted IS FALSE
 GROUP BY
@@ -79,4 +82,5 @@ GROUP BY
 ,	pos_task.attr_3231_
 ,	comp_pos_ord.id
 ,	comp_task.attr_2102_
-,	ord_pos.attr_1948_
+,	pos_ord.attr_1948_
+,	ord.id
