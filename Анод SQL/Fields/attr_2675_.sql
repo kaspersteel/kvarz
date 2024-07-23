@@ -1,7 +1,7 @@
 /*Заказы в производство*/
 --SELECT
 CASE
-          WHEN task_work_comp.ID IS NOT NULL THEN ARRAY[task_work_comp.attr_2102_]
+          WHEN comp_task.ID IS NOT NULL THEN ARRAY[comp_task.attr_2102_]
           ELSE massive_ord.mas_ord
 END
 --FROM registry.object_2137_ o
@@ -16,10 +16,13 @@ LEFT JOIN (
                   , comp_task.attr_2106_ AS tr
                   , SUM(comp_task.attr_2103_)
                     /*массив id заказов*/
+
                   , ARRAY_AGG(DISTINCT (ord_to_man.ID)) AS mas_ord
                     /*массив id изделий в справочнике номенклатуры*/
+
                   , ARRAY_AGG(DISTINCT (comp_ord.attr_1482_)) AS mas_izd_nom
                     /*массив id изделий - головных компонентов*/
+
                   , ARRAY_AGG(DISTINCT (comp_task.attr_2101_)) AS mas_izd_ord
                FROM registry.object_2094_ comp_task /*компоненты заданий в работу*/
                     /*Заказ в производство*/
@@ -42,13 +45,10 @@ LEFT JOIN (
                   , comp_task.attr_2203_
           ) massive_ord ON massive_ord.task_work_pos = o.attr_3193_
       AND massive_ord.nom_ed = o.attr_2632_
-LEFT JOIN registry.object_2094_ task_work_comp ON (
-          task_work_comp.ID = ANY (o.attr_3904_)
-       OR o.attr_3414_ = task_work_comp.id
-          --OR (task_work_comp.attr_2173_ = o.attr_2226_ AND task_work_comp.attr_3203_ = o.attr_2632_) --приводит к нескольким строкам
-          )
---GROUP BY 
-                  massive_ord.mas_ord
-                  , task_work_comp.ID
-                  , massive_ord.mas_izd_nom
-                  , massive_ord.mas_izd_ord
+          /*Ищем компоненты заданий в сборку.*/
+          /*Они понадобятся, чтоб собрать списки заказов и изделий, так как в таких заданиях нет позиций*/
+LEFT JOIN registry.object_2094_ comp_task ON comp_task.ID = ANY (o.attr_3904_)
+          /*Ищем сами задания для других формул, так как эта - базовая*/
+LEFT JOIN registry.object_2093_ task ON o.attr_2226_ = task.id
+      AND task.is_deleted IS FALSE
+--GROUP BY massive_ord.mas_ord , comp_task.ID, massive_ord.mas_izd_nom, massive_ord.mas_izd_ord, massive_ord.task_work_pos, task.id

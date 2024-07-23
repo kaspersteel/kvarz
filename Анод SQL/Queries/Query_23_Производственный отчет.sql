@@ -140,6 +140,6 @@
         , customer
         , COALESCE(sum_norm, 0) AS sum_norm
         , COALESCE(sum_getOTK, 0) AS sum_getOTK
-        , COALESCE(sum_getOTK * 100 / sum_norm, 0)::DECIMAL(4, 2) AS progress
+        , case when (COALESCE(sum_getOTK * 100 / sum_norm, 0)::DECIMAL(5, 2)) > 100 then 100 else (COALESCE(sum_getOTK * 100 / sum_norm, 0)::DECIMAL(5, 2)) end AS progress
         , 1227 AS object_pos_order
      FROM pos_data
