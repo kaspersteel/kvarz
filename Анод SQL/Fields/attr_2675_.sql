@@ -1,10 +1,10 @@
 /*Заказы в производство*/
---SELECT
-CASE
-          WHEN comp_task.ID IS NOT NULL THEN ARRAY[comp_task.attr_2102_]
-          ELSE massive_ord.mas_ord
-END
---FROM registry.object_2137_ o
+   SELECT -->>
+          CASE
+                    WHEN comp_task.ID IS NOT NULL THEN ARRAY[comp_task.attr_2102_]
+                    ELSE massive_ord.mas_ord
+          END
+     FROM registry.object_2137_ o -->>
 LEFT JOIN (
              SELECT comp_task.attr_3203_ AS nom_ed
                   , comp_task.attr_3204_ AS tech_card
@@ -51,4 +51,11 @@ LEFT JOIN registry.object_2094_ comp_task ON comp_task.ID = ANY (o.attr_3904_)
           /*Ищем сами задания для других формул, так как эта - базовая*/
 LEFT JOIN registry.object_2093_ task ON o.attr_2226_ = task.id
       AND task.is_deleted IS FALSE
---GROUP BY massive_ord.mas_ord , comp_task.ID, massive_ord.mas_izd_nom, massive_ord.mas_izd_ord, massive_ord.task_work_pos, task.id
+    WHERE o.is_deleted IS FALSE -->>      
+ GROUP BY -->>
+          massive_ord.mas_ord
+        , comp_task.ID
+        , massive_ord.mas_izd_nom
+        , massive_ord.mas_izd_ord
+        , massive_ord.task_work_pos
+        , task.id
