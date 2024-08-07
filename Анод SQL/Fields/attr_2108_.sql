@@ -10,4 +10,4 @@ CASE
           )
           )
           WHEN tech_card_prod.attr_2554_ IS FALSE THEN comp_order.attr_1896_ * tech_card_prod.attr_1908_
-END
+END END
