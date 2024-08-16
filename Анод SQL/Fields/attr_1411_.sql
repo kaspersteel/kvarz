@@ -3,7 +3,7 @@
           CASE
                     WHEN o.attr_1463_ = 1
                           AND o.attr_1478_ <> 1
-                          AND o.attr_1458_ IS NOT NULL THEN type_nom_units.attr_363_
+                          AND o.attr_1458_ IS NOT NULL THEN nomenclature.attr_363_
                               ELSE o.attr_1411_
           END
      FROM registry.object_1409_ o -->>

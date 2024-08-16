@@ -1,0 +1,157 @@
+:root{
+--cont-bg: #FFF;
+}
+
+.el-table th.el-table__cell {
+    overflow: hidden;
+    -ms-user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+    background-color: #C1E8FE;
+}
+
+.el-form-item {
+    margin-bottom: 0;
+}
+
+.approvalsButton  {
+right:200px !important;
+margin-top:-36px !important;
+}
+
+.cont_tab {
+	background-color: var(--cont-bg, #FFF);
+    margin-top:5px;
+}
+
+.cont_tab .custom_scrollbar{
+//
+}
+
+.cont_tab .tabs_container{
+	background-color:  rgba(207, 207, 207, .25);
+	padding-left:10px;
+	padding-top:5px;
+}
+
+.cont_tab .tab{
+	height:35px;
+	width: auto !important;
+	padding: 10px 15px 0px 15px;
+  	color: grey; 
+	//border:0; 
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px; 
+	transition: color 0.1s cubic-bezier(0.645, 0.045, 0.355, 1);
+	&:hover{
+		color:#039BE5;
+	}
+}
+
+.cont_tab .tab.active{
+background-color: var(--cont-bg, #FFF);
+border-top: 1px solid #039BE5;
+border-left: 1px solid #039BE5;
+border-right: 1px solid #039BE5;
+color:#039BE5;
+}
+
+.cont {
+	overflow:  hidden;  
+	background-color: #FFF !important;
+	border-left: 3px solid rgb(253,188,115, 1); 
+}
+
+.cont_modal {
+	overflow:  hidden;  
+	background-color: #FFF !important;
+}
+
+.cont .registry_fields_label, .cont_modal .registry_fields_label {
+    position: relative;
+    top: 0px;
+    color: #474A51;
+    font-weight: 500;
+    //font-style: normal;
+    font-size: 14px;
+    line-height: 15px;
+    padding: 5px;
+    display: flex;
+}
+
+.cont .xref_field.vue-treeselect, .cont_modal .xref_field.vue-treeselect {
+    display: inline-block;
+    top: 0px;
+}
+
+.user_card {
+    border-bottom: 1px solid lightgrey;
+}
+
+.user_card ._icon {
+    background-size: 100%;
+    width: 25px; 
+    height: 25px; 
+    vertical-align: bottom;
+}
+
+.user_card .el-button:not(.vue-draggable-handle) {
+    overflow: hidden;
+    padding: 0px 0px; 
+    margin-top: 2px;
+    margin-left: 10px; 
+    border: 1px solid #fff;
+}
+.user_element .registry_fields_label {
+    //font-style: normal;
+    //font-weight: 400;
+    font-size: 15px;
+    line-height: 15px;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+}
+
+.user_element .xref_field.vue-treeselect {
+    display: inline-block;
+    top: 0px;
+}
+
+.anod_colors .el-button--primary.is-plain{
+	background: #E8F7FF;
+	border-color: #3FB8F2;
+	color: #039BE5;  
+	&:hover {
+		background: #039BE5;
+		border-color: #039BE5;
+		color: #ffff;  
+	}
+	&:focus{
+		background: #008DD1;
+		border-color: #008DD1;
+		color: #ffff;  
+	}
+}
+
+.anod_colors .el-button--primary{
+	background: #039BE5;
+	border-color: #039BE5;
+	color: #ffff;  
+	&:hover{
+        background: #1CACF2;
+        border-color: #3FB8F2;
+        color: #ffff;  
+    }
+    &:focus{
+        background: #008DD1;
+        border-color: #008DD1;
+        color: #ffff;  
+    }
+}
+  
+.anod_colors .el-button--primary.is-disabled, .el-button--primary.is-plain.is-disabled {
+	color: #8cc5ff;
+	background: #ecf5ff;
+	border-color: #d9ecff;
+}

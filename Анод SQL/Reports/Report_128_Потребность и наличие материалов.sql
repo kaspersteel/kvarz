@@ -1,12 +1,11 @@
-     WITH DATASET AS (
-             SELECT o.ID AS project_id,
-                    o.attr_1923_::TEXT AS ORDER,
+     WITH dataset AS (
+             SELECT o.attr_607_ AS order_num,
+                    project.attr_1574_ AS product,
                     comp.ID AS comp_id,
-                    nom_in_comp.ID AS nom_in_comp_id,
-                    nom_in_comp.attr_376_ AS nom_in_comp_design,
-                    tech_card_prod.ID AS tech_card_id,
-                    comp.attr_3934_ AS given_mat /*давальческий*/,
+                    o.attr_1964_::DATE AS shipping_date,
                     comp.attr_1548_::DATE AS date_cut,
+                    comp.attr_1412_ AS count_one,
+                    comp.attr_1896_ AS general_count,
                     CASE
                               WHEN comp.attr_1452_ = 16 THEN comp_structure.attr_3967_
                               ELSE tech_card_prod.attr_2381_
@@ -34,18 +33,14 @@
                               WHEN sprav_tr.ID IS NOT NULL THEN sprav_tr.attr_1673_ /*ед. изм. типоразмера*/
                               ELSE sprav_mat.attr_1673_ /*ед. изм. материала*/
                     END AS units /*ссылка на ед. измерения*/
-               FROM registry.object_1227_ o
-          LEFT JOIN registry.object_1409_ comp ON comp.attr_1423_ = o.ID
+               FROM registry.object_606_ o
+          LEFT JOIN registry.object_1227_ project ON o.ID = project.attr_1923_
+                AND project.is_deleted IS FALSE
+          LEFT JOIN registry.object_1409_ comp ON project.ID = comp.attr_1423_
                 AND comp.is_deleted IS FALSE
-                AND (
-                    comp.attr_1421_ IS NULL
-                 OR comp.attr_1421_ != 1
-                    ) /*без измененний или не удален из состава*/
-          LEFT JOIN registry.object_301_ nom_in_comp ON comp.attr_1458_ = nom_in_comp.ID
-                AND nom_in_comp.is_deleted IS FALSE
           LEFT JOIN registry.object_369_ comp_structure ON comp.attr_3969_ = comp_structure.ID
                 AND comp_structure.is_deleted IS FALSE
-          LEFT JOIN registry.object_519_ tech_card_prod comp.attr_4085_ = tech_card_prod.id
+          LEFT JOIN registry.object_519_ tech_card_prod ON comp.attr_4085_ = tech_card_prod.ID
           LEFT JOIN registry.object_400_ sprav_mat ON CASE
                               WHEN comp.attr_1452_ = 16 THEN comp_structure.attr_3967_
                               ELSE tech_card_prod.attr_2381_
@@ -53,13 +48,21 @@
           LEFT JOIN registry.object_400_ sprav_sort ON tech_card_prod.attr_1876_ = sprav_sort.ID
           LEFT JOIN registry.object_400_ sprav_tr ON tech_card_prod.attr_1877_ = sprav_tr.ID
               WHERE o.is_deleted IS FALSE
-                AND o.attr_1923_ IS NOT NULL /*входит в заказ в производство*/
-                AND comp.attr_3266_ IS FALSE /* есть отрезная операция*/
-                AND comp.attr_2042_ NOT IN (1, 3) /*производимый компонент*/
+                AND o.attr_1926_ NOT IN (10, 13)
+                AND comp.attr_3934_ IS FALSE /*не с давальческим материалом*/
+                AND (
+                    comp.attr_1452_ = 16
+                 OR (
+                    comp.attr_1452_ != 16
+                AND (
+                    comp.attr_2042_ NOT IN (1, 3)
+                 OR comp.attr_2042_ IS NULL
+                    )
+                    )
+                    ) /*материал в спецификации либо не производится*/
           ),
           REMNANTS AS (
-             SELECT remnants.attr_3952_ AS given,
-                    remnants.attr_1663_ AS mat_id,
+             SELECT remnants.attr_1663_ AS mat_id,
                     remnants.attr_1664_ AS sort_id,
                     remnants.attr_1665_ AS tr_id,
                     SUM(DISTINCT attr_1675_) AS current_rem_mass,
@@ -68,64 +71,103 @@
           LEFT JOIN registry.object_1659_ remnants ON DATASET.mat = remnants.attr_1663_
                 AND COALESCE(DATASET.sort, 0) = COALESCE(remnants.attr_1664_, 0)
                 AND COALESCE(DATASET.tr, 0) = COALESCE(remnants.attr_1665_, 0)
-                AND DATASET.given_mat = remnants.attr_3952_
                 AND remnants.is_deleted IS FALSE
-           GROUP BY remnants.id
+           GROUP BY remnants.ID
           ),
           SUM_REMNANTS AS (
-             SELECT REMNANTS.given,
-                    REMNANTS.mat_id,
+             SELECT REMNANTS.mat_id,
                     REMNANTS.sort_id,
                     REMNANTS.tr_id,
                     SUM(REMNANTS.current_rem_mass) AS sum_current_rem_mass,
                     SUM(REMNANTS.expected_rem_mass) AS sum_expected_rem_mass
                FROM REMNANTS
-           GROUP BY REMNANTS.given,
-                    REMNANTS.mat_id,
+           GROUP BY REMNANTS.mat_id,
                     REMNANTS.sort_id,
                     REMNANTS.tr_id
+          ),
+          SUPPLY AS (
+             SELECT order_mat.attr_1827_ AS mat_id,
+                    order_mat.attr_1828_ AS sort_id,
+                    order_mat.attr_1829_ AS tr_id,
+                    SUM(DISTINCT order_mat.attr_2984_) AS quant
+               FROM registry.object_1596_ order_to_diler
+          LEFT JOIN registry.object_1826_ order_mat ON order_mat.attr_1834_ = order_to_diler.ID
+                AND order_mat.is_deleted IS FALSE
+              WHERE order_to_diler.is_deleted IS FALSE
+                AND order_to_diler.attr_1606_ IN (5, 6)
+           GROUP BY order_mat.attr_1827_,
+                    order_mat.attr_1828_,
+                    order_mat.attr_1829_
           )
-   SELECT STRING_AGG(DISTINCT DATASET.comp_id::TEXT, ', ') AS comp_ids,
-          STRING_AGG(DISTINCT DATASET.nom_in_comp_design::TEXT, ', ') AS nom_designs,
-          sprav_mat.ID AS sprav_mat_id,
-          sprav_sort.ID AS sprav_sort_id,
-          sprav_tr.ID AS sprav_tr_id,
+   SELECT order_num,
+          product,
+          shipping_date,
+          CONCAT(
+          sprav_mat.attr_2976_,
+          ' ',
+          sprav_sort.attr_2976_,
+          ' ',
+          sprav_tr.attr_2976_
+          ) AS full_material,
           sprav_mat.attr_2976_ AS mat,
           sprav_sort.attr_2976_ AS sort,
           sprav_tr.attr_2976_ AS tr,
           COALESCE(sprav_units.attr_390_, '-') AS units,
-          COALESCE(SUM(DATASET.quant), 0) AS sum_quant,
-          DATASET.given_mat AS given_mat,
-          STRING_AGG(
-          DISTINCT DATASET.order,
-          ', '
-           ORDER BY DATASET.order
-          ) AS orders,
-          COALESCE(SUM_REMNANTS.sum_current_rem_mass, 0) AS sum_current_rem_mass,
-          COALESCE(SUM_REMNANTS.sum_expected_rem_mass, 0) AS sum_expected_rem_mass
-     FROM DATASET
+          ROUND(
+          COALESCE(SUM(DATASET.quant * general_count), 0),
+          2
+          ) AS sum_quant,
+          count_one,
+          general_count,
+          SUM_REMNANTS.sum_expected_rem_mass,
+          SUPPLY.quant,
+          COALESCE(
+          CASE
+                    WHEN (
+                    (
+                    COALESCE(SUM_REMNANTS.sum_expected_rem_mass, 0) + COALESCE(SUPPLY.quant, 0)
+                    ) - COALESCE(SUM(DATASET.quant * general_count), 0)
+                    ) >= 0 THEN 0
+                    ELSE ROUND(
+                    ABS(
+                    (
+                    COALESCE(SUM_REMNANTS.sum_expected_rem_mass, 0) + COALESCE(SUPPLY.quant, 0)
+                    ) - COALESCE(SUM(DATASET.quant * general_count), 0)
+                    ),
+                    2
+                    )
+          END,
+          0
+          ) deficit
+     FROM dataset
 LEFT JOIN registry.object_400_ sprav_mat ON DATASET.mat = sprav_mat.ID
 LEFT JOIN registry.object_400_ sprav_sort ON DATASET.sort = sprav_sort.ID
 LEFT JOIN registry.object_400_ sprav_tr ON DATASET.tr = sprav_tr.ID
 LEFT JOIN registry.object_389_ sprav_units ON DATASET.units = sprav_units.ID
 LEFT JOIN SUM_REMNANTS ON DATASET.mat = SUM_REMNANTS.mat_id
-	 AND COALESCE(DATASET.sort, 0) = COALESCE(SUM_REMNANTS.sort_id, 0) 
-	 AND COALESCE(DATASET.tr, 0) = COALESCE(SUM_REMNANTS.tr_id, 0)
-      AND DATASET.given_mat = SUM_REMNANTS.given
+      AND COALESCE(DATASET.sort, 0) = COALESCE(SUM_REMNANTS.sort_id, 0)
+      AND COALESCE(DATASET.tr, 0) = COALESCE(SUM_REMNANTS.tr_id, 0)
+LEFT JOIN SUPPLY ON DATASET.mat = SUPPLY.mat_id
+      AND COALESCE(DATASET.sort, 0) = COALESCE(SUPPLY.sort_id, 0)
+      AND COALESCE(DATASET.tr, 0) = COALESCE(SUPPLY.tr_id, 0)
     WHERE sprav_mat.ID IS NOT NULL
-      AND DATASET.date_cut BETWEEN '{start_date_cut}'::DATE AND '{end_date_cut}'::DATE
+      AND DATASET.date_cut BETWEEN '{Период.FromDate}'::DATE AND '{Период.ToDate}'::DATE
       AND DATASET.comp_id NOT IN (
              SELECT attr_2100_
                FROM registry.object_2094_
               WHERE is_deleted IS FALSE
           ) /*компонент ещё не в производстве */
- GROUP BY sprav_mat.ID,
+ GROUP BY dataset.order_num,
+          dataset.product,
+          dataset.shipping_date,
+          dataset.count_one,
+          dataset.general_count,
+          sum_remnants.sum_expected_rem_mass,
+          supply.quant,
+          sprav_mat.ID,
           sprav_sort.ID,
           sprav_tr.ID,
-          sprav_units.ID,
-          DATASET.given_mat,
-          SUM_REMNANTS.sum_current_rem_mass,
-          SUM_REMNANTS.sum_expected_rem_mass
- ORDER BY sprav_mat.attr_2976_,
-          sprav_sort.attr_2976_,
-          sprav_tr.attr_2976_
+          sprav_units.ID
+ ORDER BY mat,
+          sort,
+          tr

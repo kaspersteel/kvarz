@@ -2,7 +2,7 @@
    SELECT -->>
           CASE
                     WHEN o.attr_1458_ IS NULL THEN NULL
-                    ELSE sprav_nom.attr_1494_
+                    ELSE nomenclature.attr_1494_
           END
      FROM registry.object_1409_ o -->>
 LEFT JOIN registry.object_301_ sprav_nom ON sprav_nom.id = o.attr_1458_
