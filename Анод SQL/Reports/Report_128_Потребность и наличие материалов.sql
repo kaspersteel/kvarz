@@ -49,7 +49,8 @@
           LEFT JOIN registry.object_400_ sprav_tr ON tech_card_prod.attr_1877_ = sprav_tr.ID
               WHERE o.is_deleted IS FALSE
                 AND o.attr_1926_ NOT IN (10, 13)
-                AND comp.attr_3934_ IS FALSE /*не с давальческим материалом*/
+                AND comp.attr_3937_ IS NULL /*не из давальческого*/
+                AND comp.attr_1896_ > 0
                 AND (
                     comp.attr_1452_ = 16
                  OR (

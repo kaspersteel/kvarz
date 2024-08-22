@@ -9,5 +9,5 @@ CASE
           comp_order.attr_1896_::NUMERIC(5, 2) / tech_card_prod.attr_2555_::NUMERIC(5, 2)
           )
           )
-          WHEN tech_card_prod.attr_2554_ IS FALSE THEN comp_order.attr_1896_ * tech_card_prod.attr_1908_
+          WHEN tech_card_prod.attr_2554_ IS FALSE THEN comp_order.attr_1896_ * tech_card_prod.attr_1879_
 END END
