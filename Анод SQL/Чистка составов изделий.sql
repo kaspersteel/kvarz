@@ -32,7 +32,7 @@
           LEFT JOIN registry.object_369_ h ON h.attr_374_ = o.attr_374_
                 AND h.attr_1455_ IS NULL
                 AND h.is_deleted IS FALSE
-          LEFT JOIN cte ON h.ID = cte.o_id
+          LEFT JOIN children ON h.ID = children.o_id
               WHERE o.is_deleted IS FALSE
            GROUP BY o.ID
                   , h.ID

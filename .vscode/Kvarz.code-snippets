@@ -20,11 +20,12 @@
 "scope": "",
 "prefix": "template_attr",
 "body": [
-"--SELECT",
+"SELECT -->>",
 "",
-"--FROM registry.object__ o",
+"FROM registry.object__ o -->>",
 "",
-"--GROUP BY"
+"WHERE o.is_deleted IS FALSE -->>",
+"GROUP BY -->>"
 ],
 "description": "Шаблон формулы для редактора объектов"
 }
