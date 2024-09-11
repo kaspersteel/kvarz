@@ -1,0 +1,25 @@
+select
+2093 as id_registry,
+435 as id_card,
+task_to_work.id id_task,
+task_to_work.attr_2174_ num_task,
+vocabulary_nom.attr_376_ designation,
+vocabulary_nom.attr_362_ name_,
+balance_nom.attr_1618_ id_NE,
+demand_invoice.attr_3416_ num_order,
+sum(demand_invoice.attr_3420_) sum_count
+
+from registry.object_2093_ task_to_work  
+
+left join registry.object_2112_ demand_invoice on demand_invoice.attr_2215_ = task_to_work.id and demand_invoice.is_deleted <> true
+left join registry.object_2111_ demand_invoice_table_part on demand_invoice_table_part.attr_2126_ = demand_invoice.id and demand_invoice_table_part.is_deleted <> true
+left join registry.object_1617_ balance_nom on balance_nom.id = demand_invoice_table_part.attr_3443_ and balance_nom.is_deleted <> true
+left join registry.object_301_ vocabulary_nom on vocabulary_nom.id = balance_nom.attr_1618_ and vocabulary_nom.is_deleted <> true
+
+where task_to_work.attr_3413_ = true and task_to_work.attr_3206_ = true and task_to_work.is_deleted <> true
+
+group by
+task_to_work.id,
+vocabulary_nom.id,
+balance_nom.id,
+demand_invoice.id

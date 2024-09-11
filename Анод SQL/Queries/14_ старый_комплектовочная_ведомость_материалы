@@ -1,0 +1,31 @@
+select
+2093 as id_registry,
+315 as id_card,
+task_to_work.id id_task,  
+task_to_work.attr_2174_ num_task,
+balance_mat.attr_1663_ id_material, 
+balance_mat.attr_1664_ id_sort, 
+balance_mat.attr_1665_ id_typesize, 
+sum(components_of_task.attr_2108_) sum_weight,
+components_of_task.attr_2102_ num_order,
+concat_ws(' ', vocabulary_materials_mat.attr_2976_,vocabulary_materials_sort.attr_401_, vocabulary_materials_tr.attr_401_ ) name_mat
+
+from registry.object_2093_ task_to_work
+
+left join registry.object_3168_ task_position on task_position.attr_3173_ = task_to_work.id and task_position.is_deleted <> true and task_position.attr_3244_ <> 2
+left join registry.object_2094_ components_of_task on components_of_task.attr_3175_ = task_position.id and components_of_task.is_deleted <> true
+left join registry.object_1659_ balance_mat on balance_mat.id = task_position.attr_3169_  and components_of_task.is_deleted <> true
+left join registry.object_400_ vocabulary_materials_mat on vocabulary_materials_mat.id = balance_mat.attr_1663_ and vocabulary_materials_mat.is_deleted <> true
+left join registry.object_400_ vocabulary_materials_sort on vocabulary_materials_sort.id = balance_mat.attr_1664_ and vocabulary_materials_sort.is_deleted <> true
+left join registry.object_400_ vocabulary_materials_tr on vocabulary_materials_tr.id = balance_mat.attr_1665_ and vocabulary_materials_tr.is_deleted <> true
+
+where
+task_to_work.is_deleted <> true and task_to_work.attr_3206_ = true and task_to_work.attr_3413_ is null
+
+group by 
+task_to_work.id,  
+balance_mat.id, 
+components_of_task.id,
+vocabulary_materials_mat.id,
+vocabulary_materials_sort.id,
+vocabulary_materials_tr.id

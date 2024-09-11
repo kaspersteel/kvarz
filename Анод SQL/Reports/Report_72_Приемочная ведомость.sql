@@ -75,7 +75,7 @@ LEFT JOIN (
       AND tab_part.attr_2149_ = n_t.id_to
       AND tab_part.attr_3208_ = n_t.n_step
     WHERE o.is_deleted IS FALSE
-      AND o.id = {id}
+      AND o.id = '{id}'
  GROUP BY o.ID
         , tab_part.ID
         , tech_op.attr_547_
