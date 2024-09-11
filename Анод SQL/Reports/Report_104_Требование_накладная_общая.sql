@@ -3,7 +3,8 @@
                   , requirement_invoice.attr_2121_ AS n_requirement_invoice
                   , accepted_list.attr_2155_ AS n_accepted_list
                   , work_task.attr_2174_ AS n_work_task
-                  , requirement_invoice.attr_3420_ AS amount
+                  , requirement_invoice.attr_4125_ AS invoice_amount
+                  , requirement_invoice.attr_3420_ AS order_amount
                   , orders.attr_607_ AS n_order
                   , sprav_nom.attr_376_ AS article
                   , sprav_comp.attr_1494_ AS component_article

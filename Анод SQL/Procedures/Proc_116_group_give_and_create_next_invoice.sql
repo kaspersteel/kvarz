@@ -4,18 +4,9 @@ storage_param INT := (parameters ->> 'storage_param')::INT;
 
 do_user INT := (parameters ->> 'user_id')::INT;
 
-invoice RECORD := (
-   SELECT *
-     FROM registry.object_2112_ current_invoice
-    WHERE current_invoice.id = (parameters ->> 'id')::INT
-);
+invoice RECORD;
 
-tab_invoice_ids INT[] := (
-   SELECT ARRAY_AGG(id)
-     FROM registry.object_2111_
-    WHERE attr_2126_ = invoice.id
-      AND is_deleted IS FALSE
-);
+tab_invoice_ids INT[];
 
 count_process_tab_invoice INT := 0;
 
@@ -23,20 +14,38 @@ copy_invoice_ids INT[];
 
 copy_tab_invoice_ids INT[];
 
+assembly_storage RECORD;
+
+assembly_storage_ids INT[];
+
 tab_invoice RECORD;
 
 ostatok INT;
 
-    BEGIN 
-      FOR tab_invoice IN (
+    BEGIN
+/*получаем запись накладной*/
+   SELECT * INTO invoice
+     FROM registry.object_2112_ current_invoice
+    WHERE current_invoice.id = (parameters ->> 'id')::INT;
+
+/*получаем id всех записей табличной части*/
+tab_invoice_ids := (
+   SELECT ARRAY_AGG(id)
+     FROM registry.object_2111_
+    WHERE attr_2126_ = invoice.id
+      AND is_deleted IS FALSE
+);
+
+/*обрабатываем записи табличной части, подходящие под заданные пользователем условия*/
+FOR tab_invoice IN (
    SELECT tab.id AS id_tab_invoice,
-          COALESCE(remnants.attr_3910_, 0) + COALESCE(tab.attr_3423_, 0) AS count_in_assemble,
           COALESCE(remnants.attr_1620_, 0) - COALESCE(tab.attr_3423_, 0) AS current_count_remnants,
           COALESCE(remnants.attr_1677_, 0) - COALESCE(tab.attr_3423_, 0) AS reserved_count_remnants,
           tab.attr_4128_ AS id_remnants,
           tab.attr_2115_ AS sign_nom,
           tab.attr_3421_ AS name_nom,
-          tab.attr_3423_ AS COUNT
+          tab.attr_3423_ AS COUNT,
+          tab.attr_4121_ AS given
      FROM registry.object_2111_ tab
           /*ищем остатки для подбора по складу*/
 LEFT JOIN registry.object_1617_ remnants ON remnants.id = tab.attr_4128_
@@ -48,15 +57,42 @@ LEFT JOIN registry.object_1617_ remnants ON remnants.id = tab.attr_4128_
           /*подбор по зафиксированному остатку и id склада, переданному при запуске команды в параметре storage_param*/
       AND CASE
                     WHEN storage_param IS NULL
-                          AND remnants.attr_2574_ IS NOT NULL THEN TRUE
-                              WHEN storage_param IS NOT NULL
-                          AND remnants.attr_2574_ = storage_param THEN TRUE
+                         AND remnants.attr_2574_ IS NOT NULL THEN TRUE
+                    WHEN storage_param IS NOT NULL
+                         AND remnants.attr_2574_ = storage_param THEN TRUE
           END
 ) LOOP
+   SELECT * INTO assembly_storage
+     FROM registry.object_1617_
+    WHERE attr_1618_ = tab_invoice.sign_nom
+      AND attr_2574_ = 14
+      AND attr_3951_ = tab_invoice.given;
+
+/*запись кол-ва на склад сборки. если для такой НЕ нет записи на складе сборки, то создаем её*/
+IF assembly_storage.id IS NOT NULL THEN
+   UPDATE registry.object_1617_
+      SET attr_1620_ = attr_1620_ + tab_invoice.count,
+          attr_3131_ = attr_3131_ + tab_invoice.count,
+          attr_2565_ = CURRENT_DATE,
+          operation_user_id = do_user
+    WHERE id = assembly_storage.id;
+
+ELSE assembly_storage_ids := registry."copyRecord" (1617, tab_invoice.id_remnants, 1, NULL, NULL, do_user, TRUE);
+
+   UPDATE registry.object_1617_
+      SET attr_1620_ = tab_invoice.count,
+          attr_3131_ = tab_invoice.count,
+          attr_1677_ = 0,
+          attr_2574_ = 14,
+          attr_2565_ = CURRENT_DATE,
+          operation_user_id = do_user
+    WHERE id = assembly_storage_ids[1];
+
+END IF;
+
 /*списание номенклатуры с остатка*/
    UPDATE registry.object_1617_
-      SET attr_3910_ = tab_invoice.count_in_assemble,
-          attr_1620_ = tab_invoice.current_count_remnants,
+      SET attr_1620_ = tab_invoice.current_count_remnants,
           attr_1677_ = tab_invoice.reserved_count_remnants,
           attr_2565_ = CURRENT_DATE,
           operation_user_id = do_user
@@ -102,7 +138,7 @@ END LOOP;
 IF count_process_tab_invoice > 0 THEN
 /*вычитаем из количества по заказу количество в накладных на тот же компонент*/
 ostatok := invoice.attr_3420_ - (
-   SELECT COUNT(invoices.attr_4125_)
+   SELECT SUM(invoices.attr_4125_)
      FROM registry.object_2112_ invoices
     WHERE invoices.attr_3415_ = invoice.attr_3415_
 );
@@ -116,6 +152,7 @@ IF ostatok > 0
    UPDATE registry.object_2112_
       SET attr_4132_ = FALSE,
           attr_4125_ = ostatok,
+          attr_4134_ = ostatok,
           operation_user_id = do_user
     WHERE id = copy_invoice_ids[1];
 
