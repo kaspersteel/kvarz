@@ -1,6 +1,4 @@
-  DECLARE 
-
-do_user INT := (parameters ->> 'user_id')::INT;
+  DECLARE do_user INT := (parameters ->> 'user_id')::INT;
 
 tab_invoice RECORD;
 
@@ -19,30 +17,26 @@ assembly_storage_ids INT[];
 ostatok INT;
 
     BEGIN
-   SELECT * 
-     INTO tab_invoice
+   SELECT * INTO tab_invoice
      FROM registry.object_2111_
     WHERE id = (parameters ->> 'id')::INT;
 
-   SELECT * 
-     INTO invoice
+   SELECT * INTO invoice
      FROM registry.object_2112_
     WHERE id = tab_invoice.attr_2126_;
 
 /*запись остатка по зафиксированному на момент выдачи id остатка*/
-   SELECT *,
-          COALESCE(attr_1620_, 0) - COALESCE(tab_invoice.attr_3423_, 0) AS current_count_remnants,
-          COALESCE(attr_1677_, 0) - COALESCE(tab_invoice.attr_3423_, 0) AS reserved_count_remnants 
-          INTO remnant
+   SELECT * INTO remnant
      FROM registry.object_1617_
     WHERE id = tab_invoice.attr_4128_;
 
-SELECT * INTO assembly_storage
+   SELECT * INTO assembly_storage
      FROM registry.object_1617_
     WHERE attr_1618_ = tab_invoice.attr_2115_
       AND attr_2574_ = 14
       AND attr_3951_ = tab_invoice.attr_4121_;
 
+IF remnants.attr_3131_ >= tab_invoice.attr_3423_ THEN
 /*запись кол-ва на склад сборки. если для такой НЕ нет записи на складе сборки, то создаем её*/
 IF assembly_storage.id IS NOT NULL THEN
    UPDATE registry.object_1617_
@@ -67,9 +61,8 @@ END IF;
 
 /*списание номенклатуры с остатка*/
    UPDATE registry.object_1617_
-      SET 
-          attr_1620_ = remnant.current_count_remnants,
-          attr_1677_ = remnant.reserved_count_remnants,
+      SET attr_1620_ = attr_1620_ - tab_invoice.count,
+          attr_3131_ = attr_3131_ - tab_invoice.count,
           attr_2565_ = CURRENT_DATE,
           operation_user_id = do_user
     WHERE id = remnant.id;
@@ -109,7 +102,8 @@ ostatok := invoice.attr_3420_ - (
 );
 
 /*если есть остаток по сумме всех накладных и текущая накладная не заблокирована (она последняя), то создаем копию накладной с остатком*/
-IF ostatok > 0 AND invoice.attr_4132_ IS FALSE THEN
+IF ostatok > 0
+      AND invoice.attr_4132_ IS FALSE THEN
           /*копия текущей накладной вместе с табличной частью (последний флаг - TRUE) с отключенной блокировкой и количеством, равным остатку*/
           copy_invoice_ids := registry."copyRecord" (2112, invoice.id, 1, NULL, NULL, do_user, TRUE);
 
@@ -132,5 +126,7 @@ END IF;
       SET attr_4132_ = TRUE,
           operation_user_id = do_user
     WHERE id = invoice.id;
+
+END IF;
 
 END

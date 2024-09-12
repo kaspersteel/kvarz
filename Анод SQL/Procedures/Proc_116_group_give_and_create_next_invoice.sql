@@ -39,12 +39,10 @@ tab_invoice_ids := (
 /*обрабатываем записи табличной части, подходящие под заданные пользователем условия*/
 FOR tab_invoice IN (
    SELECT tab.id AS id_tab_invoice,
-          COALESCE(remnants.attr_1620_, 0) - COALESCE(tab.attr_3423_, 0) AS current_count_remnants,
-          COALESCE(remnants.attr_1677_, 0) - COALESCE(tab.attr_3423_, 0) AS reserved_count_remnants,
           tab.attr_4128_ AS id_remnants,
           tab.attr_2115_ AS sign_nom,
           tab.attr_3421_ AS name_nom,
-          tab.attr_3423_ AS COUNT,
+          tab.attr_3423_ AS count,
           tab.attr_4121_ AS given
      FROM registry.object_2111_ tab
           /*ищем остатки для подбора по складу*/
@@ -61,6 +59,8 @@ LEFT JOIN registry.object_1617_ remnants ON remnants.id = tab.attr_4128_
                     WHEN storage_param IS NOT NULL
                          AND remnants.attr_2574_ = storage_param THEN TRUE
           END
+    /*ожидаемый остаток на складе не меньше требуемого к выдаче*/
+      AND remnants.attr_3131_ >= tab.attr_3423_
 ) LOOP
    SELECT * INTO assembly_storage
      FROM registry.object_1617_
@@ -92,8 +92,8 @@ END IF;
 
 /*списание номенклатуры с остатка*/
    UPDATE registry.object_1617_
-      SET attr_1620_ = tab_invoice.current_count_remnants,
-          attr_1677_ = tab_invoice.reserved_count_remnants,
+      SET attr_1620_ = attr_1620_ - tab_invoice.count,
+          attr_3131_ = attr_3131_ - tab_invoice.count,
           attr_2565_ = CURRENT_DATE,
           operation_user_id = do_user
     WHERE id = tab_invoice.id_remnants;
