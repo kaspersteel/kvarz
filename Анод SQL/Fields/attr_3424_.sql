@@ -16,6 +16,7 @@ LEFT JOIN registry.object_1617_ remnants ON remnants.id = (
                          FROM registry.object_1617_
                         WHERE is_deleted IS FALSE
                           AND attr_3131_ > 0
+                          AND attr_2574_ <> 14
                     ) remnants_max
               WHERE remnants_max.nom_id = o.attr_2115_
                 AND remnants_max.given = o.attr_4121_

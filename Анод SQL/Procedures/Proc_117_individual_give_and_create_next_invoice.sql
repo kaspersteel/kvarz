@@ -36,7 +36,7 @@ ostatok INT;
       AND attr_2574_ = 14
       AND attr_3951_ = tab_invoice.attr_4121_;
 
-IF remnants.attr_3131_ >= tab_invoice.attr_3423_ THEN
+IF remnant.attr_3131_ >= tab_invoice.attr_3423_ THEN
 /*запись кол-ва на склад сборки. если для такой НЕ нет записи на складе сборки, то создаем её*/
 IF assembly_storage.id IS NOT NULL THEN
    UPDATE registry.object_1617_
@@ -61,8 +61,8 @@ END IF;
 
 /*списание номенклатуры с остатка*/
    UPDATE registry.object_1617_
-      SET attr_1620_ = attr_1620_ - tab_invoice.count,
-          attr_3131_ = attr_3131_ - tab_invoice.count,
+      SET attr_1620_ = attr_1620_ - tab_invoice.attr_3423_,
+          attr_3131_ = attr_3131_ - tab_invoice.attr_3423_,
           attr_2565_ = CURRENT_DATE,
           operation_user_id = do_user
     WHERE id = remnant.id;
