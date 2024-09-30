@@ -47,7 +47,7 @@
                               WHEN (
                                  SELECT nomen.attr_2869_
                                    FROM registry.object_301_ nomen
-                                  WHERE nomen.is_deleted <> TRUE
+                                  WHERE nomen.is_deleted IS FALSE
                                     AND nomen.id = accepted_list.attr_2632_
                               ) IS TRUE THEN SUM(accept.sum_another_time)
                               ELSE 0
@@ -220,7 +220,7 @@
                     tech_op_list.another_time * comp_position_orders.attr_1896_ /*+ (
                        SELECT SUM(task.attr_4122_)
                          FROM registry.object_329_ task
-                        WHERE task.is_deleted <> TRUE
+                        WHERE task.is_deleted IS FALSE
                           AND task.attr_4089_ = comp_position_orders.id
                     )*/,
                     2
@@ -275,7 +275,7 @@
           LEFT JOIN registry.object_2094_ work_task_comp ON work_task_comp.attr_2100_ = comp_position_orders.id
                 AND work_task_comp.is_deleted IS FALSE
           LEFT JOIN registry.object_3168_ poz ON poz.id = work_task_comp.attr_3175_
-                AND poz.is_deleted <> TRUE
+                AND poz.is_deleted IS FALSE
                     /*извлекаем из таблицы производственных данных записи по информации из ПВ. 
                     Для собираемых компонентов по наличию их в массиве производимых компонентов. 
                     Для несобираемых - по соответствию номенклатуры, узлу в позиции заказа и*/

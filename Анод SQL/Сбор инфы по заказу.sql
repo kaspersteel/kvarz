@@ -8,7 +8,7 @@
           comp_task.attr_2102_,
           comp_task.attr_2173_,
           comp_task.attr_3203_,
-          task.ID "2093id",
+          comp_task.attr_2173_ "task id",
           accepted_list.ID "2137id",
           accepted_list.attr_2226_,
           accepted_list.attr_2675_,
@@ -41,8 +41,6 @@ LEFT JOIN registry.object_1409_ comp_head ON component.attr_1414_ = comp_head.ID
       AND comp_head.is_deleted IS FALSE
 LEFT JOIN registry.object_2094_ comp_task ON comp_task.attr_2100_ = component.ID
       AND comp_task.is_deleted IS FALSE
-LEFT JOIN registry.object_2093_ task ON task.ID = comp_task.attr_2173_
-      AND task.is_deleted IS FALSE
 LEFT JOIN registry.object_2137_ accepted_list ON accepted_list.is_deleted IS FALSE
           /*совпадает задание*/
       AND comp_task.attr_2173_ = accepted_list.attr_2226_
