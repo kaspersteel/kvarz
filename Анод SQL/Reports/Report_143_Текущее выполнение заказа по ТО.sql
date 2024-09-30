@@ -1,514 +1,1252 @@
-select o.id,
-component.id as component_id,
-component.attr_1414_ as rod_component,
-component.attr_1410_ as component,
-component.attr_1413_ as name,
-
-project.attr_1394_ as nn,
-accept_list.attr_3403_ as pvn,
-
-
-case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end as plan_count,
-accept_list.id as pv_id,
-
-/*Отрезная*/
-
-(select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 39 and o1.attr_2148_ = accept_list.id) as otk_otrez,
-
-/*Токарная1*/
-
-(select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 46 and o1.attr_2148_ = accept_list.id) as otk_tok1,
-
-/*Термическая*/
-
-(select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 41 and o1.attr_2148_ = accept_list.id) as otk_term,
-
-/*Токарная*/
-
-(select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 40 and o1.attr_2148_ = accept_list.id and o1.attr_3208_ = (select min(o2.attr_3208_)
-from registry.object_2138_ o2
-where o2.is_deleted IS FALSE  and o2.attr_2149_ = 40 and o2.attr_2148_ = accept_list.id)) as otk_tokr,
-
-/*Фрезерная*/
-
-(select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 42 and o1.attr_2148_ = accept_list.id and o1.attr_3208_ = (select min(o2.attr_3208_)
-from registry.object_2138_ o2
-where o2.is_deleted IS FALSE  and o2.attr_2149_ = 42 and o2.attr_2148_ = accept_list.id)) as otk_frezer,
-
-/*Расточная*/
-
-(select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 43 and o1.attr_2148_ = accept_list.id and o1.attr_3208_ = (select min(o2.attr_3208_)
-from registry.object_2138_ o2
-where o2.is_deleted IS FALSE  and o2.attr_2149_ = 43 and o2.attr_2148_ = accept_list.id)) as otk_rast,
-
-/*Долбежная*/
-
-(select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 45 and o1.attr_2148_ = accept_list.id and o1.attr_3208_ = (select min(o2.attr_3208_)
-from registry.object_2138_ o2
-where o2.is_deleted IS FALSE  and o2.attr_2149_ = 45 and o2.attr_2148_ = accept_list.id)) as otk_dolb,
-
-/*Шлифовальная*/
-
-(select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 51 and o1.attr_2148_ = accept_list.id and o1.attr_3208_ = (select min(o2.attr_3208_)
-from registry.object_2138_ o2
-where o2.is_deleted IS FALSE  and o2.attr_2149_ = 51 and o2.attr_2148_ = accept_list.id)) as otk_shlif,
-
-/*Сварочная*/
-
-(select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 49 and o1.attr_2148_ = accept_list.id and o1.attr_3208_ = (select min(o2.attr_3208_)
-from registry.object_2138_ o2
-where o2.is_deleted IS FALSE  and o2.attr_2149_ = 49 and o2.attr_2148_ = accept_list.id)) as otk_svar,
-
-/*Слесарная*/
-
-(select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 44 and o1.attr_2148_ = accept_list.id and o1.attr_3208_ = (select min(o2.attr_3208_)
-from registry.object_2138_ o2
-where o2.is_deleted IS FALSE  and o2.attr_2149_ = 44 and o2.attr_2148_ = accept_list.id)) as otk_sles,
-
-/*Притирочная*/
-
-(select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 63 and o1.attr_2148_ = accept_list.id) as otk_pritir,
-
-/*Опрессовочная*/
-
-(select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 56 and o1.attr_2148_ = accept_list.id) as otk_opress,
-
-/*Слесарно-сборочная*/
-
-(select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 55 and o1.attr_2148_ = accept_list.id) as otk_sles_sbor,
-
-/*Токарная ЧПУ*/
-
-(select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 33 and o1.attr_2148_ = accept_list.id) as otk_tokr_chpu,
-
-/*Расточная ЧПУ*/
-
-(select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 59 and o1.attr_2148_ = accept_list.id) as otk_rast_chpu,
-
-/*Фрезерная ЧПУ*/
-
-(select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 60 and o1.attr_2148_ = accept_list.id) as otk_frezer_chpu,
-
-/*Маршрутная*/
-
-(select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 53 and o1.attr_2148_ = accept_list.id) as otk_marsh,
-
-/*Комплектовочная*/
-
-(select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 54 and o1.attr_2148_ = accept_list.id) as otk_kom,
-
-/*Упаковочная*/
-
-(select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 67 and o1.attr_2148_ = accept_list.id) as otk_upakov,
-
-/*Прочие*/
-
-(select sum(o1.attr_2609_)
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ in (62,38,57,50,52,48,47,61) and o1.attr_2148_ = accept_list.id
-order by o.attr_1964_ limit 1) as otk_procheye,
-
-/*Прочие Токарные*/
-
-(select sum(o1.attr_2609_)
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 40 and o1.attr_2148_ = accept_list.id and o1.id != (select o1.id
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 40 and o1.attr_2148_ = accept_list.id and o1.attr_3208_ = (select min(o2.attr_3208_)
-from registry.object_2138_ o2
-where o2.is_deleted IS FALSE  and o2.attr_2149_ = 40 and o2.attr_2148_ = accept_list.id))) as otk_tokr_procheye,
-
-/*Прочие Шлифовальные*/
-
-(select sum(o1.attr_2609_)
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 51 and o1.attr_2148_ = accept_list.id and o1.id != (select o1.id
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 51 and o1.attr_2148_ = accept_list.id and o1.attr_3208_ = (select min(o2.attr_3208_)
-from registry.object_2138_ o2
-where o2.is_deleted IS FALSE  and o2.attr_2149_ = 51 and o2.attr_2148_ = accept_list.id))) as otk_shlif_procheye,
-
-/*Прочие Слесарные*/
-
-(select sum(o1.attr_2609_)
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 44 and o1.attr_2148_ = accept_list.id and o1.id != (select o1.id
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 44 and o1.attr_2148_ = accept_list.id and o1.attr_3208_ = (select min(o2.attr_3208_)
-from registry.object_2138_ o2
-where o2.is_deleted IS FALSE  and o2.attr_2149_ = 44 and o2.attr_2148_ = accept_list.id))) as otk_sles_procheye,
-
-/*Прочие Фрезерные*/
-
-(select sum(o1.attr_2609_)
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 42 and o1.attr_2148_ = accept_list.id and o1.id != (select o1.id
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 42 and o1.attr_2148_ = accept_list.id and o1.attr_3208_ = (select min(o2.attr_3208_)
-from registry.object_2138_ o2
-where o2.is_deleted IS FALSE  and o2.attr_2149_ = 42 and o2.attr_2148_ = accept_list.id))) as otk_frezer_procheye,
-
-
-/*Отрезная-Проверка*/
-
-case when '39' = any((select array_agg(distinct o1.attr_2149_)
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2148_ = accept_list.id and o1.attr_2150_ = accept_list.attr_2632_)::text[]) then 
-(case when (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) = (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 39 and o1.attr_2148_ = accept_list.id) then 1 else 0 end) end as proverka_otrez,
-
-/*Токарная1-Проверка*/
-
-case when '46' = any((select array_agg(distinct o1.attr_2149_)
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2148_ = accept_list.id and o1.attr_2150_ = accept_list.attr_2632_)::text[]) then 
-(case when (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) = (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 46 and o1.attr_2148_ = accept_list.id) then 1 else 0 end) end as proverka_tokr1,
-
-/*Термическая-Проверка*/
-
-case when '41' = any((select array_agg(distinct o1.attr_2149_)
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2148_ = accept_list.id and o1.attr_2150_ = accept_list.attr_2632_)::text[]) then 
-(case when (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) = (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 41 and o1.attr_2148_ = accept_list.id) then 1 else 0 end) end as proverka_term,
-
-/*Токарная-Проверка*/
-
-case when '40' = any((select array_agg(distinct o1.attr_2149_)
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2148_ = accept_list.id and o1.attr_2150_ = accept_list.attr_2632_)::text[]) then 
-(case when (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) = (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 40 and o1.attr_2148_ = accept_list.id and o1.attr_3208_ = (select min(o2.attr_3208_)
-from registry.object_2138_ o2
-where o2.is_deleted IS FALSE  and o2.attr_2149_ = 40 and o2.attr_2148_ = accept_list.id)) then 1 else 0 end) end as proverka_tokr,
-
-/*Фрезерная-Проверка*/
-
-case when '42' = any((select array_agg(distinct o1.attr_2149_)
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2148_ = accept_list.id and o1.attr_2150_ = accept_list.attr_2632_)::text[]) then 
-(case when (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) = (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 42 and o1.attr_2148_ = accept_list.id and o1.attr_3208_ = (select min(o2.attr_3208_)
-from registry.object_2138_ o2
-where o2.is_deleted IS FALSE  and o2.attr_2149_ = 42 and o2.attr_2148_ = accept_list.id)) then 1 else 0 end) end as proverka_frezer,
-
-/*Расточная-Проверка*/
-
-case when '43' = any((select array_agg(distinct o1.attr_2149_)
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2148_ = accept_list.id and o1.attr_2150_ = accept_list.attr_2632_)::text[]) then 
-(case when (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) = (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 43 and o1.attr_2148_ = accept_list.id and o1.attr_3208_ = (select min(o2.attr_3208_)
-from registry.object_2138_ o2
-where o2.is_deleted IS FALSE  and o2.attr_2149_ = 43 and o2.attr_2148_ = accept_list.id)) then 1 else 0 end) end as proverka_rast,
-
-/*Долбежная-Проверка*/
-
-case when '45' = any((select array_agg(distinct o1.attr_2149_)
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2148_ = accept_list.id and o1.attr_2150_ = accept_list.attr_2632_)::text[]) then 
-(case when (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) = (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 45 and o1.attr_2148_ = accept_list.id and o1.attr_3208_ = (select min(o2.attr_3208_)
-from registry.object_2138_ o2
-where o2.is_deleted IS FALSE  and o2.attr_2149_ = 45 and o2.attr_2148_ = accept_list.id)) then 1 else 0 end) end as proverka_dolb,
-
-/*Шлифовальная-Проверка*/
-
-case when '51' = any((select array_agg(distinct o1.attr_2149_)
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2148_ = accept_list.id and o1.attr_2150_ = accept_list.attr_2632_)::text[]) then 
-(case when (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) = (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 51 and o1.attr_2148_ = accept_list.id and o1.attr_3208_ = (select min(o2.attr_3208_)
-from registry.object_2138_ o2
-where o2.is_deleted IS FALSE  and o2.attr_2149_ = 51 and o2.attr_2148_ = accept_list.id)) then 1 else 0 end) end as proverka_shlif,
-
-/*Сварочная-Проверка*/
-
-case when '49' = any((select array_agg(distinct o1.attr_2149_)
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2148_ = accept_list.id and o1.attr_2150_ = accept_list.attr_2632_)::text[]) then 
-(case when (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) = (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 49 and o1.attr_2148_ = accept_list.id and o1.attr_3208_ = (select min(o2.attr_3208_)
-from registry.object_2138_ o2
-where o2.is_deleted IS FALSE  and o2.attr_2149_ = 49 and o2.attr_2148_ = accept_list.id)) then 1 else 0 end) end as proverka_svar,
-
-/*Слесарная-Проверка*/
-
-case when '44' = any((select array_agg(distinct o1.attr_2149_)
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2148_ = accept_list.id and o1.attr_2150_ = accept_list.attr_2632_)::text[]) then 
-(case when (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) = (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 44 and o1.attr_2148_ = accept_list.id and o1.attr_3208_ = (select min(o2.attr_3208_)
-from registry.object_2138_ o2
-where o2.is_deleted IS FALSE  and o2.attr_2149_ = 44 and o2.attr_2148_ = accept_list.id)) then 1 else 0 end) end as proverka_sles,
-
-/*Притирочная-Проверка*/
-
-case when '63' = any((select array_agg(distinct o1.attr_2149_)
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2148_ = accept_list.id and o1.attr_2150_ = accept_list.attr_2632_)::text[]) then 
-(case when (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) = (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 63 and o1.attr_2148_ = accept_list.id) then 1 else 0 end) end as proverka_pritir,
-
-/*Опрессовочная-Проверка*/
-
-case when '56' = any((select array_agg(distinct o1.attr_2149_)
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2148_ = accept_list.id and o1.attr_2150_ = accept_list.attr_2632_)::text[]) then 
-(case when (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) = (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 56 and o1.attr_2148_ = accept_list.id) then 1 else 0 end) end as proverka_opress,
-
-/*Слесарно-сборочная-Проверка*/
-
-case when '55' = any((select array_agg(distinct o1.attr_2149_)
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2148_ = accept_list.id and o1.attr_2150_ = accept_list.attr_2632_)::text[]) then 
-(case when (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) = (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 55 and o1.attr_2148_ = accept_list.id) then 1 else 0 end) end as proverka_sles_sbor,
-
-/*Токарная ЧПУ-Проверка*/
-
-case when '33' = any((select array_agg(distinct o1.attr_2149_)
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2148_ = accept_list.id and o1.attr_2150_ = accept_list.attr_2632_)::text[]) then 
-(case when (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) = (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 33 and o1.attr_2148_ = accept_list.id) then 1 else 0 end) end as proverka_tokr_chpu,
-
-/*Расточная ЧПУ-Проверка*/
-
-case when '59' = any((select array_agg(distinct o1.attr_2149_)
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2148_ = accept_list.id and o1.attr_2150_ = accept_list.attr_2632_)::text[]) then 
-(case when (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) = (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 59 and o1.attr_2148_ = accept_list.id) then 1 else 0 end) end as proverka_rast_chpu,
-
-/*Фрезерная ЧПУ-Проверка*/
-
-case when '60' = any((select array_agg(distinct o1.attr_2149_)
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2148_ = accept_list.id and o1.attr_2150_ = accept_list.attr_2632_)::text[]) then 
-(case when (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) = (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 60 and o1.attr_2148_ = accept_list.id) then 1 else 0 end) end as proverka_frezer_chpu,
-
-/*Маршрутная-Проверка*/
-
-case when '53' = any((select array_agg(distinct o1.attr_2149_)
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2148_ = accept_list.id and o1.attr_2150_ = accept_list.attr_2632_)::text[]) then 
-(case when (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) = (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 53 and o1.attr_2148_ = accept_list.id) then 1 else 0 end) end as proverka_marsh,
-
-/*Комплектовочная-Проверка*/
-
-case when '54' = any((select array_agg(distinct o1.attr_2149_)
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2148_ = accept_list.id and o1.attr_2150_ = accept_list.attr_2632_)::text[]) then 
-(case when (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) = (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 54 and o1.attr_2148_ = accept_list.id) then 1 else 0 end) end as proverka_kom,
-
-/*Упаковочная-Проверка*/
-
-case when '67' = any((select array_agg(distinct o1.attr_2149_)
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2148_ = accept_list.id and o1.attr_2150_ = accept_list.attr_2632_)::text[]) then 
-(case when (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) = (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 67 and o1.attr_2148_ = accept_list.id) then 1 else 0 end) end as proverka_upakov,
-
-/*Отрезная_Проверка2 (Если кол-во больше, чем плановое = синий)*/
-
-case when (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 39 and o1.attr_2148_ = accept_list.id) > (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) then 'blue' end as proverka2_otrez,
-
-/*Токарная1-Проверка2*/
-
-case when (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 46 and o1.attr_2148_ = accept_list.id) > (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) then 'blue' end as proverka2_tokr1,
-
-/*Термическая-Проверка2*/
-
-case when (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 41 and o1.attr_2148_ = accept_list.id) > (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) then 'blue' end as proverka2_term,
-
-/*Токарная-Проверка2*/
-
-case when (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 40 and o1.attr_2148_ = accept_list.id and o1.attr_3208_ = (select min(o2.attr_3208_)
-from registry.object_2138_ o2
-where o2.is_deleted IS FALSE  and o2.attr_2149_ = 40 and o2.attr_2148_ = accept_list.id)) > (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) then 'blue' end as proverka2_tokr,
-
-/*Фрезерная-Проверка2*/
-
-case when (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 42 and o1.attr_2148_ = accept_list.id and o1.attr_3208_ = (select min(o2.attr_3208_)
-from registry.object_2138_ o2
-where o2.is_deleted IS FALSE  and o2.attr_2149_ = 42 and o2.attr_2148_ = accept_list.id)) > (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) then 'blue' end as proverka2_frezer,
-
-/*Расточная-Проверка2*/
-
-case when (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 43 and o1.attr_2148_ = accept_list.id and o1.attr_3208_ = (select min(o2.attr_3208_)
-from registry.object_2138_ o2
-where o2.is_deleted IS FALSE  and o2.attr_2149_ = 43 and o2.attr_2148_ = accept_list.id)) > (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) then 'blue' end as proverka2_rast,
-
-/*Долбежная-Проверка2*/
-
-case when (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 45 and o1.attr_2148_ = accept_list.id and o1.attr_3208_ = (select min(o2.attr_3208_)
-from registry.object_2138_ o2
-where o2.is_deleted IS FALSE  and o2.attr_2149_ = 45 and o2.attr_2148_ = accept_list.id)) > (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) then 'blue' end as proverka2_dolb,
-
-/*Шлифовальная-Проверка2*/
-
-case when (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 51 and o1.attr_2148_ = accept_list.id and o1.attr_3208_ = (select min(o2.attr_3208_)
-from registry.object_2138_ o2
-where o2.is_deleted IS FALSE  and o2.attr_2149_ = 51 and o2.attr_2148_ = accept_list.id)) > (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) then 'blue' end as proverka2_shlif,
-
-/*Сварочная-Проверка2*/
-
-case when (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 49 and o1.attr_2148_ = accept_list.id and o1.attr_3208_ = (select min(o2.attr_3208_)
-from registry.object_2138_ o2
-where o2.is_deleted IS FALSE  and o2.attr_2149_ = 49 and o2.attr_2148_ = accept_list.id)) > (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) then 'blue' end as proverka2_svar,
-
-/*Слесарная-Проверка2*/
-
-case when (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 44 and o1.attr_2148_ = accept_list.id and o1.attr_3208_ = (select min(o2.attr_3208_)
-from registry.object_2138_ o2
-where o2.is_deleted IS FALSE  and o2.attr_2149_ = 44 and o2.attr_2148_ = accept_list.id)) > (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) then 'blue' end as proverka2_sles,
-
-/*Притирочная-Проверка2*/
-
-case when (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 63 and o1.attr_2148_ = accept_list.id) > (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) then 'blue' end as proverka2_pritir,
-
-/*Опрессовочная-Проверка2*/
-
-case when (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 56 and o1.attr_2148_ = accept_list.id) > (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) then 'blue' end as proverka2_opress,
-
-/*Слесарно-сборочная-Проверка2*/
-
-case when (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 55 and o1.attr_2148_ = accept_list.id) > (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) then 'blue' end as proverka2_sles_sbor,
-
-/*Токарная ЧПУ-Проверка2*/
-
-case when (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 33 and o1.attr_2148_ = accept_list.id) > (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) then 'blue' end as proverka2_tokr_chpu,
-
-/*Расточная ЧПУ-Проверка2*/
-
-case when (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 59 and o1.attr_2148_ = accept_list.id) > (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) then 'blue' end as proverka2_rast_chpu,
-
-/*Фрезерная ЧПУ-Проверка2*/
-
-case when (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 60 and o1.attr_2148_ = accept_list.id) > (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) then 'blue' end as proverka2_frezer_chpu,
-
-/*Маршрутная-Проверка2*/
-
-case when (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 53 and o1.attr_2148_ = accept_list.id) > (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) then 'blue' end as proverka2_marsh,
-
-/*Комплектовочная-Проверка2*/
-
-case when (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 54 and o1.attr_2148_ = accept_list.id) > (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) then 'blue' end as proverka2_kom,
-
-/*Упаковочная-Проверка2*/
-
-case when (select o1.attr_2609_
-from registry.object_2138_ o1
-where o1.is_deleted IS FALSE  and o1.attr_2149_ = 67 and o1.attr_2148_ = accept_list.id) > (case when component.attr_1411_ in (1,2,8,9) then project.attr_1895_ else component.attr_1896_ end) then 'blue' end as proverka2_upakov
-
-
-from registry.object_606_ o
-
-left join registry.object_1227_ project on project.attr_1923_ = o.id and project.is_deleted IS FALSE 
-left join registry.object_1409_ component on component.attr_1423_ = project.id and component.is_deleted IS FALSE 
-
-/*Ссылка на ПВ*/
-left join registry.object_2137_ accept_list on accept_list.attr_2632_ = component.attr_1458_ 
-and accept_list.is_deleted IS FALSE  and string_to_array (component.attr_1650_, ',')::integer[] <@ accept_list.attr_2675_ 
-and project.attr_1394_ ::text = any(string_to_array(accept_list.attr_3403_,'; '))
-
-where o.is_deleted IS FALSE  and o.id =533
+   SELECT o.id
+        , component.id AS component_id
+        , component.attr_1414_ AS rod_component
+        , component.attr_1410_ AS component
+        , component.attr_1413_ AS NAME
+        , project.attr_1394_ AS nn
+        , nado.attr_3403_ AS pvn
+        , CASE
+                    WHEN component.attr_1411_ NOT IN (3, 6, 7, 82) THEN project.attr_1895_
+                    ELSE component.attr_1896_
+          END AS plan_count
+        , nado.id AS pv_id
+        , /*Отрезная*/
+          (
+             SELECT o1.attr_2609_
+               FROM registry.object_2138_ o1
+              WHERE o1.is_deleted <> TRUE
+                AND o1.attr_2149_ = 39
+                AND o1.attr_2148_ = nado.id
+          ) AS otk_otrez
+        , /*Токарная1*/
+          (
+             SELECT o1.attr_2609_
+               FROM registry.object_2138_ o1
+              WHERE o1.is_deleted <> TRUE
+                AND o1.attr_2149_ = 46
+                AND o1.attr_2148_ = nado.id
+          ) AS otk_tok1
+        , /*Термическая*/
+          (
+             SELECT o1.attr_2609_
+               FROM registry.object_2138_ o1
+              WHERE o1.is_deleted <> TRUE
+                AND o1.attr_2149_ = 41
+                AND o1.attr_2148_ = nado.id
+          ) AS otk_term
+        , /*Токарная*/
+          (
+             SELECT o1.attr_2609_
+               FROM registry.object_2138_ o1
+              WHERE o1.is_deleted <> TRUE
+                AND o1.attr_2149_ = 40
+                AND o1.attr_2148_ = nado.id
+                AND o1.attr_3208_ = (
+                       SELECT MIN(o2.attr_3208_)
+                         FROM registry.object_2138_ o2
+                        WHERE o2.is_deleted <> TRUE
+                          AND o2.attr_2149_ = 40
+                          AND o2.attr_2148_ = nado.id
+                    )
+          ) AS otk_tokr
+        , /*Фрезерная*/
+          (
+             SELECT o1.attr_2609_
+               FROM registry.object_2138_ o1
+              WHERE o1.is_deleted <> TRUE
+                AND o1.attr_2149_ = 42
+                AND o1.attr_2148_ = nado.id
+                AND o1.attr_3208_ = (
+                       SELECT MIN(o2.attr_3208_)
+                         FROM registry.object_2138_ o2
+                        WHERE o2.is_deleted <> TRUE
+                          AND o2.attr_2149_ = 42
+                          AND o2.attr_2148_ = nado.id
+                    )
+          ) AS otk_frezer
+        , /*Расточная*/
+          (
+             SELECT o1.attr_2609_
+               FROM registry.object_2138_ o1
+              WHERE o1.is_deleted <> TRUE
+                AND o1.attr_2149_ = 43
+                AND o1.attr_2148_ = nado.id
+                AND o1.attr_3208_ = (
+                       SELECT MIN(o2.attr_3208_)
+                         FROM registry.object_2138_ o2
+                        WHERE o2.is_deleted <> TRUE
+                          AND o2.attr_2149_ = 43
+                          AND o2.attr_2148_ = nado.id
+                    )
+          ) AS otk_rast
+        , /*Долбежная*/
+          (
+             SELECT o1.attr_2609_
+               FROM registry.object_2138_ o1
+              WHERE o1.is_deleted <> TRUE
+                AND o1.attr_2149_ = 45
+                AND o1.attr_2148_ = nado.id
+                AND o1.attr_3208_ = (
+                       SELECT MIN(o2.attr_3208_)
+                         FROM registry.object_2138_ o2
+                        WHERE o2.is_deleted <> TRUE
+                          AND o2.attr_2149_ = 45
+                          AND o2.attr_2148_ = nado.id
+                    )
+          ) AS otk_dolb
+        , /*Шлифовальная*/
+          (
+             SELECT o1.attr_2609_
+               FROM registry.object_2138_ o1
+              WHERE o1.is_deleted <> TRUE
+                AND o1.attr_2149_ = 51
+                AND o1.attr_2148_ = nado.id
+                AND o1.attr_3208_ = (
+                       SELECT MIN(o2.attr_3208_)
+                         FROM registry.object_2138_ o2
+                        WHERE o2.is_deleted <> TRUE
+                          AND o2.attr_2149_ = 51
+                          AND o2.attr_2148_ = nado.id
+                    )
+          ) AS otk_shlif
+        , /*Сварочная*/
+          (
+             SELECT o1.attr_2609_
+               FROM registry.object_2138_ o1
+              WHERE o1.is_deleted <> TRUE
+                AND o1.attr_2149_ = 49
+                AND o1.attr_2148_ = nado.id
+                AND o1.attr_3208_ = (
+                       SELECT MIN(o2.attr_3208_)
+                         FROM registry.object_2138_ o2
+                        WHERE o2.is_deleted <> TRUE
+                          AND o2.attr_2149_ = 49
+                          AND o2.attr_2148_ = nado.id
+                    )
+          ) AS otk_svar
+        , /*Слесарная*/
+          (
+             SELECT o1.attr_2609_
+               FROM registry.object_2138_ o1
+              WHERE o1.is_deleted <> TRUE
+                AND o1.attr_2149_ = 44
+                AND o1.attr_2148_ = nado.id
+                AND o1.attr_3208_ = (
+                       SELECT MIN(o2.attr_3208_)
+                         FROM registry.object_2138_ o2
+                        WHERE o2.is_deleted <> TRUE
+                          AND o2.attr_2149_ = 44
+                          AND o2.attr_2148_ = nado.id
+                    )
+          ) AS otk_sles
+        , /*Притирочная*/
+          (
+             SELECT o1.attr_2609_
+               FROM registry.object_2138_ o1
+              WHERE o1.is_deleted <> TRUE
+                AND o1.attr_2149_ = 63
+                AND o1.attr_2148_ = nado.id
+          ) AS otk_pritir
+        , /*Опрессовочная*/
+          (
+             SELECT o1.attr_2609_
+               FROM registry.object_2138_ o1
+              WHERE o1.is_deleted <> TRUE
+                AND o1.attr_2149_ = 56
+                AND o1.attr_2148_ = nado.id
+          ) AS otk_opress
+        , /*Слесарно-сборочная*/
+          (
+             SELECT o1.attr_2609_
+               FROM registry.object_2138_ o1
+              WHERE o1.is_deleted <> TRUE
+                AND o1.attr_2149_ = 55
+                AND o1.attr_2148_ = nado.id
+          ) AS otk_sles_sbor
+        , /*Токарная ЧПУ*/
+          (
+             SELECT o1.attr_2609_
+               FROM registry.object_2138_ o1
+              WHERE o1.is_deleted <> TRUE
+                AND o1.attr_2149_ = 33
+                AND o1.attr_2148_ = nado.id
+          ) AS otk_tokr_chpu
+        , /*Расточная ЧПУ*/
+          (
+             SELECT o1.attr_2609_
+               FROM registry.object_2138_ o1
+              WHERE o1.is_deleted <> TRUE
+                AND o1.attr_2149_ = 59
+                AND o1.attr_2148_ = nado.id
+          ) AS otk_rast_chpu
+        , /*Фрезерная ЧПУ*/
+          (
+             SELECT o1.attr_2609_
+               FROM registry.object_2138_ o1
+              WHERE o1.is_deleted <> TRUE
+                AND o1.attr_2149_ = 60
+                AND o1.attr_2148_ = nado.id
+          ) AS otk_frezer_chpu
+        , /*Маршрутная*/
+          (
+             SELECT o1.attr_2609_
+               FROM registry.object_2138_ o1
+              WHERE o1.is_deleted <> TRUE
+                AND o1.attr_2149_ = 53
+                AND o1.attr_2148_ = nado.id
+          ) AS otk_marsh
+        , /*Комплектовочная*/
+          (
+             SELECT o1.attr_2609_
+               FROM registry.object_2138_ o1
+              WHERE o1.is_deleted <> TRUE
+                AND o1.attr_2149_ = 54
+                AND o1.attr_2148_ = nado.id
+          ) AS otk_kom
+        , /*Упаковочная*/
+          (
+             SELECT o1.attr_2609_
+               FROM registry.object_2138_ o1
+              WHERE o1.is_deleted <> TRUE
+                AND o1.attr_2149_ = 67
+                AND o1.attr_2148_ = nado.id
+          ) AS otk_upakov
+        , /*Прочие*/
+          (
+             SELECT SUM(o1.attr_2609_)
+               FROM registry.object_2138_ o1
+              WHERE o1.is_deleted <> TRUE
+                AND o1.attr_2149_ IN (62, 38, 57, 50, 52, 48, 47, 61)
+                AND o1.attr_2148_ = nado.id
+           ORDER BY o.attr_1964_
+              LIMIT 1
+          ) AS otk_procheye
+        , /*Прочие Токарные*/
+          (
+             SELECT SUM(o1.attr_2609_)
+               FROM registry.object_2138_ o1
+              WHERE o1.is_deleted <> TRUE
+                AND o1.attr_2149_ = 40
+                AND o1.attr_2148_ = nado.id
+                AND o1.id != (
+                       SELECT o1.id
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2149_ = 40
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_3208_ = (
+                                 SELECT MIN(o2.attr_3208_)
+                                   FROM registry.object_2138_ o2
+                                  WHERE o2.is_deleted <> TRUE
+                                    AND o2.attr_2149_ = 40
+                                    AND o2.attr_2148_ = nado.id
+                              )
+                    )
+          ) AS otk_tokr_procheye
+        , /*Прочие Шлифовальные*/
+          (
+             SELECT SUM(o1.attr_2609_)
+               FROM registry.object_2138_ o1
+              WHERE o1.is_deleted <> TRUE
+                AND o1.attr_2149_ = 51
+                AND o1.attr_2148_ = nado.id
+                AND o1.id != (
+                       SELECT o1.id
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2149_ = 51
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_3208_ = (
+                                 SELECT MIN(o2.attr_3208_)
+                                   FROM registry.object_2138_ o2
+                                  WHERE o2.is_deleted <> TRUE
+                                    AND o2.attr_2149_ = 51
+                                    AND o2.attr_2148_ = nado.id
+                              )
+                    )
+          ) AS otk_shlif_procheye
+        , /*Прочие Слесарные*/
+          (
+             SELECT SUM(o1.attr_2609_)
+               FROM registry.object_2138_ o1
+              WHERE o1.is_deleted <> TRUE
+                AND o1.attr_2149_ = 44
+                AND o1.attr_2148_ = nado.id
+                AND o1.id != (
+                       SELECT o1.id
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2149_ = 44
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_3208_ = (
+                                 SELECT MIN(o2.attr_3208_)
+                                   FROM registry.object_2138_ o2
+                                  WHERE o2.is_deleted <> TRUE
+                                    AND o2.attr_2149_ = 44
+                                    AND o2.attr_2148_ = nado.id
+                              )
+                    )
+          ) AS otk_sles_procheye
+        , /*Прочие Фрезерные*/
+          (
+             SELECT SUM(o1.attr_2609_)
+               FROM registry.object_2138_ o1
+              WHERE o1.is_deleted <> TRUE
+                AND o1.attr_2149_ = 42
+                AND o1.attr_2148_ = nado.id
+                AND o1.id != (
+                       SELECT o1.id
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2149_ = 42
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_3208_ = (
+                                 SELECT MIN(o2.attr_3208_)
+                                   FROM registry.object_2138_ o2
+                                  WHERE o2.is_deleted <> TRUE
+                                    AND o2.attr_2149_ = 42
+                                    AND o2.attr_2148_ = nado.id
+                              )
+                    )
+          ) AS otk_frezer_procheye
+        , /*Отрезная-Проверка*/
+          CASE
+                    WHEN '39' = ANY (
+                    (
+                       SELECT ARRAY_AGG(DISTINCT o1.attr_2149_)
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_2150_ = nado.attr_2632_
+                    )::TEXT[]
+                    ) THEN (
+                    CASE
+                              WHEN (
+                              CASE
+                                        WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                                        ELSE component.attr_1896_
+                              END
+                              ) = (
+                                 SELECT o1.attr_2609_
+                                   FROM registry.object_2138_ o1
+                                  WHERE o1.is_deleted <> TRUE
+                                    AND o1.attr_2149_ = 39
+                                    AND o1.attr_2148_ = nado.id
+                              ) THEN 1
+                              ELSE 0
+                    END
+                    )
+          END AS proverka_otrez
+        , /*Токарная1-Проверка*/
+          CASE
+                    WHEN '46' = ANY (
+                    (
+                       SELECT ARRAY_AGG(DISTINCT o1.attr_2149_)
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_2150_ = nado.attr_2632_
+                    )::TEXT[]
+                    ) THEN (
+                    CASE
+                              WHEN (
+                              CASE
+                                        WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                                        ELSE component.attr_1896_
+                              END
+                              ) = (
+                                 SELECT o1.attr_2609_
+                                   FROM registry.object_2138_ o1
+                                  WHERE o1.is_deleted <> TRUE
+                                    AND o1.attr_2149_ = 46
+                                    AND o1.attr_2148_ = nado.id
+                              ) THEN 1
+                              ELSE 0
+                    END
+                    )
+          END AS proverka_tokr1
+        , /*Термическая-Проверка*/
+          CASE
+                    WHEN '41' = ANY (
+                    (
+                       SELECT ARRAY_AGG(DISTINCT o1.attr_2149_)
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_2150_ = nado.attr_2632_
+                    )::TEXT[]
+                    ) THEN (
+                    CASE
+                              WHEN (
+                              CASE
+                                        WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                                        ELSE component.attr_1896_
+                              END
+                              ) = (
+                                 SELECT o1.attr_2609_
+                                   FROM registry.object_2138_ o1
+                                  WHERE o1.is_deleted <> TRUE
+                                    AND o1.attr_2149_ = 41
+                                    AND o1.attr_2148_ = nado.id
+                              ) THEN 1
+                              ELSE 0
+                    END
+                    )
+          END AS proverka_term
+        , /*Токарная-Проверка*/
+          CASE
+                    WHEN '40' = ANY (
+                    (
+                       SELECT ARRAY_AGG(DISTINCT o1.attr_2149_)
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_2150_ = nado.attr_2632_
+                    )::TEXT[]
+                    ) THEN (
+                    CASE
+                              WHEN (
+                              CASE
+                                        WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                                        ELSE component.attr_1896_
+                              END
+                              ) = (
+                                 SELECT o1.attr_2609_
+                                   FROM registry.object_2138_ o1
+                                  WHERE o1.is_deleted <> TRUE
+                                    AND o1.attr_2149_ = 40
+                                    AND o1.attr_2148_ = nado.id
+                                    AND o1.attr_3208_ = (
+                                           SELECT MIN(o2.attr_3208_)
+                                             FROM registry.object_2138_ o2
+                                            WHERE o2.is_deleted <> TRUE
+                                              AND o2.attr_2149_ = 40
+                                              AND o2.attr_2148_ = nado.id
+                                        )
+                              ) THEN 1
+                              ELSE 0
+                    END
+                    )
+          END AS proverka_tokr
+        , /*Фрезерная-Проверка*/
+          CASE
+                    WHEN '42' = ANY (
+                    (
+                       SELECT ARRAY_AGG(DISTINCT o1.attr_2149_)
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_2150_ = nado.attr_2632_
+                    )::TEXT[]
+                    ) THEN (
+                    CASE
+                              WHEN (
+                              CASE
+                                        WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                                        ELSE component.attr_1896_
+                              END
+                              ) = (
+                                 SELECT o1.attr_2609_
+                                   FROM registry.object_2138_ o1
+                                  WHERE o1.is_deleted <> TRUE
+                                    AND o1.attr_2149_ = 42
+                                    AND o1.attr_2148_ = nado.id
+                                    AND o1.attr_3208_ = (
+                                           SELECT MIN(o2.attr_3208_)
+                                             FROM registry.object_2138_ o2
+                                            WHERE o2.is_deleted <> TRUE
+                                              AND o2.attr_2149_ = 42
+                                              AND o2.attr_2148_ = nado.id
+                                        )
+                              ) THEN 1
+                              ELSE 0
+                    END
+                    )
+          END AS proverka_frezer
+        , /*Расточная-Проверка*/
+          CASE
+                    WHEN '43' = ANY (
+                    (
+                       SELECT ARRAY_AGG(DISTINCT o1.attr_2149_)
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_2150_ = nado.attr_2632_
+                    )::TEXT[]
+                    ) THEN (
+                    CASE
+                              WHEN (
+                              CASE
+                                        WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                                        ELSE component.attr_1896_
+                              END
+                              ) = (
+                                 SELECT o1.attr_2609_
+                                   FROM registry.object_2138_ o1
+                                  WHERE o1.is_deleted <> TRUE
+                                    AND o1.attr_2149_ = 43
+                                    AND o1.attr_2148_ = nado.id
+                                    AND o1.attr_3208_ = (
+                                           SELECT MIN(o2.attr_3208_)
+                                             FROM registry.object_2138_ o2
+                                            WHERE o2.is_deleted <> TRUE
+                                              AND o2.attr_2149_ = 43
+                                              AND o2.attr_2148_ = nado.id
+                                        )
+                              ) THEN 1
+                              ELSE 0
+                    END
+                    )
+          END AS proverka_rast
+        , /*Долбежная-Проверка*/
+          CASE
+                    WHEN '45' = ANY (
+                    (
+                       SELECT ARRAY_AGG(DISTINCT o1.attr_2149_)
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_2150_ = nado.attr_2632_
+                    )::TEXT[]
+                    ) THEN (
+                    CASE
+                              WHEN (
+                              CASE
+                                        WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                                        ELSE component.attr_1896_
+                              END
+                              ) = (
+                                 SELECT o1.attr_2609_
+                                   FROM registry.object_2138_ o1
+                                  WHERE o1.is_deleted <> TRUE
+                                    AND o1.attr_2149_ = 45
+                                    AND o1.attr_2148_ = nado.id
+                                    AND o1.attr_3208_ = (
+                                           SELECT MIN(o2.attr_3208_)
+                                             FROM registry.object_2138_ o2
+                                            WHERE o2.is_deleted <> TRUE
+                                              AND o2.attr_2149_ = 45
+                                              AND o2.attr_2148_ = nado.id
+                                        )
+                              ) THEN 1
+                              ELSE 0
+                    END
+                    )
+          END AS proverka_dolb
+        , /*Шлифовальная-Проверка*/
+          CASE
+                    WHEN '51' = ANY (
+                    (
+                       SELECT ARRAY_AGG(DISTINCT o1.attr_2149_)
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_2150_ = nado.attr_2632_
+                    )::TEXT[]
+                    ) THEN (
+                    CASE
+                              WHEN (
+                              CASE
+                                        WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                                        ELSE component.attr_1896_
+                              END
+                              ) = (
+                                 SELECT o1.attr_2609_
+                                   FROM registry.object_2138_ o1
+                                  WHERE o1.is_deleted <> TRUE
+                                    AND o1.attr_2149_ = 51
+                                    AND o1.attr_2148_ = nado.id
+                                    AND o1.attr_3208_ = (
+                                           SELECT MIN(o2.attr_3208_)
+                                             FROM registry.object_2138_ o2
+                                            WHERE o2.is_deleted <> TRUE
+                                              AND o2.attr_2149_ = 51
+                                              AND o2.attr_2148_ = nado.id
+                                        )
+                              ) THEN 1
+                              ELSE 0
+                    END
+                    )
+          END AS proverka_shlif
+        , /*Сварочная-Проверка*/
+          CASE
+                    WHEN '49' = ANY (
+                    (
+                       SELECT ARRAY_AGG(DISTINCT o1.attr_2149_)
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_2150_ = nado.attr_2632_
+                    )::TEXT[]
+                    ) THEN (
+                    CASE
+                              WHEN (
+                              CASE
+                                        WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                                        ELSE component.attr_1896_
+                              END
+                              ) = (
+                                 SELECT o1.attr_2609_
+                                   FROM registry.object_2138_ o1
+                                  WHERE o1.is_deleted <> TRUE
+                                    AND o1.attr_2149_ = 49
+                                    AND o1.attr_2148_ = nado.id
+                                    AND o1.attr_3208_ = (
+                                           SELECT MIN(o2.attr_3208_)
+                                             FROM registry.object_2138_ o2
+                                            WHERE o2.is_deleted <> TRUE
+                                              AND o2.attr_2149_ = 49
+                                              AND o2.attr_2148_ = nado.id
+                                        )
+                              ) THEN 1
+                              ELSE 0
+                    END
+                    )
+          END AS proverka_svar
+        , /*Слесарная-Проверка*/
+          CASE
+                    WHEN '44' = ANY (
+                    (
+                       SELECT ARRAY_AGG(DISTINCT o1.attr_2149_)
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_2150_ = nado.attr_2632_
+                    )::TEXT[]
+                    ) THEN (
+                    CASE
+                              WHEN (
+                              CASE
+                                        WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                                        ELSE component.attr_1896_
+                              END
+                              ) = (
+                                 SELECT o1.attr_2609_
+                                   FROM registry.object_2138_ o1
+                                  WHERE o1.is_deleted <> TRUE
+                                    AND o1.attr_2149_ = 44
+                                    AND o1.attr_2148_ = nado.id
+                                    AND o1.attr_3208_ = (
+                                           SELECT MIN(o2.attr_3208_)
+                                             FROM registry.object_2138_ o2
+                                            WHERE o2.is_deleted <> TRUE
+                                              AND o2.attr_2149_ = 44
+                                              AND o2.attr_2148_ = nado.id
+                                        )
+                              ) THEN 1
+                              ELSE 0
+                    END
+                    )
+          END AS proverka_sles
+        , /*Притирочная-Проверка*/
+          CASE
+                    WHEN '63' = ANY (
+                    (
+                       SELECT ARRAY_AGG(DISTINCT o1.attr_2149_)
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_2150_ = nado.attr_2632_
+                    )::TEXT[]
+                    ) THEN (
+                    CASE
+                              WHEN (
+                              CASE
+                                        WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                                        ELSE component.attr_1896_
+                              END
+                              ) = (
+                                 SELECT o1.attr_2609_
+                                   FROM registry.object_2138_ o1
+                                  WHERE o1.is_deleted <> TRUE
+                                    AND o1.attr_2149_ = 63
+                                    AND o1.attr_2148_ = nado.id
+                              ) THEN 1
+                              ELSE 0
+                    END
+                    )
+          END AS proverka_pritir
+        , /*Опрессовочная-Проверка*/
+          CASE
+                    WHEN '56' = ANY (
+                    (
+                       SELECT ARRAY_AGG(DISTINCT o1.attr_2149_)
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_2150_ = nado.attr_2632_
+                    )::TEXT[]
+                    ) THEN (
+                    CASE
+                              WHEN (
+                              CASE
+                                        WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                                        ELSE component.attr_1896_
+                              END
+                              ) = (
+                                 SELECT o1.attr_2609_
+                                   FROM registry.object_2138_ o1
+                                  WHERE o1.is_deleted <> TRUE
+                                    AND o1.attr_2149_ = 56
+                                    AND o1.attr_2148_ = nado.id
+                              ) THEN 1
+                              ELSE 0
+                    END
+                    )
+          END AS proverka_opress
+        , /*Слесарно-сборочная-Проверка*/
+          CASE
+                    WHEN '55' = ANY (
+                    (
+                       SELECT ARRAY_AGG(DISTINCT o1.attr_2149_)
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_2150_ = nado.attr_2632_
+                    )::TEXT[]
+                    ) THEN (
+                    CASE
+                              WHEN (
+                              CASE
+                                        WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                                        ELSE component.attr_1896_
+                              END
+                              ) = (
+                                 SELECT o1.attr_2609_
+                                   FROM registry.object_2138_ o1
+                                  WHERE o1.is_deleted <> TRUE
+                                    AND o1.attr_2149_ = 55
+                                    AND o1.attr_2148_ = nado.id
+                              ) THEN 1
+                              ELSE 0
+                    END
+                    )
+          END AS proverka_sles_sbor
+        , /*Токарная ЧПУ-Проверка*/
+          CASE
+                    WHEN '33' = ANY (
+                    (
+                       SELECT ARRAY_AGG(DISTINCT o1.attr_2149_)
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_2150_ = nado.attr_2632_
+                    )::TEXT[]
+                    ) THEN (
+                    CASE
+                              WHEN (
+                              CASE
+                                        WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                                        ELSE component.attr_1896_
+                              END
+                              ) = (
+                                 SELECT o1.attr_2609_
+                                   FROM registry.object_2138_ o1
+                                  WHERE o1.is_deleted <> TRUE
+                                    AND o1.attr_2149_ = 33
+                                    AND o1.attr_2148_ = nado.id
+                              ) THEN 1
+                              ELSE 0
+                    END
+                    )
+          END AS proverka_tokr_chpu
+        , /*Расточная ЧПУ-Проверка*/
+          CASE
+                    WHEN '59' = ANY (
+                    (
+                       SELECT ARRAY_AGG(DISTINCT o1.attr_2149_)
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_2150_ = nado.attr_2632_
+                    )::TEXT[]
+                    ) THEN (
+                    CASE
+                              WHEN (
+                              CASE
+                                        WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                                        ELSE component.attr_1896_
+                              END
+                              ) = (
+                                 SELECT o1.attr_2609_
+                                   FROM registry.object_2138_ o1
+                                  WHERE o1.is_deleted <> TRUE
+                                    AND o1.attr_2149_ = 59
+                                    AND o1.attr_2148_ = nado.id
+                              ) THEN 1
+                              ELSE 0
+                    END
+                    )
+          END AS proverka_rast_chpu
+        , /*Фрезерная ЧПУ-Проверка*/
+          CASE
+                    WHEN '60' = ANY (
+                    (
+                       SELECT ARRAY_AGG(DISTINCT o1.attr_2149_)
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_2150_ = nado.attr_2632_
+                    )::TEXT[]
+                    ) THEN (
+                    CASE
+                              WHEN (
+                              CASE
+                                        WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                                        ELSE component.attr_1896_
+                              END
+                              ) = (
+                                 SELECT o1.attr_2609_
+                                   FROM registry.object_2138_ o1
+                                  WHERE o1.is_deleted <> TRUE
+                                    AND o1.attr_2149_ = 60
+                                    AND o1.attr_2148_ = nado.id
+                              ) THEN 1
+                              ELSE 0
+                    END
+                    )
+          END AS proverka_frezer_chpu
+        , /*Маршрутная-Проверка*/
+          CASE
+                    WHEN '53' = ANY (
+                    (
+                       SELECT ARRAY_AGG(DISTINCT o1.attr_2149_)
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_2150_ = nado.attr_2632_
+                    )::TEXT[]
+                    ) THEN (
+                    CASE
+                              WHEN (
+                              CASE
+                                        WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                                        ELSE component.attr_1896_
+                              END
+                              ) = (
+                                 SELECT o1.attr_2609_
+                                   FROM registry.object_2138_ o1
+                                  WHERE o1.is_deleted <> TRUE
+                                    AND o1.attr_2149_ = 53
+                                    AND o1.attr_2148_ = nado.id
+                              ) THEN 1
+                              ELSE 0
+                    END
+                    )
+          END AS proverka_marsh
+        , /*Комплектовочная-Проверка*/
+          CASE
+                    WHEN '54' = ANY (
+                    (
+                       SELECT ARRAY_AGG(DISTINCT o1.attr_2149_)
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_2150_ = nado.attr_2632_
+                    )::TEXT[]
+                    ) THEN (
+                    CASE
+                              WHEN (
+                              CASE
+                                        WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                                        ELSE component.attr_1896_
+                              END
+                              ) = (
+                                 SELECT o1.attr_2609_
+                                   FROM registry.object_2138_ o1
+                                  WHERE o1.is_deleted <> TRUE
+                                    AND o1.attr_2149_ = 54
+                                    AND o1.attr_2148_ = nado.id
+                              ) THEN 1
+                              ELSE 0
+                    END
+                    )
+          END AS proverka_kom
+        , /*Упаковочная-Проверка*/
+          CASE
+                    WHEN '67' = ANY (
+                    (
+                       SELECT ARRAY_AGG(DISTINCT o1.attr_2149_)
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_2150_ = nado.attr_2632_
+                    )::TEXT[]
+                    ) THEN (
+                    CASE
+                              WHEN (
+                              CASE
+                                        WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                                        ELSE component.attr_1896_
+                              END
+                              ) = (
+                                 SELECT o1.attr_2609_
+                                   FROM registry.object_2138_ o1
+                                  WHERE o1.is_deleted <> TRUE
+                                    AND o1.attr_2149_ = 67
+                                    AND o1.attr_2148_ = nado.id
+                              ) THEN 1
+                              ELSE 0
+                    END
+                    )
+          END AS proverka_upakov
+        , /*Отрезная_Проверка2 (Если кол-во больше, чем планове = синий)*/
+          CASE
+                    WHEN (
+                       SELECT o1.attr_2609_
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2149_ = 39
+                          AND o1.attr_2148_ = nado.id
+                    ) > (
+                    CASE
+                              WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                              ELSE component.attr_1896_
+                    END
+                    ) THEN 'blue'
+          END AS proverka2_otrez
+        , /*Токарная1-Проверка2*/
+          CASE
+                    WHEN (
+                       SELECT o1.attr_2609_
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2149_ = 46
+                          AND o1.attr_2148_ = nado.id
+                    ) > (
+                    CASE
+                              WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                              ELSE component.attr_1896_
+                    END
+                    ) THEN 'blue'
+          END AS proverka2_tokr1
+        , /*Термическая-Проверка2*/
+          CASE
+                    WHEN (
+                       SELECT o1.attr_2609_
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2149_ = 41
+                          AND o1.attr_2148_ = nado.id
+                    ) > (
+                    CASE
+                              WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                              ELSE component.attr_1896_
+                    END
+                    ) THEN 'blue'
+          END AS proverka2_term
+        , /*Токарная-Проверка2*/
+          CASE
+                    WHEN (
+                       SELECT o1.attr_2609_
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2149_ = 40
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_3208_ = (
+                                 SELECT MIN(o2.attr_3208_)
+                                   FROM registry.object_2138_ o2
+                                  WHERE o2.is_deleted <> TRUE
+                                    AND o2.attr_2149_ = 40
+                                    AND o2.attr_2148_ = nado.id
+                              )
+                    ) > (
+                    CASE
+                              WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                              ELSE component.attr_1896_
+                    END
+                    ) THEN 'blue'
+          END AS proverka2_tokr
+        , /*Фрезерная-Проверка2*/
+          CASE
+                    WHEN (
+                       SELECT o1.attr_2609_
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2149_ = 42
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_3208_ = (
+                                 SELECT MIN(o2.attr_3208_)
+                                   FROM registry.object_2138_ o2
+                                  WHERE o2.is_deleted <> TRUE
+                                    AND o2.attr_2149_ = 42
+                                    AND o2.attr_2148_ = nado.id
+                              )
+                    ) > (
+                    CASE
+                              WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                              ELSE component.attr_1896_
+                    END
+                    ) THEN 'blue'
+          END AS proverka2_frezer
+        , /*Расточная-Проверка2*/
+          CASE
+                    WHEN (
+                       SELECT o1.attr_2609_
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2149_ = 43
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_3208_ = (
+                                 SELECT MIN(o2.attr_3208_)
+                                   FROM registry.object_2138_ o2
+                                  WHERE o2.is_deleted <> TRUE
+                                    AND o2.attr_2149_ = 43
+                                    AND o2.attr_2148_ = nado.id
+                              )
+                    ) > (
+                    CASE
+                              WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                              ELSE component.attr_1896_
+                    END
+                    ) THEN 'blue'
+          END AS proverka2_rast
+        , /*Долбежная-Проверка2*/
+          CASE
+                    WHEN (
+                       SELECT o1.attr_2609_
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2149_ = 45
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_3208_ = (
+                                 SELECT MIN(o2.attr_3208_)
+                                   FROM registry.object_2138_ o2
+                                  WHERE o2.is_deleted <> TRUE
+                                    AND o2.attr_2149_ = 45
+                                    AND o2.attr_2148_ = nado.id
+                              )
+                    ) > (
+                    CASE
+                              WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                              ELSE component.attr_1896_
+                    END
+                    ) THEN 'blue'
+          END AS proverka2_dolb
+        , /*Шлифовальная-Проверка2*/
+          CASE
+                    WHEN (
+                       SELECT o1.attr_2609_
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2149_ = 51
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_3208_ = (
+                                 SELECT MIN(o2.attr_3208_)
+                                   FROM registry.object_2138_ o2
+                                  WHERE o2.is_deleted <> TRUE
+                                    AND o2.attr_2149_ = 51
+                                    AND o2.attr_2148_ = nado.id
+                              )
+                    ) > (
+                    CASE
+                              WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                              ELSE component.attr_1896_
+                    END
+                    ) THEN 'blue'
+          END AS proverka2_shlif
+        , /*Сварочная-Проверка2*/
+          CASE
+                    WHEN (
+                       SELECT o1.attr_2609_
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2149_ = 49
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_3208_ = (
+                                 SELECT MIN(o2.attr_3208_)
+                                   FROM registry.object_2138_ o2
+                                  WHERE o2.is_deleted <> TRUE
+                                    AND o2.attr_2149_ = 49
+                                    AND o2.attr_2148_ = nado.id
+                              )
+                    ) > (
+                    CASE
+                              WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                              ELSE component.attr_1896_
+                    END
+                    ) THEN 'blue'
+          END AS proverka2_svar
+        , /*Слесарная-Проверка2*/
+          CASE
+                    WHEN (
+                       SELECT o1.attr_2609_
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2149_ = 44
+                          AND o1.attr_2148_ = nado.id
+                          AND o1.attr_3208_ = (
+                                 SELECT MIN(o2.attr_3208_)
+                                   FROM registry.object_2138_ o2
+                                  WHERE o2.is_deleted <> TRUE
+                                    AND o2.attr_2149_ = 44
+                                    AND o2.attr_2148_ = nado.id
+                              )
+                    ) > (
+                    CASE
+                              WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                              ELSE component.attr_1896_
+                    END
+                    ) THEN 'blue'
+          END AS proverka2_sles
+        , /*Притирочная-Проверка2*/
+          CASE
+                    WHEN (
+                       SELECT o1.attr_2609_
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2149_ = 63
+                          AND o1.attr_2148_ = nado.id
+                    ) > (
+                    CASE
+                              WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                              ELSE component.attr_1896_
+                    END
+                    ) THEN 'blue'
+          END AS proverka2_pritir
+        , /*Опрессовочная-Проверка2*/
+          CASE
+                    WHEN (
+                       SELECT o1.attr_2609_
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2149_ = 56
+                          AND o1.attr_2148_ = nado.id
+                    ) > (
+                    CASE
+                              WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                              ELSE component.attr_1896_
+                    END
+                    ) THEN 'blue'
+          END AS proverka2_opress
+        , /*Слесарно-сборочная-Проверка2*/
+          CASE
+                    WHEN (
+                       SELECT o1.attr_2609_
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2149_ = 55
+                          AND o1.attr_2148_ = nado.id
+                    ) > (
+                    CASE
+                              WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                              ELSE component.attr_1896_
+                    END
+                    ) THEN 'blue'
+          END AS proverka2_sles_sbor
+        , /*Токарная ЧПУ-Проверка2*/
+          CASE
+                    WHEN (
+                       SELECT o1.attr_2609_
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2149_ = 33
+                          AND o1.attr_2148_ = nado.id
+                    ) > (
+                    CASE
+                              WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                              ELSE component.attr_1896_
+                    END
+                    ) THEN 'blue'
+          END AS proverka2_tokr_chpu
+        , /*Расточная ЧПУ-Проверка2*/
+          CASE
+                    WHEN (
+                       SELECT o1.attr_2609_
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2149_ = 59
+                          AND o1.attr_2148_ = nado.id
+                    ) > (
+                    CASE
+                              WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                              ELSE component.attr_1896_
+                    END
+                    ) THEN 'blue'
+          END AS proverka2_rast_chpu
+        , /*Фрезерная ЧПУ-Проверка2*/
+          CASE
+                    WHEN (
+                       SELECT o1.attr_2609_
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2149_ = 60
+                          AND o1.attr_2148_ = nado.id
+                    ) > (
+                    CASE
+                              WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                              ELSE component.attr_1896_
+                    END
+                    ) THEN 'blue'
+          END AS proverka2_frezer_chpu
+        , /*Маршрутная-Проверка2*/
+          CASE
+                    WHEN (
+                       SELECT o1.attr_2609_
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2149_ = 53
+                          AND o1.attr_2148_ = nado.id
+                    ) > (
+                    CASE
+                              WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                              ELSE component.attr_1896_
+                    END
+                    ) THEN 'blue'
+          END AS proverka2_marsh
+        , /*Комплектовочная-Проверка2*/
+          CASE
+                    WHEN (
+                       SELECT o1.attr_2609_
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2149_ = 54
+                          AND o1.attr_2148_ = nado.id
+                    ) > (
+                    CASE
+                              WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                              ELSE component.attr_1896_
+                    END
+                    ) THEN 'blue'
+          END AS proverka2_kom
+        , /*Упаковочная-Проверка2*/
+          CASE
+                    WHEN (
+                       SELECT o1.attr_2609_
+                         FROM registry.object_2138_ o1
+                        WHERE o1.is_deleted <> TRUE
+                          AND o1.attr_2149_ = 67
+                          AND o1.attr_2148_ = nado.id
+                    ) > (
+                    CASE
+                              WHEN component.attr_1411_ IN (1, 2, 8, 9) THEN project.attr_1895_
+                              ELSE component.attr_1896_
+                    END
+                    ) THEN 'blue'
+          END AS proverka2_upakov
+     FROM registry.object_606_ o
+LEFT JOIN registry.object_1227_ project ON project.attr_1923_ = o.id
+      AND project.is_deleted <> TRUE
+LEFT JOIN registry.object_1409_ component ON component.attr_1423_ = project.id
+      AND component.is_deleted <> TRUE
+      AND component.attr_1896_ <> -0
+          /*Ссылка на ПВ*/
+LEFT JOIN registry.object_301_ orn ON component.attr_1458_ = orn.id
+      AND orn.is_deleted <> TRUE
+
+
+
+
+LEFT JOIN registry.object_2094_ comp_task ON comp_task.attr_2100_ = component.ID 
+AND comp_task.is_deleted IS FALSE 
+
+
+LEFT JOIN registry.object_2137_ nado ON nado.attr_2632_ = orn.id
+      AND nado.is_deleted <> TRUE
+      AND component.attr_1414_::INTEGER = ANY (nado.attr_4033_)
+      AND nado.attr_3193_ =comp_task.attr_3175_
+
+
+    WHERE o.is_deleted <> TRUE
+      AND o.id = '{superid}'
+      AND component.attr_1896_ <> 0
