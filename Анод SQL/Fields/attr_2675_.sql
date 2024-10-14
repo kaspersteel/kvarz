@@ -14,15 +14,12 @@ LEFT JOIN (
                     comp_task.attr_2104_ AS mat,
                     comp_task.attr_2105_ AS sort,
                     comp_task.attr_2106_ AS tr,
-                    SUM(comp_task.attr_2103_)
+                    SUM(comp_task.attr_2103_),
                     /*массив id заказов*/
-,
-                    ARRAY_AGG(DISTINCT (ord_to_man.ID)) AS mas_ord
+                    ARRAY_AGG(DISTINCT (ord_to_man.ID)) AS mas_ord,
                     /*массив id изделий в справочнике номенклатуры*/
-,
-                    ARRAY_AGG(DISTINCT (comp_ord.attr_1482_)) AS mas_izd_nom
+                    ARRAY_AGG(DISTINCT (comp_ord.attr_1482_)) AS mas_izd_nom,
                     /*массив id изделий - головных компонентов*/
-,
                     ARRAY_AGG(DISTINCT (comp_task.attr_2101_)) AS mas_izd_ord
                FROM registry.object_2094_ comp_task /*компоненты заданий в работу*/
                     /*Заказ в производство*/
@@ -57,9 +54,9 @@ LEFT JOIN registry.object_2093_ task ON o.attr_2226_ = task.id
       AND task.is_deleted IS FALSE
     WHERE o.is_deleted IS FALSE -->>      
  GROUP BY -->>
-          massive_ord.mas_ord
-        , comp_task.ID
-        , massive_ord.mas_izd_nom
-        , massive_ord.mas_izd_ord
-        , massive_ord.task_work_pos
-        , task.id
+          massive_ord.mas_ord,
+          comp_task.ID,
+          massive_ord.mas_izd_nom,
+          massive_ord.mas_izd_ord,
+          massive_ord.task_work_pos,
+          task.id

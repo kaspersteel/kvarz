@@ -44,7 +44,7 @@ WITH DATA AS
                                                    WHEN comp.attr_1452_ = 16 THEN comp_structure.attr_3967_
                                                    ELSE tech_card.attr_2381_
                                                END = sprav_mat. ID
-   LEFT JOIN registry.object_400_ sprav_sort ON tech_card.attr_1876_ = sprav_sort. ID
+   LEFT JOIN registry.object_400_ sprav_sort ON tech_card.attr_1876_ = sprav_sort.ID
    LEFT JOIN registry.object_400_ sprav_tr ON tech_card.attr_1877_ = sprav_tr.ID
    WHERE o.is_deleted <> TRUE
      AND o.ID = '{id_proj}')
