@@ -138,3 +138,4 @@
           END
           ) AS time_proc
      FROM base
+    WHERE base.array_time IS NOT NULL
