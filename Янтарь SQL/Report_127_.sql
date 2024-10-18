@@ -1,37 +1,40 @@
- WITH base AS (
+     WITH base AS (
              SELECT fio_pac.attr_1985_ AS fio,
-                    PROCEDURES.attr_695_ AS name_proc,
-                    plan.id AS id_proc,
-                    nom_cat.attr_444_ AS nom,
                     o.attr_4005_ AS hist_id,
+                    nom_cat.attr_444_ AS nom,
                     o.attr_4032_ AS date_rasp,
-                    /*создается поле с массивами временных отрезков*/
-                    CASE plan.id
-                              WHEN o.attr_4008_ THEN o.attr_4007_
-                              WHEN o.attr_4010_ THEN o.attr_4009_
-                              WHEN o.attr_4012_ THEN o.attr_4011_
-                              WHEN o.attr_4014_ THEN o.attr_4013_
-                              WHEN o.attr_4016_ THEN o.attr_4015_
-                              WHEN o.attr_4018_ THEN o.attr_4017_
-                              WHEN o.attr_4020_ THEN o.attr_4019_
-                              WHEN o.attr_4022_ THEN o.attr_4021_
-                              WHEN o.attr_4024_ THEN o.attr_4023_
-                              WHEN o.attr_4026_ THEN o.attr_4025_
-                              WHEN o.attr_4028_ THEN o.attr_4027_
-                              WHEN o.attr_4163_ THEN o.attr_4162_
-                              WHEN o.attr_4166_ THEN o.attr_4165_
-                              WHEN o.attr_4169_ THEN o.attr_4168_
-                              WHEN o.attr_4252_ THEN o.attr_4251_
-                              WHEN o.attr_4444_ THEN o.attr_4443_
-                              WHEN o.attr_4447_ THEN o.attr_4446_
-                              WHEN o.attr_4456_ THEN o.attr_4455_
-                              WHEN o.attr_4459_ THEN o.attr_4458_
-                    END AS array_time
+                    plan.attr_784_ AS id_proc,
+                    proc.attr_695_ AS name_proc,
+                    p.*
                FROM registry.object_4000_ o
-          LEFT JOIN registry.object_783_ plan ON o.attr_4005_ = plan.attr_827_
+                    /*строится таблица соответствия id процедуры в плане и её времени по строке расписания*/
+          LEFT JOIN LATERAL (
+                       VALUES (o.attr_4008_, o.attr_4007_),
+                              (o.attr_4010_, o.attr_4009_),
+                              (o.attr_4012_, o.attr_4011_),
+                              (o.attr_4014_, o.attr_4013_),
+                              (o.attr_4016_, o.attr_4015_),
+                              (o.attr_4018_, o.attr_4017_),
+                              (o.attr_4020_, o.attr_4019_),
+                              (o.attr_4022_, o.attr_4021_),
+                              (o.attr_4024_, o.attr_4023_),
+                              (o.attr_4026_, o.attr_4025_),
+                              (o.attr_4028_, o.attr_4027_),
+                              (o.attr_4030_, o.attr_4029_),
+                              (o.attr_4163_, o.attr_4162_),
+                              (o.attr_4166_, o.attr_4165_),
+                              (o.attr_4169_, o.attr_4168_),
+                              (o.attr_4252_, o.attr_4251_),
+                              (o.attr_4444_, o.attr_4443_),
+                              (o.attr_4447_, o.attr_4446_),
+                              (o.attr_4456_, o.attr_4455_),
+                              (o.attr_4459_, o.attr_4458_)
+                    ) AS p ("proc_in_plan", "array_time") ON p.array_time IS NOT NULL
+                AND p.array_time != ARRAY[1]
+          LEFT JOIN registry.object_783_ plan ON plan.id = p.proc_in_plan
                 AND NOT plan.is_deleted
-          LEFT JOIN registry.object_694_ PROCEDURES ON plan.attr_784_ = PROCEDURES.id
-                AND NOT PROCEDURES.is_deleted
+          LEFT JOIN registry.object_694_ proc ON plan.attr_784_ = proc.id
+                AND NOT proc.is_deleted
           LEFT JOIN registry.object_45_ fio_pac ON o.attr_4004_ = fio_pac.id
                 AND NOT fio_pac.is_deleted
           LEFT JOIN registry.object_127_ nom_cat ON o.attr_4006_ = nom_cat.id
