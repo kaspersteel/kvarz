@@ -3,7 +3,7 @@ copy_ids INT [];
 do_user INT = ( PARAMETERS ->> 'user_id' ) :: INT;
 responsible INT = ( PARAMETERS ->> 'responsible' ) :: INT;
 employee INT = ( PARAMETERS ->> 'employee' ) :: INT;
-give_quant INT = ( PARAMETERS ->> 'give_quant' ) :: INT;
+quant INT = ( PARAMETERS ->> 'quant' ) :: INT;
 instrument RECORD;
 BEGIN
 	SELECT
@@ -39,7 +39,7 @@ BEGIN
 			UPDATE registry.object_2936_ 
 			SET attr_4144_ = employee,
 			attr_4163_ = responsible,
-			attr_4145_ = give_quant,
+			attr_4145_ = quant,
 			attr_4160_ = TRUE,
 			attr_2942_ = CURRENT_DATE,
 			operation_user_id = do_user 
@@ -51,7 +51,7 @@ BEGIN
 				IF
 					instrument.prev_rem IS NOT NULL THEN
 						UPDATE registry.object_2936_ 
-						SET attr_4145_ = COALESCE (attr_4145_, 0) + give_quant,
+						SET attr_4145_ = COALESCE (attr_4145_, 0) + quant,
 						attr_4163_ = responsible,
 						attr_4158_ = TRUE,
 						attr_2942_ = CURRENT_DATE,
@@ -62,7 +62,7 @@ BEGIN
 					UPDATE registry.object_2936_ 
 					SET attr_4144_ = employee,
 					attr_4163_ = responsible,
-					attr_4145_ = give_quant,
+					attr_4145_ = quant,
 					attr_4158_ = TRUE,
 					attr_2942_ = CURRENT_DATE,
 					operation_user_id = do_user 
@@ -73,7 +73,7 @@ BEGIN
 				ELSE 
 				END CASE;
 			UPDATE registry.object_2936_ 
-			SET attr_4145_ = attr_4145_ - give_quant,
+			SET attr_4145_ = attr_4145_ - quant,
 			attr_2942_ = CURRENT_DATE,
 			operation_user_id = do_user 
 			WHERE
