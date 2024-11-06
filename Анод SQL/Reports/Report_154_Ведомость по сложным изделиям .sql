@@ -39,23 +39,22 @@
           o.attr_582_ AS NAME,
           code.attr_1525_ AS kod,
           o.attr_4079_ AS COUNT,
-/*nomen.attr_363_ as type_nom,*/
 
 CASE
           WHEN nomen.attr_363_ IN (84, 85, 86, 87, 1, 10) THEN 1
           WHEN nomen.attr_363_ = 2 THEN 2
           WHEN nomen.attr_363_ = 3
                 AND nomen.attr_376_ LIKE SPLIT_PART(head.attr_376_, ' ', 1) || '%' THEN 3
-                    WHEN nomen.attr_363_ = 3
+          WHEN nomen.attr_363_ = 3
                 AND nomen.attr_376_ NOT LIKE SPLIT_PART(head.attr_376_, ' ', 1) || '%' THEN 4
-                    WHEN nomen.attr_363_ = 6
+          WHEN nomen.attr_363_ = 6
                 AND NOT nomen.attr_4157_ THEN 5
-                    WHEN nomen.attr_363_ = 6
+          WHEN nomen.attr_363_ = 6
                 AND nomen.attr_4157_ THEN 6
-                    WHEN nomen.attr_363_ IN (7, 88) THEN 7
-                    WHEN nomen.attr_363_ = 82 THEN 8
-                    WHEN nomen.attr_363_ IN (8, 9, 11, 83) THEN 9
-                    ELSE 10
+          WHEN nomen.attr_363_ IN (7, 88) THEN 7
+          WHEN nomen.attr_363_ = 82 THEN 8
+          WHEN nomen.attr_363_ IN (8, 9, 11, 83) THEN 9
+          ELSE 10
 END type_nom,
 CASE
           WHEN nomen.attr_363_ IN (84, 85, 86, 87, 1, 10) THEN 'изд'
@@ -63,12 +62,12 @@ CASE
           WHEN nomen.attr_363_ = 3 THEN 'дет'
           WHEN nomen.attr_363_ = 6
                 AND NOT nomen.attr_4157_ THEN 'ГД'
-                    WHEN nomen.attr_363_ = 6
+          WHEN nomen.attr_363_ = 6
                 AND nomen.attr_4157_ THEN 'СтД'
-                    WHEN nomen.attr_363_ IN (7, 88) THEN 'прч'
-                    WHEN nomen.attr_363_ = 82 THEN 'МвС'
-                    WHEN nomen.attr_363_ IN (8, 9, 11, 83) THEN 'К'
-                    ELSE 'др'
+          WHEN nomen.attr_363_ IN (7, 88) THEN 'прч'
+          WHEN nomen.attr_363_ = 82 THEN 'МвС'
+          WHEN nomen.attr_363_ IN (8, 9, 11, 83) THEN 'К'
+          ELSE 'др'
 END name_type_nom,
 CASE
           WHEN o.attr_1456_ IN (3, 8, 9.10) THEN 4
