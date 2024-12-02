@@ -180,7 +180,7 @@
                                                   WHEN comp_position_orders.attr_2042_ = 2
                                                         AND comp_position_orders.attr_3934_ IS FALSE
                                                         AND poz.attr_3231_ IS TRUE THEN CASE
-                                                                      WHEN mat.attr_1354_ = 6 THEN work_task_comp.attr_3419_
+                                                                      WHEN fact_mat.attr_1354_ = 6 THEN work_task_comp.attr_3419_
                                                                       ELSE work_task_comp.attr_2108_
                                                             END
                                                             ELSE 0
