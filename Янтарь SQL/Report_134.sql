@@ -235,7 +235,7 @@
 					SELECT
 						timeslots.finish 
 					FROM
-						UNNEST ( base.array_ranges [1], base.array_ranges [2] ) AS timeslots ( START, finish )) THEN
+						UNNEST ( base.array_ranges [1][1:], base.array_ranges [2:][1:] ) AS timeslots ( START, finish )) THEN
 							timeslots.START 
 						END AS c1,
 					CASE
@@ -244,14 +244,14 @@
 							SELECT
 								timeslots.START 
 							FROM
-								UNNEST ( base.array_ranges [1], base.array_ranges [2] ) AS timeslots ( START, finish )) THEN
+									UNNEST ( base.array_ranges [1][1:], base.array_ranges [2:][1:] ) AS timeslots ( START, finish )) THEN
 									timeslots.finish 
 								END AS c2 
 							FROM
-								UNNEST ( base.array_ranges [1], base.array_ranges [2] ) AS timeslots ( START, finish ) 
+									UNNEST ( base.array_ranges [1][1:], base.array_ranges [2:][1:] ) AS timeslots ( START, finish )
 							) x 
 						) y 
-					) 
+					)
 				FROM
 					base 
 			WHERE
