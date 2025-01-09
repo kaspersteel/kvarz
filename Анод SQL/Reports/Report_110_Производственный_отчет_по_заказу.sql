@@ -25,7 +25,7 @@
                               WHEN (
                                  SELECT nomen.attr_2869_
                                    FROM registry.object_301_ nomen
-                                  WHERE nomen.is_deleted IS FALSE
+                                  WHERE nomen.is_deleted <> TRUE
                                     AND nomen.id = accepted_list.attr_2632_
                               ) IS TRUE THEN SUM(accept.sum_another_time)
                               ELSE 0
@@ -108,7 +108,7 @@
                               )
                     END AS name_reg_mat,
                     CASE
-                              WHEN comp_position_orders.attr_1411_ IN (1, 2, 6, 8, 9) THEN units_nomenclature.attr_390_
+                              WHEN comp_position_orders.attr_1411_ NOT IN (3, 6) THEN units_nomenclature.attr_390_
                               WHEN comp_position_orders.attr_1411_ = 82 THEN units__mat.attr_390_
                               ELSE CASE
                                         WHEN units_reg_tr.attr_390_ IS NULL THEN units_reg_mat.attr_390_
@@ -117,7 +117,7 @@
                     END AS name_units_reg_mat,
                     /*если сборочная единица или стандартная деталь, то выбираем между исходным и новым количеством, если деталь - берем массу детали из техкарты НЕ*/
                     CASE
-                              WHEN comp_position_orders.attr_1411_ IN (1, 2, 6, 8, 9) THEN COALESCE(
+                              WHEN comp_position_orders.attr_1411_ NOT IN (3, 6) THEN COALESCE(
                               comp_position_orders.attr_1412_,
                               comp_position_orders.attr_2433_
                               )
@@ -126,7 +126,7 @@
                     END AS reg_amount,
                     /*если деталь - считаем массу заготовки, в остальных случаях берем общее количество из заказа*/
                     CASE
-                              WHEN comp_position_orders.attr_1411_ IN (1, 2, 6, 8, 9) THEN comp_position_orders.attr_1896_
+                              WHEN comp_position_orders.attr_1411_ NOT IN (3, 6) THEN comp_position_orders.attr_1896_
                               ELSE CASE
                                         WHEN nom_tech_card.attr_2554_ IS TRUE THEN (
                                         nom_tech_card.attr_1908_ * CEILING(
@@ -150,7 +150,7 @@
                               )
                     END AS name_fact_mat,
                     CASE
-                              WHEN comp_position_orders.attr_1411_ IN (1, 2, 6, 8, 9)
+                              WHEN comp_position_orders.attr_1411_ NOT IN (3, 6)
                                     AND comp_position_orders.attr_2042_ = 2 THEN units_nomenclature.attr_390_
                                         ELSE (
                                         CASE
@@ -160,7 +160,7 @@
                     END AS name_units_fact_mat,
                     /*если компонент - не деталь, то берем единицу(?), если деталь - берем массу детали из карты, пошедшей в производство */
                     CASE
-                              WHEN comp_position_orders.attr_1411_ IN (1, 2, 6, 8, 9)
+                              WHEN comp_position_orders.attr_1411_ NOT IN (3, 6)
                                     AND comp_position_orders.attr_2042_ = 2 THEN 1
                                         ELSE (
                                         CASE
@@ -173,13 +173,16 @@
                     END AS fact_amount,
                     /*если компонент - не деталь, то берем его общее кол-во из заказа, если деталь - берем общую массу заготовок из компонента*/
                     CASE
-                              WHEN comp_position_orders.attr_1411_ IN (1, 2, 6, 8, 9)
+                              WHEN comp_position_orders.attr_1411_ NOT IN (3, 6)
                                     AND comp_position_orders.attr_2042_ = 2 THEN work_task_comp.attr_3419_
                                         ELSE (
                                         CASE
                                                   WHEN comp_position_orders.attr_2042_ = 2
                                                         AND comp_position_orders.attr_3934_ IS FALSE
-                                                        AND poz.attr_3231_ IS TRUE THEN work_task_comp.attr_2108_
+                                                        AND poz.attr_3231_ IS TRUE THEN CASE
+                                                                      WHEN fact_mat.attr_1354_ = 6 THEN work_task_comp.attr_3419_
+                                                                      ELSE work_task_comp.attr_2108_
+                                                            END
                                                             ELSE 0
                                         END
                                         )
@@ -198,7 +201,7 @@
                     tech_op_list.another_time * comp_position_orders.attr_1896_ + (
                        SELECT SUM(task.attr_4122_)
                          FROM registry.object_329_ task
-                        WHERE task.is_deleted IS FALSE
+                        WHERE task.is_deleted <> TRUE
                           AND task.attr_4089_ = comp_position_orders.id
                     ),
                     2
@@ -224,7 +227,7 @@
           LEFT JOIN registry.object_389_ units_nomenclature ON nom_units.attr_379_ = units_nomenclature.id
           LEFT JOIN registry.object_519_ nom_tech_card ON comp_position_orders.attr_1458_ = nom_tech_card.attr_520_
                 AND nom_tech_card.is_deleted IS FALSE
-                AND nom_tech_card.attr_2908_ IS TRUE
+                AND nom_tech_card.attr_2908_ = TRUE
           LEFT JOIN registry.object_527_ tp_tech_card ON tp_tech_card.attr_538_ = nom_tech_card.id
                 AND tp_tech_card.is_deleted IS FALSE
           LEFT JOIN registry.object_400_ reg_mat ON nom_tech_card.attr_2381_ = reg_mat.id
@@ -241,7 +244,7 @@
           LEFT JOIN registry.object_2094_ work_task_comp ON work_task_comp.attr_2100_ = comp_position_orders.id
                 AND work_task_comp.is_deleted IS FALSE
           LEFT JOIN registry.object_3168_ poz ON poz.id = work_task_comp.attr_3175_
-                AND poz.is_deleted IS FALSE
+                AND poz.is_deleted <> TRUE
                     /*извлекаем из таблицы производственных данных записи по информации из ПВ. 
                     Для собираемых компонентов по наличию их в массиве производимых компонентов. 
                     Для несобираемых - по соответствию номенклатуры, узлу в позиции заказа и*/
@@ -284,7 +287,7 @@
                     tech_op_list.id_accepted_list,
                     nom_units.id,
                     poz.attr_3231_,
-                    mat.attr_401_,
+                    mat.id,
                     units__mat.attr_390_,
                     comp.attr_3926_,
                     mat.attr_2976_,
