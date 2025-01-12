@@ -288,9 +288,9 @@ LEFT JOIN registry.object_757_ holidays ON holidays.attr_789_ = days AND NOT hol
 ),
 dow_row AS (
 SELECT 
-T.*, dow.*
+T_row.*, dow.*
 FROM dow
-LEFT JOIN (SELECT * FROM T LIMIT 1) ON t.id_sotr is null
+LEFT JOIN (SELECT * FROM T WHERE id_sotr is null LIMIT 1) T_row ON true
 )
 SELECT * 
 FROM dow_row
