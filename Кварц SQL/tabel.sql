@@ -290,8 +290,8 @@ dow_row AS (
 SELECT 
 T.*, dow.*
 FROM dow
-LEFT JOIN T ON t.id_sotr is null
-LIMIT 1)
+LEFT JOIN (SELECT * FROM T LIMIT 1) ON t.id_sotr is null
+)
 SELECT * 
 FROM dow_row
 UNION ALL
