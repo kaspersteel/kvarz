@@ -1,23 +1,22 @@
 WITH 
-/*таблица переменных*/
-vars AS ( SELECT 
-     {division}::int as "division",
-     {employee}::int as "employee",
-     {period}::date as "period",
-     EXTRACT(MONTH FROM {period}::date)::int as "month_tab",
-     EXTRACT(YEAR FROM {period}::date)::int as "year_tab",
-     date_trunc('month', {period}::date) as fdm_tab,
-     {period}::date + INTERVAL '1 MONTH - 1 day' as ldm_tab,
-     'RGB(0 255 0 / 0)' AS "c_notwork",
-     'RGB(60 179 113 / 0.25)' AS "c_work",
-     'RGB(220 20 60 / 0.25)' AS "c_alert",
-     'RGB(255 255 0 / 0.25)' AS "c_vacation",
-     'RGB(255 165 0 / 0.25)' AS "c_absence",
-     'RGB(105 105 105 / 0.25)' AS "c_holiday" --DimGrey
-     /*'RGB(255 238 208 / 1)' AS "c_holiday" --цвет шапки*/    
-     /*'RGB(65 105 225 / 0.25)' AS "c_holiday" --RoyalBlue*/      
+vars AS (SELECT 
+null::int as "division",
+null::int as "employee",
+'01-01-2025'::date as "period",
+EXTRACT(MONTH FROM '01-01-2025'::date)::int as "month_tab",
+EXTRACT(YEAR FROM '01-01-2025'::date)::int as "year_tab",
+date_trunc('month', '01-01-2025'::date) as "fdm_tab",
+'01-01-2025'::date + INTERVAL '1 MONTH - 1 day' as "ldm_tab",
+'RGB(0 255 0 / 0)' AS "c_notwork",
+'RGB(60 179 113 / 0.25)' AS "c_work",
+'RGB(220 20 60 / 0.25)' AS "c_alert",
+'RGB(255 255 0 / 0.25)' AS "c_vacation",
+'RGB(255 165 0 / 0.25)' AS "c_absence",
+'RGB(105 105 105 / 0.25)' AS "c_holiday" --DimGrey
+/*'RGB(255 238 208 / 1)' AS "c_holiday" --цвет шапки*/    
+/*'RGB(65 105 225 / 0.25)' AS "c_holiday" --RoyalBlue*/ 
 ), 
-/*базовая таблицы табеля с суммами часов*/
+
 base_tab AS ( SELECT 
           o.id AS "id_sotr",
           o.attr_424_ AS "fio_sotr",
@@ -36,7 +35,11 @@ base_tab AS ( SELECT
           gr_otp.id AS "id_gr_otp",
           absence.attr_1504_ AS "type_absence",
           SUM (tabel.attr_1780_) OVER (PARTITION BY o.id) as "sum_plan",
-          SUM (FLOOR (EXTRACT(HOUR FROM asyst.attr_1789_+ interval '30 minutes')::int)) OVER (PARTITION BY o.id) as "sum_fact"
+          SUM (FLOOR (EXTRACT(HOUR FROM asyst.attr_1789_+ interval '30 minutes')::int)) OVER (PARTITION BY o.id) as "sum_fact",
+          SUM (tabel.attr_1780_) OVER (PARTITION BY brigade.id) as "sum_br_plan",
+          SUM (FLOOR (EXTRACT(HOUR FROM asyst.attr_1789_+ interval '30 minutes')::int)) OVER (PARTITION BY brigade.id) as "sum_br_fact",		
+					SUM (tabel.attr_1780_) OVER (PARTITION BY division.id) as "sum_div_plan",
+          SUM (FLOOR (EXTRACT(HOUR FROM asyst.attr_1789_+ interval '30 minutes')::int)) OVER (PARTITION BY division.id) as "sum_div_fact"
      FROM registry.object_419_ o
 LEFT JOIN registry.object_1774_ tabel ON o.id = tabel.attr_1775_
       AND NOT tabel.is_deleted
@@ -79,7 +82,30 @@ T AS (select
 223 as "card_tab",
 419 as "object_sotr",
 222 as "card_sotr",
-base_tab.id_sotr, base_tab.fio_sotr, base_tab.chiefs_org_str, base_tab.id_div, base_tab.name_div, base_tab.name_post, base_tab.name_brigade,
+base_tab.id_sotr, 
+CASE 
+WHEN base_tab.id_sotr is not NULL THEN base_tab.fio_sotr 
+WHEN base_tab.name_brigade is not NULL THEN '> Итого '||base_tab.name_brigade 
+ELSE '> Итого '||base_tab.name_div 
+END as "fio_sotr", 
+base_tab.chiefs_org_str, 
+base_tab.id_div,
+base_tab.name_div, 
+base_tab.name_post, 
+base_tab.name_brigade,
+
+CASE 
+WHEN base_tab.id_sotr is not NULL THEN MAX (base_tab.sum_plan) 
+WHEN base_tab.name_brigade is not NULL THEN MAX (base_tab.sum_br_plan) 
+ELSE MAX (base_tab.sum_div_plan)
+END as sum_plan2,
+
+CASE 
+WHEN base_tab.id_sotr is not NULL THEN MAX (base_tab.sum_fact)
+WHEN base_tab.name_brigade is not NULL THEN MAX (base_tab.sum_br_fact)
+ELSE MAX (base_tab.sum_div_fact)
+END as sum_fact2,
+
 MAX (CASE WHEN base_tab.day_tab = 1 THEN base_tab.h_tab END) as h_plan1,
 MAX (CASE WHEN base_tab.day_tab = 2 THEN base_tab.h_tab END) as h_plan2,
 MAX (CASE WHEN base_tab.day_tab = 3 THEN base_tab.h_tab END) as h_plan3,
@@ -238,98 +264,20 @@ MAX (CASE WHEN base_tab.day_tab = 27 THEN base_tab.id_tab END) as id_tab27,
 MAX (CASE WHEN base_tab.day_tab = 28 THEN base_tab.id_tab END) as id_tab28,
 MAX (CASE WHEN base_tab.day_tab = 29 THEN base_tab.id_tab END) as id_tab29,
 MAX (CASE WHEN base_tab.day_tab = 30 THEN base_tab.id_tab END) as id_tab30,
-MAX (CASE WHEN base_tab.day_tab = 31 THEN base_tab.id_tab END) as id_tab31,
-
-MAX (base_tab.sum_plan) as sum_plan,
-MAX (base_tab.sum_fact) as sum_fact
+MAX (CASE WHEN base_tab.day_tab = 31 THEN base_tab.id_tab END) as id_tab31
 
 FROM base_tab
 
 GROUP BY 
-base_tab.id_sotr, base_tab.fio_sotr, base_tab.chiefs_org_str, base_tab.id_div, base_tab.name_div, base_tab.name_post, base_tab.name_brigade
+GROUPING SETS (
+(base_tab.id_sotr, base_tab.fio_sotr, base_tab.chiefs_org_str, base_tab.id_div, base_tab.name_div, base_tab.name_post, base_tab.name_brigade)
+, (base_tab.name_brigade, base_tab.name_div)
+)
 
 ORDER BY
-base_tab.name_brigade, base_tab.fio_sotr
-),
-/*строка дней недели*/
-dow AS (
-SELECT 
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 1 THEN TO_CHAR(days, 'TMDy') END) as mark1,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 2 THEN TO_CHAR(days, 'TMDy') END) as mark2,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 3 THEN TO_CHAR(days, 'TMDy') END) as mark3,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 4 THEN TO_CHAR(days, 'TMDy') END) as mark4,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 5 THEN TO_CHAR(days, 'TMDy') END) as mark5,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 6 THEN TO_CHAR(days, 'TMDy') END) as mark6,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 7 THEN TO_CHAR(days, 'TMDy') END) as mark7,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 8 THEN TO_CHAR(days, 'TMDy') END) as mark8,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 9 THEN TO_CHAR(days, 'TMDy') END) as mark9,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 10 THEN TO_CHAR(days, 'TMDy') END) as mark10,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 11 THEN TO_CHAR(days, 'TMDy') END) as mark11,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 12 THEN TO_CHAR(days, 'TMDy') END) as mark12,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 13 THEN TO_CHAR(days, 'TMDy') END) as mark13,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 14 THEN TO_CHAR(days, 'TMDy') END) as mark14,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 15 THEN TO_CHAR(days, 'TMDy') END) as mark15,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 16 THEN TO_CHAR(days, 'TMDy') END) as mark16,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 17 THEN TO_CHAR(days, 'TMDy') END) as mark17,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 18 THEN TO_CHAR(days, 'TMDy') END) as mark18,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 19 THEN TO_CHAR(days, 'TMDy') END) as mark19,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 20 THEN TO_CHAR(days, 'TMDy') END) as mark20,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 21 THEN TO_CHAR(days, 'TMDy') END) as mark21,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 22 THEN TO_CHAR(days, 'TMDy') END) as mark22,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 23 THEN TO_CHAR(days, 'TMDy') END) as mark23,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 24 THEN TO_CHAR(days, 'TMDy') END) as mark24,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 25 THEN TO_CHAR(days, 'TMDy') END) as mark25,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 26 THEN TO_CHAR(days, 'TMDy') END) as mark26,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 27 THEN TO_CHAR(days, 'TMDy') END) as mark27,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 28 THEN TO_CHAR(days, 'TMDy') END) as mark28,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 29 THEN TO_CHAR(days, 'TMDy') END) as mark29,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 30 THEN TO_CHAR(days, 'TMDy') END) as mark30,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 31 THEN TO_CHAR(days, 'TMDy') END) as mark31,
-
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 1 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color1,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 2 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color2,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 3 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color3,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 4 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color4,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 5 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color5,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 6 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color6,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 7 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color7,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 8 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color8,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 9 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color9,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 10 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color10,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 11 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color11,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 12 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color12,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 13 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color13,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 14 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color14,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 15 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color15,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 16 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color16,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 17 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color17,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 18 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color18,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 19 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color19,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 20 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color20,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 21 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color21,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 22 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color22,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 23 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color23,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 24 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color24,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 25 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color25,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 26 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color26,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 27 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color27,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 28 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color28,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 29 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color29,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 30 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color30,
-MAX (CASE WHEN EXTRACT(DAY FROM days) = 31 AND holidays.id is not null THEN (SELECT c_holiday FROM vars) END) as color31
-FROM generate_series((SELECT fdm_tab FROM vars), (SELECT ldm_tab FROM vars), '1 day') days
-LEFT JOIN registry.object_757_ holidays ON holidays.attr_789_ = days AND NOT holidays.is_deleted
-),
-/*строка дней недели c полями, нужными для UNION*/
-dow_row AS (
-SELECT 
-T_row.*, dow.*
-FROM dow
-LEFT JOIN (SELECT * FROM T WHERE id_sotr is null LIMIT 1) T_row ON true
+base_tab.name_div, base_tab.name_brigade, base_tab.fio_sotr
 )
-SELECT * 
-FROM dow_row
-UNION ALL
+
 SELECT T.*,
 CASE T.absence1 WHEN 1 THEN 'О' WHEN 4 THEN 'О' WHEN 5 THEN 'О' WHEN 2 THEN 'А' WHEN 3 THEN 'Б' ELSE CASE WHEN T.otp_plan1 = 1 THEN 'Оп' ELSE CASE WHEN make_date((SELECT year_tab FROM vars), (SELECT month_tab FROM vars), 1) <= CURRENT_DATE THEN T.h_plan1::text ELSE CASE WHEN T.h_plan1 is not null THEN 'Д' ELSE '' END END END END as mark1,
 CASE T.absence2 WHEN 1 THEN 'О' WHEN 4 THEN 'О' WHEN 5 THEN 'О' WHEN 2 THEN 'А' WHEN 3 THEN 'Б' ELSE CASE WHEN T.otp_plan2 = 1 THEN 'Оп' ELSE CASE WHEN make_date((SELECT year_tab FROM vars), (SELECT month_tab FROM vars), 2) <= CURRENT_DATE THEN T.h_plan2::text ELSE CASE WHEN T.h_plan2 is not null THEN 'Д' ELSE '' END END END END as mark2,
@@ -396,3 +344,4 @@ CASE WHEN T.absence30 IN (1, 2, 3, 4, 5) THEN (SELECT c_absence FROM vars) ELSE 
 CASE WHEN T.absence31 IN (1, 2, 3, 4, 5) THEN (SELECT c_absence FROM vars) ELSE CASE WHEN T.otp_plan31 = 1 THEN (SELECT c_vacation FROM vars) ELSE CASE WHEN T.h_plan31 is not null THEN CASE WHEN make_date((SELECT year_tab FROM vars), (SELECT month_tab FROM vars), 31) <= CURRENT_DATE AND T.h_asys31 + interval '30 minutes' < make_time(T.h_plan31, 0, 0) THEN (SELECT c_alert FROM vars) ELSE (SELECT c_work FROM vars) END ELSE (SELECT c_notwork FROM vars) END END END as color31
 
 FROM T
+WHERE T.fio_sotr is not null
