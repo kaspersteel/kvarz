@@ -20,7 +20,11 @@ vars AS ( SELECT
 /*базовая таблица табеля с суммами часов*/
 base_tab AS (
 /*заготовка под строку дней недели*/
-   SELECT 0 AS "id_sotr",
+   SELECT NULL AS "object_tab",
+          NULL AS "card_tab",
+          NULL AS "object_sotr",
+          NULL AS "card_sotr",
+          0 AS "id_sotr",
           NULL AS "fio_sotr",
           NULL AS "chiefs_org_str",
           NULL AS "name_post",
@@ -40,7 +44,11 @@ base_tab AS (
           NULL AS "sum_div_plan",
           NULL AS "sum_div_fact"
 UNION ALL
-   SELECT o.id AS "id_sotr",
+   SELECT 1774 AS "object_tab",
+          223 AS "card_tab",
+          419 AS "object_sotr",
+          222 AS "card_sotr",
+          o.id AS "id_sotr",
           o.attr_424_ AS "fio_sotr",
           o.attr_1762_ AS "chiefs_org_str",
           post.attr_504_ AS "name_post",
@@ -156,10 +164,10 @@ LEFT JOIN registry.object_1502_ absence ON o.id = absence.attr_1503_
 ),
 /*табель*/
 T AS (select
-1774 as "object_tab",
-223 as "card_tab",
-419 as "object_sotr",
-222 as "card_sotr",
+base_tab.object_tab,
+base_tab.card_tab,
+base_tab.object_sotr,
+base_tab.card_sotr,
 base_tab.id_sotr, 
 CASE 
 WHEN base_tab.id_sotr is not NULL THEN base_tab.fio_sotr 
@@ -348,7 +356,8 @@ FROM base_tab
 /*группировка по сотрудникам и по подразделению+бригаде - для итоговых строк*/
 GROUP BY 
 GROUPING SETS (
-(base_tab.id_sotr, base_tab.fio_sotr, base_tab.chiefs_org_str, base_tab.id_div, base_tab.name_div, base_tab.name_post, base_tab.name_brigade)
+(base_tab.object_tab, base_tab.card_tab, base_tab.object_sotr, base_tab.card_sotr,base_tab.id_sotr, base_tab.fio_sotr, 
+base_tab.chiefs_org_str, base_tab.id_div, base_tab.name_div, base_tab.name_post, base_tab.name_brigade)
 , (base_tab.name_brigade, base_tab.name_div)
 )
 ORDER BY
