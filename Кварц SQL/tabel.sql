@@ -4,6 +4,7 @@ vars AS ( SELECT
      {division}::int as "division",
      {employee}::int as "employee",
      {period}::date as "period",
+     (SELECT o.attr_1815_ FROM registry.object_15_ o WHERE o.id = {user}) as "subdivs",
      EXTRACT(MONTH FROM {period}::date)::int as "month_tab",
      EXTRACT(YEAR FROM {period}::date)::int as "year_tab",
      date_trunc('month', {period}::date) as fdm_tab,
@@ -126,17 +127,15 @@ LEFT JOIN registry.object_1502_ absence ON o.id = absence.attr_1503_
       AND NOT absence.is_deleted
     WHERE NOT o.is_deleted
       AND CASE
-                    WHEN (
-                       SELECT division
-                         FROM vars
-                    )::INT IS NOT NULL THEN CASE
-                              WHEN division.id = (
-                                 SELECT division
-                                   FROM vars
-                              )::INT THEN TRUE
+                    WHEN (SELECT division FROM vars) IS NOT NULL THEN CASE
+                              WHEN division.id = (SELECT division FROM vars) THEN TRUE
                               ELSE FALSE
                     END
-                    ELSE TRUE
+                    ELSE CASE
+                              WHEN ARRAY[division.id] && (SELECT subdivs FROM vars) THEN TRUE
+                              --WHEN division.id = ANY(SELECT UNNEST(subdivs) FROM vars) THEN TRUE
+                              ELSE FALSE
+                    END
           END
       AND CASE
                     WHEN (
@@ -163,17 +162,18 @@ LEFT JOIN registry.object_1502_ absence ON o.id = absence.attr_1503_
           END
 ),
 /*табель*/
-T AS (select
+T AS (select distinct
 base_tab.object_tab,
 base_tab.card_tab,
 base_tab.object_sotr,
 base_tab.card_sotr,
 base_tab.id_sotr, 
+base_tab.fio_sotr,          
 CASE 
 WHEN base_tab.id_sotr is not NULL THEN base_tab.fio_sotr 
-WHEN base_tab.name_brigade is not NULL THEN '> Итого '||base_tab.name_brigade 
---WHEN base_tab.name_div is not NULL THEN '> Итого '||base_tab.name_div  убрано потому, что нет понимания как выводить укрупненные итоги по подразделениям
-END as "fio_sotr", 
+WHEN base_tab.name_brigade is not NULL THEN 'Итого '||base_tab.name_brigade||' --->' 
+WHEN base_tab.name_div is not NULL THEN 'Итого '||base_tab.name_div||' --->' 
+END as "first_column", 
 base_tab.chiefs_org_str, 
 base_tab.id_div,
 base_tab.name_div, 
@@ -359,9 +359,10 @@ GROUPING SETS (
 (base_tab.object_tab, base_tab.card_tab, base_tab.object_sotr, base_tab.card_sotr,base_tab.id_sotr, base_tab.fio_sotr, 
 base_tab.chiefs_org_str, base_tab.id_div, base_tab.name_div, base_tab.name_post, base_tab.name_brigade)
 , (base_tab.name_brigade, base_tab.name_div)
+, base_tab.name_div
 )
 ORDER BY
-base_tab.name_brigade, base_tab.fio_sotr
+base_tab.name_div, base_tab.name_brigade, base_tab.fio_sotr
 ),
 /*строка дней недели*/
 dow AS (
@@ -507,4 +508,4 @@ CASE WHEN EXTRACT(DAY FROM (SELECT ldm_tab FROM vars)) >= 29 AND T.id_sotr is no
 CASE WHEN EXTRACT(DAY FROM (SELECT ldm_tab FROM vars)) >= 30 AND T.id_sotr is not null THEN CASE WHEN T.absence30 IN (1, 2, 3, 4, 5) THEN (SELECT c_absence FROM vars) ELSE CASE WHEN T.otp_plan30 = 1 THEN (SELECT c_vacation FROM vars) ELSE CASE WHEN T.h_plan30 is not null THEN CASE WHEN make_date((SELECT year_tab FROM vars), (SELECT month_tab FROM vars), 30) <= CURRENT_DATE AND T.h_asys30 + interval '30 minutes' < make_time(T.h_plan30, 0, 0) THEN (SELECT c_alert FROM vars) ELSE (SELECT c_work FROM vars) END ELSE (SELECT c_notwork FROM vars) END END END END as color30,
 CASE WHEN EXTRACT(DAY FROM (SELECT ldm_tab FROM vars)) >= 31 AND T.id_sotr is not null THEN CASE WHEN T.absence31 IN (1, 2, 3, 4, 5) THEN (SELECT c_absence FROM vars) ELSE CASE WHEN T.otp_plan31 = 1 THEN (SELECT c_vacation FROM vars) ELSE CASE WHEN T.h_plan31 is not null THEN CASE WHEN make_date((SELECT year_tab FROM vars), (SELECT month_tab FROM vars), 31) <= CURRENT_DATE AND T.h_asys31 + interval '30 minutes' < make_time(T.h_plan31, 0, 0) THEN (SELECT c_alert FROM vars) ELSE (SELECT c_work FROM vars) END ELSE (SELECT c_notwork FROM vars) END END END END as color31
 FROM T
-WHERE T.fio_sotr is not null
+WHERE T.first_column is not null
