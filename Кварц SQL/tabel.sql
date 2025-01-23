@@ -1,23 +1,24 @@
 WITH 
 /*таблица переменных*/
-vars AS ( SELECT 
+vars AS ( SELECT
+      /*mode - режим учёта места работы. 1 - из графика, 2 - из данных сотрудника*/ 
+     {mode}::int as "mode",    
      {division}::int as "division",
-     {employee}::int as "employee",
      {period}::date as "period",
      (SELECT o.attr_1815_ FROM registry.object_15_ o WHERE o.id = {user}) as "subdivs",
      EXTRACT(MONTH FROM {period}::date)::int as "month_tab",
      EXTRACT(YEAR FROM {period}::date)::int as "year_tab",
      date_trunc('month', {period}::date) as fdm_tab,
      date_trunc('month', {period}::date) + INTERVAL '1 MONTH - 1 day' as ldm_tab,
-     'RGB(0 255 0 / 0)' AS "c_notwork",
-     'RGB(60 179 113 / 0.25)' AS "c_work",
-     'RGB(0 191 255 / 0.25)' AS "c_hand", --DeepSkyBlue
-     'RGB(220 38 41 / 0.25)' AS "c_alert",
-     /*'RGB(255 0 0 / 0.25)' AS "c_alert", --Red*/
-     /*'RGB(220 20 60 / 0.25)' AS "c_alert", --Crimson*/
-     'RGB(255 255 0 / 0.25)' AS "c_vacation",
-     'RGB(255 165 0 / 0.25)' AS "c_absence",
-     'RGB(105 105 105 / 0.25)' AS "c_holiday" --DimGrey
+     'RGBA(0, 255, 0, 0)' AS "c_notwork",
+     'RGBA(60, 179, 113, 0.25)' AS "c_work",
+     'RGBA(0, 102, 255, 0.4)' AS "c_hand",
+     'RGBA(220, 38, 41, 0.25)' AS "c_alert",
+     /*'RGBA(255, 0, 0, 0.25)' AS "c_alert", --Red*/
+     /*'RGBA(220, 20, 60, 0.25)' AS "c_alert", --Crimson*/
+     'RGBA(255, 255, 0, 0.25)' AS "c_vacation",
+     'RGBA(255, 165, 0, 0.25)' AS "c_absence",
+     'RGBA(105, 105, 105, 0.25)' AS "c_holiday"
 ), 
 /*исходная таблица табеля*/
 source_tab AS (
@@ -70,9 +71,9 @@ LEFT JOIN registry.object_1774_ tabel ON o.id = tabel.attr_1775_
       AND NOT tabel.is_deleted
 LEFT JOIN registry.object_503_ post ON o.attr_505_ = post.id
       AND NOT post.is_deleted
-LEFT JOIN registry.object_1544_ division ON o.attr_1546_ = division.id
+LEFT JOIN registry.object_1544_ division ON CASE WHEN (SELECT mode FROM vars) = 1 THEN tabel.attr_1817_ WHEN (SELECT mode FROM vars) = 2 THEN o.attr_1546_ END = division.id
       AND NOT division.is_deleted
-LEFT JOIN registry.object_1790_ brigade ON o.attr_1804_ = brigade.id
+LEFT JOIN registry.object_1790_ brigade ON CASE WHEN (SELECT mode FROM vars) = 1 THEN tabel.attr_1818_ WHEN (SELECT mode FROM vars) = 2 THEN o.attr_1804_ END = brigade.id
       AND NOT brigade.is_deleted
 LEFT JOIN registry.object_1785_ asyst ON o.id = asyst.attr_1786_
       AND tabel.attr_1776_ = asyst.attr_1787_::date
@@ -99,14 +100,6 @@ LEFT JOIN registry.object_1502_ absence ON o.id = absence.attr_1503_
                          END
           END
       AND CASE
-                    WHEN ( SELECT employee FROM vars )::INT IS NOT NULL THEN 
-                    CASE
-                              WHEN o.id = ( SELECT employee FROM vars )::INT THEN TRUE
-                              ELSE FALSE
-                    END
-                    ELSE TRUE
-          END
-      AND CASE
                     WHEN DATE_TRUNC('month', tabel.attr_1776_::date) = DATE_TRUNC( 'month', ( SELECT period FROM vars ) ) THEN TRUE
                     ELSE FALSE
           END
@@ -117,12 +110,13 @@ base_tab AS (
 SELECT 
 source_tab.*,
 /*сборка HTML-кода для ячеек таблицы*/
-CASE WHEN source_tab.id_sotr = 0 THEN '<div style="background-color:'||CASE WHEN source_tab.holyday is not null THEN (SELECT c_holiday FROM vars) END||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||TO_CHAR(source_tab.date_period, 'TMDy')||'</div></div> ' 
+CASE WHEN source_tab.id_sotr = 0 THEN '<div style="background-color:'||CASE WHEN source_tab.holyday is not null THEN (SELECT c_holiday FROM vars) ELSE 'RGB(0 255 0 / 0)' END||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||TO_CHAR(source_tab.date_period, 'TMDy')||'</div></div> ' 
      ELSE CASE WHEN make_date((SELECT year_tab FROM vars), (SELECT month_tab FROM vars), source_tab.day_tab::int ) <= CURRENT_DATE THEN 
                CASE WHEN source_tab.h_hand is not null THEN '<div style="background-color:'||(SELECT c_hand FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||source_tab.h_hand::TEXT||'</div></div> ' 
                     ELSE CASE WHEN EXTRACT( HOUR FROM source_tab.h_asys + INTERVAL '30 minutes' )::INT != COALESCE( source_tab.h_plan, 0) THEN '<div style="background-color:'||(SELECT c_alert FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'|| EXTRACT( HOUR FROM source_tab.h_asys + INTERVAL '30 minutes' )::INT ||'</div></div> ' 
                               ELSE CASE WHEN source_tab.h_plan is not null THEN '<div style="background-color:'||(SELECT c_work FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'|| EXTRACT( HOUR FROM source_tab.h_asys + INTERVAL '30 minutes' )::INT ||'</div></div> ' 
-                                        ELSE CASE source_tab.absence WHEN 1 THEN '<div style="background-color:'||(SELECT c_absence FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'О'||'</div></div> ' 
+                                        ELSE CASE source_tab.absence 
+                                                  WHEN 1 THEN '<div style="background-color:'||(SELECT c_absence FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'О'||'</div></div> ' 
                                                   WHEN 4 THEN '<div style="background-color:'||(SELECT c_absence FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'О'||'</div></div> ' 
                                                   WHEN 5 THEN '<div style="background-color:'||(SELECT c_absence FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'О'||'</div></div> ' 
                                                   WHEN 2 THEN '<div style="background-color:'||(SELECT c_absence FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'А'||'</div></div> ' 
@@ -145,20 +139,21 @@ CASE WHEN source_tab.id_sotr = 0 THEN '<div style="background-color:'||CASE WHEN
                                         ELSE '<div style="background-color:'||(SELECT c_notwork FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||''||'</div></div> ' 
                                    END 
                          END 
-                         ELSE CASE WHEN source_tab.absence is not null OR source_tab.otp_plan is not null THEN '<div style="background-color:'||(SELECT c_alert FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'!'||'</div></div> ' 
+                         ELSE CASE WHEN source_tab.absence is not null OR source_tab.otp_plan is not null THEN '<div style="background-color:'||(SELECT c_alert FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'Д'||'</div></div> ' 
                                    ELSE '<div style="background-color:'||(SELECT c_work FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'Д'||'</div></div> ' 
                               END 
                     END 
           END
 END as "html",																								
 /*отдельные суммы по сотруднику, бригаде, подразделению*/
-          SUM( source_tab.h_plan) OVER ( PARTITION BY source_tab.id_sotr ) AS "sum_plan",
-          SUM( COALESCE( source_tab.h_hand, EXTRACT( HOUR FROM source_tab.h_asys + INTERVAL '30 minutes' )::INT ) ) OVER ( PARTITION BY source_tab.id_sotr ) AS "sum_fact",
-          SUM( source_tab.h_plan ) OVER ( PARTITION BY source_tab.name_brigade ) AS "sum_br_plan",
-          SUM( COALESCE( source_tab.h_hand, EXTRACT( HOUR FROM source_tab.h_asys + INTERVAL '30 minutes' )::INT ) ) OVER ( PARTITION BY source_tab.name_brigade ) AS "sum_br_fact",
-          SUM( source_tab.h_plan ) OVER ( PARTITION BY source_tab.name_div ) AS "sum_div_plan",
-          SUM( COALESCE( source_tab.h_hand, EXTRACT( HOUR FROM source_tab.h_asys + INTERVAL '30 minutes' )::INT ) ) OVER ( PARTITION BY source_tab.name_div ) AS "sum_div_fact"
-FROM source_tab
+CASE WHEN source_tab.id_sotr != 0 THEN SUM( COALESCE( source_tab.h_plan, 0) ) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) END AS "sum_plan",
+CASE WHEN source_tab.id_sotr != 0 THEN SUM( COALESCE( source_tab.h_plan, 0) ) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) END AS "sum_fact",
+SUM( COALESCE( source_tab.h_plan, 0) ) OVER ( PARTITION BY source_tab.name_brigade ) AS "sum_br_plan",
+SUM( COALESCE( source_tab.h_hand, EXTRACT( HOUR FROM source_tab.h_asys + INTERVAL '30 minutes' )::INT ) ) OVER ( PARTITION BY source_tab.name_brigade ) AS "sum_br_fact",
+SUM( COALESCE( source_tab.h_plan, 0) )  OVER ( PARTITION BY source_tab.name_div ) AS "sum_div_plan",
+SUM( COALESCE( source_tab.h_hand, EXTRACT( HOUR FROM source_tab.h_asys + INTERVAL '30 minutes' )::INT ) ) OVER ( PARTITION BY source_tab.name_div ) AS "sum_div_fact"
+
+FROM source_tab 
 ),
 
 /*табель*/
@@ -174,8 +169,8 @@ T AS (
           CASE
                     WHEN base_tab.id_sotr = 0 THEN ''
                     WHEN base_tab.id_sotr IS NOT NULL THEN base_tab.fio_sotr
-                    WHEN base_tab.name_brigade IS NOT NULL THEN 'Итого ' || base_tab.name_brigade || ' --->'
-                    WHEN base_tab.name_div IS NOT NULL THEN 'Итого ' || base_tab.name_div || ' --->'
+                    WHEN base_tab.name_brigade IS NOT NULL THEN 'Итого ' || base_tab.name_brigade || ''
+                    WHEN base_tab.name_div IS NOT NULL THEN 'Итого ' || base_tab.name_div || ''
           END AS "first_column",
           base_tab.name_post,
           base_tab.name_div,
@@ -273,6 +268,7 @@ name_brigade,
 fio_sotr
 )
 
-select T.* from T 
+SELECT * 
+FROM T 
 /*убираем строку итого для строки дней*/
 WHERE not (T.name_div = '0' AND T.id_sotr is null)
