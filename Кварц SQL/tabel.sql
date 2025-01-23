@@ -147,7 +147,7 @@ CASE WHEN source_tab.id_sotr = 0 THEN '<div style="background-color:'||CASE WHEN
 END as "html",																								
 /*отдельные суммы по сотруднику, бригаде, подразделению*/
 CASE WHEN source_tab.id_sotr != 0 THEN SUM( COALESCE( source_tab.h_plan, 0) ) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) END AS "sum_plan",
-CASE WHEN source_tab.id_sotr != 0 THEN SUM( COALESCE( source_tab.h_plan, 0) ) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) END AS "sum_fact",
+CASE WHEN source_tab.id_sotr != 0 THEN SUM( COALESCE( source_tab.h_hand, EXTRACT( HOUR FROM source_tab.h_asys + INTERVAL '30 minutes' )::INT ) ) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) END AS "sum_fact",
 SUM( COALESCE( source_tab.h_plan, 0) ) OVER ( PARTITION BY source_tab.name_brigade ) AS "sum_br_plan",
 SUM( COALESCE( source_tab.h_hand, EXTRACT( HOUR FROM source_tab.h_asys + INTERVAL '30 minutes' )::INT ) ) OVER ( PARTITION BY source_tab.name_brigade ) AS "sum_br_fact",
 SUM( COALESCE( source_tab.h_plan, 0) )  OVER ( PARTITION BY source_tab.name_div ) AS "sum_div_plan",
