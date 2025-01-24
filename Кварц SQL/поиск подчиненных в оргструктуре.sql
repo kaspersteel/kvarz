@@ -3,7 +3,7 @@ SELECT
           o.attr_424_ AS "fio_sotr",
           post.attr_504_ AS "name_post",
           division.attr_1545_ AS "name_div",
-					array_remove(array_agg(distinct div_dn_org.id), null) AS dn_divs
+	    array_remove(array_agg(distinct div_dn_org.id), null) AS dn_divs
 FROM registry.object_419_ o
 LEFT JOIN registry.object_503_ post ON o.attr_505_ = post.id
       AND NOT post.is_deleted
