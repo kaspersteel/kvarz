@@ -86,7 +86,14 @@
                               WHEN o.attr_4005_::VARCHAR THEN TRUE
                               ELSE FALSE
                     END
-                AND o.attr_4032_ = COALESCE(
+           ORDER BY "date_rasp" DESC,
+                    "fio",
+                    "array_time"
+          )
+	SELECT base.*
+      FROM base
+     WHERE base.array_time IS NOT NULL
+	 AND base.date_rasp = COALESCE(
                     (
                     CASE
                               WHEN '{date_rasp}' = '' THEN NULL
@@ -95,10 +102,3 @@
                     ),
                     CURRENT_DATE::VARCHAR
                     )::date
-           ORDER BY "date_rasp" DESC,
-                    "fio",
-                    "array_time"
-          )
-	SELECT base.*
-      FROM base
-     WHERE base.array_time IS NOT NULL

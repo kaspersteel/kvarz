@@ -88,6 +88,7 @@ LEFT JOIN registry.object_1502_ absence ON o.id = absence.attr_1503_
       AND tabel.attr_1776_ <= absence.attr_1506_::date
       AND NOT absence.is_deleted
     WHERE NOT o.is_deleted
+      AND not tabel.attr_1908_
       AND CASE
                     WHEN (SELECT division FROM vars) IS NOT NULL THEN 
                     CASE
@@ -139,9 +140,16 @@ CASE WHEN source_tab.id_sotr = 0 THEN '<div style="background-color:'||CASE WHEN
                                         ELSE '<div style="background-color:'||(SELECT c_notwork FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||''||'</div></div> ' 
                                    END 
                          END 
-                         ELSE CASE WHEN source_tab.absence is not null OR source_tab.otp_plan is not null THEN '<div style="background-color:'||(SELECT c_alert FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'Д'||'</div></div> ' 
-                                   ELSE '<div style="background-color:'||(SELECT c_work FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'Д'||'</div></div> ' 
-                              END 
+                         ELSE CASE source_tab.absence 
+                              WHEN 1 THEN '<div style="background-color:'||(SELECT c_alert FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'О'||'</div></div> ' 
+                              WHEN 4 THEN '<div style="background-color:'||(SELECT c_alert FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'О'||'</div></div> ' 
+                              WHEN 5 THEN '<div style="background-color:'||(SELECT c_alert FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'О'||'</div></div> ' 
+                              WHEN 2 THEN '<div style="background-color:'||(SELECT c_alert FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'А'||'</div></div> ' 
+                              WHEN 3 THEN '<div style="background-color:'||(SELECT c_alert FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'Б'||'</div></div> ' 
+                              ELSE CASE WHEN source_tab.otp_plan = 1 THEN '<div style="background-color:'||(SELECT c_alert FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'Оп'||'</div></div> ' 
+                                        ELSE '<div style="background-color:'||(SELECT c_work FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'Д'||'</div></div> ' 
+                                   END 
+                         END 
                     END 
           END
 END as "html",																								
@@ -153,7 +161,7 @@ SUM( COALESCE( source_tab.h_hand, EXTRACT( HOUR FROM source_tab.h_asys + INTERVA
 SUM( COALESCE( source_tab.h_plan, 0) )  OVER ( PARTITION BY source_tab.name_div ) AS "sum_div_plan",
 SUM( COALESCE( source_tab.h_hand, EXTRACT( HOUR FROM source_tab.h_asys + INTERVAL '30 minutes' )::INT ) ) OVER ( PARTITION BY source_tab.name_div ) AS "sum_div_fact"
 
-FROM source_tab 
+FROM source_tab
 ),
 
 /*табель*/
