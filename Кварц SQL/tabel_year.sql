@@ -5,15 +5,13 @@ vars AS ( SELECT
      {period}::date as "period",
      EXTRACT(YEAR FROM {period}::date)::int as "year_tab",
      array ['Январь', 'Февраль', 'Март', 'Апрель', 'Май',	'Июнь', 'Июль',	'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'] AS month_arr,
-     'RGB(0 255 0 / 0)' AS "c_notwork",
-     'RGB(60 179 113 / 0.25)' AS "c_work",
-     'RGB(0 191 255 / 0.25)' AS "c_hand", --DeepSkyBlue
-     'RGB(220 38 41 / 0.25)' AS "c_alert",
-     /*'RGB(255 0 0 / 0.25)' AS "c_alert", --Red*/
-     /*'RGB(220 20 60 / 0.25)' AS "c_alert", --Crimson*/
-     'RGB(255 255 0 / 0.25)' AS "c_vacation",
-     'RGB(255 165 0 / 0.25)' AS "c_absence",
-     'RGB(105 105 105 / 0.25)' AS "c_holiday" --DimGrey
+     'RGBA(0, 255, 0, 0)' AS "c_notwork",
+     'RGBA(60, 179, 113, 0.25)' AS "c_work",
+     'RGBA(0, 102, 255, 0.4)' AS "c_hand",
+     'RGBA(220, 38, 41, 0.25)' AS "c_alert",
+     'RGBA(255, 255, 0, 0.25)' AS "c_vacation",
+     'RGBA(255, 165, 0, 0.25)' AS "c_absence",
+     'RGBA(105, 105, 105, 0.25)' AS "c_holiday"
 ), 
 /*исходная таблица табеля*/
 source_tab AS (

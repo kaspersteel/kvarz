@@ -14,8 +14,6 @@ vars AS ( SELECT
      'RGBA(60, 179, 113, 0.25)' AS "c_work",
      'RGBA(0, 102, 255, 0.4)' AS "c_hand",
      'RGBA(220, 38, 41, 0.25)' AS "c_alert",
-     /*'RGBA(255, 0, 0, 0.25)' AS "c_alert", --Red*/
-     /*'RGBA(220, 20, 60, 0.25)' AS "c_alert", --Crimson*/
      'RGBA(255, 255, 0, 0.25)' AS "c_vacation",
      'RGBA(255, 165, 0, 0.25)' AS "c_absence",
      'RGBA(105, 105, 105, 0.25)' AS "c_holiday"
@@ -181,14 +179,13 @@ ORDER BY id_sotr, day_tab
 
 /*табель*/
 T AS (
-      SELECT DISTINCT 
-          base_tab.object_tab,
+   SELECT DISTINCT base_tab.object_tab,
           base_tab.card_tab,
           base_tab.object_sotr,
           base_tab.card_sotr,
           base_tab.id_sotr,
           base_tab.fio_sotr,
-            /*первая колонка таблицы*/
+          /*первая колонка таблицы*/
           CASE
                     WHEN base_tab.id_sotr = 0 THEN ''
                     WHEN base_tab.id_sotr IS NOT NULL THEN base_tab.fio_sotr
@@ -206,22 +203,25 @@ T AS (
                     WHEN base_tab.name_brigade IS NOT NULL THEN MAX(base_tab.sum_br_plan)
                     ELSE MAX(base_tab.sum_div_plan)
           END AS sum_plan,
-          
-		  CASE
+          CASE
                     WHEN base_tab.id_sotr IS NOT NULL THEN MAX(base_tab.sum_fact)
                     WHEN base_tab.name_brigade IS NOT NULL THEN MAX(base_tab.sum_br_fact)
                     ELSE MAX(base_tab.sum_div_fact)
           END AS sum_fact,
-		  
-		  CASE WHEN base_tab.id_sotr !=0
-					THEN max( CASE WHEN base_tab.day_tab = 0 
-										THEN CASE WHEN base_tab.h_hand is not null 
-													   THEN (SELECT c_hand FROM vars) 
-												  ELSE (SELECT c_notwork FROM vars) 
-										     END
-							  END) 
-			  ELSE (SELECT c_notwork FROM vars)
-		  END AS sum_fact_color,
+          CASE
+                    WHEN base_tab.id_sotr != 0 THEN MAX(
+                    CASE
+                              WHEN base_tab.day_tab = 0 THEN CASE
+                                        WHEN base_tab.h_hand IS NOT NULL THEN ( SELECT c_hand FROM vars )
+                                        ELSE ( SELECT c_notwork FROM vars )
+                              END
+                    END
+                    )
+                    ELSE (
+                       SELECT c_notwork
+                         FROM vars
+                    )
+          END AS sum_fact_color,
 /*поколоночный вывод ID записей в реестре табеля*/
 CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 0 THEN base_tab.id_tab END) END as id_tab0,
 CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 1 THEN base_tab.id_tab END) END as id_tab1,
