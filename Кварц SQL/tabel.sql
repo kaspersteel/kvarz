@@ -1,11 +1,11 @@
 WITH 
 /*таблица переменных*/
 vars AS ( SELECT
-      /*mode - режим учёта места работы. 1 - из графика, 2 - из данных сотрудника*/ 
+      /*mode - режим учёта места работы. 1 - из графика, 2 - из оргструктуры*/ 
      {mode}::int as "mode",    
      {division}::int as "division",
      {period}::date as "period",
-     (SELECT o.attr_1815_ FROM registry.object_15_ o WHERE o.id = {user}) as "subdivs",
+     (SELECT '{}'::int[] /*o.attr_1815_*/ FROM registry.object_15_ o WHERE o.id = {user}) as "subdivs",
      EXTRACT(MONTH FROM {period}::date)::int as "month_tab",
      EXTRACT(YEAR FROM {period}::date)::int as "year_tab",
      date_trunc('month', {period}::date) as fdm_tab,
@@ -114,7 +114,7 @@ source_tab.*,
 CASE WHEN source_tab.id_sotr != 0 THEN SUM( COALESCE( source_tab.h_plan, 0) ) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) END AS "sum_plan",
 CASE WHEN source_tab.id_sotr != 0 
      THEN COALESCE( SUM( CASE WHEN source_tab.day_tab = 0 THEN source_tab.h_hand END) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) , 
-                    SUM( EXTRACT( HOUR FROM COALESCE( make_time(source_tab.h_hand, 0, 0), source_tab.h_asys) )::INT ) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) ) 
+                    SUM( COALESCE( source_tab.h_hand, EXTRACT( HOUR FROM source_tab.h_asys ) )::INT ) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) ) 
 END AS "sum_fact",
 SUM( COALESCE( source_tab.h_plan, 0) ) OVER ( PARTITION BY source_tab.name_brigade ) AS "sum_br_plan",
 SUM( COALESCE( source_tab.h_plan, 0) ) OVER ( PARTITION BY source_tab.name_div ) AS "sum_div_plan"
@@ -306,3 +306,5 @@ SELECT *
 FROM T 
 /*убираем строку итого для строки дней*/
 WHERE not (T.name_div = '0' AND T.id_sotr is null)
+AND not (T.id_period is null AND T.id_sotr is not null)
+/*AND T.sum_plan != 0*/
