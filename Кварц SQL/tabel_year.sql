@@ -68,7 +68,7 @@ source_tab.*,
 /*отдельные суммы по сотруднику, году*/
 SUM( COALESCE( source_tab.h_plan, 0) ) OVER ( PARTITION BY EXTRACT(MONTH FROM source_tab.date_period::date)::int) AS "sum_plan",
 COALESCE( SUM( CASE WHEN source_tab.day_tab = 0 THEN source_tab.h_hand END) OVER ( PARTITION BY EXTRACT(MONTH FROM source_tab.date_period::date)::int),
-          SUM( EXTRACT( HOUR FROM COALESCE( make_time(source_tab.h_hand, 0, 0), source_tab.h_asys) )::INT ) OVER ( PARTITION BY EXTRACT(MONTH FROM source_tab.date_period::date)::int))AS "sum_fact",
+          SUM( COALESCE( source_tab.h_hand, EXTRACT( HOUR FROM source_tab.h_asys ) )::INT ) OVER ( PARTITION BY EXTRACT(MONTH FROM source_tab.date_period::date)::int))AS "sum_fact",
 SUM( COALESCE( source_tab.h_plan, 0) ) OVER () AS "sum_plan_year"
 
 FROM source_tab
@@ -240,3 +240,5 @@ base_tab.month_tab
 
 select T.* from T 
 WHERE T.fio_sotr is not null
+AND not (T.id_period is null AND T.id_sotr is not null)
+/*AND T.sum_plan != 0*/
