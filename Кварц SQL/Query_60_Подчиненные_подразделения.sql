@@ -18,9 +18,34 @@ WHERE users.id = {user}::int
 GROUP BY  sotr.id,  post.attr_504_, division.attr_1545_ 
 HAVING NOT (array_agg(div_dn_org.id) = '{NULL}')*/
 
-SELECT
-array_to_string( array_agg( distinct org.attr_65_), ',') AS dn_divs
-FROM registry.object_15_ users
-LEFT JOIN registry.object_36_ org ON org.id = ANY (users.attr_1815_)
-      AND NOT org.is_deleted	
-WHERE users.id = {user}::int
+SELECT 
+array_to_string(  (SELECT ARRAY_AGG ( DISTINCT divs) FROM UNNEST ( odd_org.sub_divs || org.sub_divs ) AS "divs" ), ',' ) AS "dn_divs" 
+FROM
+	registry.object_15_ users
+	LEFT JOIN LATERAL (
+	SELECT 
+		ARRAY_AGG( attr_65_ ) AS "sub_divs" 
+	FROM
+		registry.object_36_ o 
+	WHERE
+		o.ID = ANY ( users.attr_1815_ ) 
+		AND NOT o.is_deleted 
+	) "org" ON TRUE 
+		LEFT JOIN LATERAL (
+	SELECT 
+	ARRAY_AGG ( distinct odd_sub_org.attr_65_ ) AS "sub_divs"
+FROM
+	registry.object_36_ odd_org
+	LEFT JOIN registry.object_36_ odd_up_org ON odd_up_org.ID = odd_org.attr_1753_ 
+	AND odd_up_org.attr_65_ != odd_org.attr_65_ 
+	AND NOT odd_up_org.is_deleted 
+	LEFT JOIN registry.object_15_ odd_users ON odd_users.attr_506_ = odd_org.attr_285_
+	AND NOT odd_users.is_deleted 
+	LEFT JOIN registry.object_36_ odd_sub_org ON odd_sub_org.ID = ANY (odd_users.attr_1815_)
+	AND NOT odd_sub_org.is_deleted 
+WHERE
+	odd_org.attr_65_ = ANY ( users.attr_1914_ ) 
+	AND NOT odd_org.is_deleted
+	AND odd_up_org.id is not null
+	) "odd_org" ON TRUE 
+    WHERE users.id = {user}::INT

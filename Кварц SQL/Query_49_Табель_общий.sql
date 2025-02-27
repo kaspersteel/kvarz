@@ -5,7 +5,32 @@ vars AS ( SELECT
      {mode}::int as "mode",    
      {division}::int as "division",
      {period}::date as "period",
-     (SELECT '{}'::int[] /*o.attr_1815_*/ FROM registry.object_15_ o WHERE o.id = {user}) as "subdivs",
+     (    SELECT (
+             SELECT ARRAY_AGG(DISTINCT divs)
+               FROM UNNEST(odd_org.sub_divs || org.sub_divs) AS "divs"
+          )
+     FROM registry.object_15_ users
+LEFT JOIN LATERAL (
+             SELECT ARRAY_AGG(attr_65_) AS "sub_divs"
+               FROM registry.object_36_ o
+              WHERE o.ID = ANY (users.attr_1815_)
+                AND NOT o.is_deleted
+          ) "org" ON TRUE
+LEFT JOIN LATERAL (
+             SELECT ARRAY_AGG(DISTINCT odd_sub_org.attr_65_) AS "sub_divs"
+               FROM registry.object_36_ odd_org
+          LEFT JOIN registry.object_36_ odd_up_org ON odd_up_org.ID = odd_org.attr_1753_
+                AND odd_up_org.attr_65_ != odd_org.attr_65_
+                AND NOT odd_up_org.is_deleted
+          LEFT JOIN registry.object_15_ odd_users ON odd_users.attr_506_ = odd_org.attr_285_
+                AND NOT odd_users.is_deleted
+          LEFT JOIN registry.object_36_ odd_sub_org ON odd_sub_org.ID = ANY (odd_users.attr_1815_)
+                AND NOT odd_sub_org.is_deleted
+              WHERE odd_org.attr_65_ = ANY (users.attr_1914_)
+                AND NOT odd_org.is_deleted
+                AND odd_up_org.id IS NOT NULL
+          ) "odd_org" ON TRUE
+    WHERE users.id = {user}::INT) as "subdivs",
      EXTRACT(MONTH FROM {period}::date)::int as "month_tab",
      EXTRACT(YEAR FROM {period}::date)::int as "year_tab",
      date_trunc('month', {period}::date) as fdm_tab,
