@@ -3,11 +3,36 @@ WITH
 vars AS ( SELECT 
      {division}::int as "division",
      '{period}'::date as "period",
-     (SELECT o.attr_1815_ FROM registry.object_15_ o WHERE o.id = {user}) as "subdivs",
+     (    SELECT (
+             SELECT ARRAY_AGG(DISTINCT divs)
+               FROM UNNEST(odd_org.sub_divs || org.sub_divs) AS "divs"
+          )
+     FROM registry.object_15_ users
+LEFT JOIN LATERAL (
+             SELECT ARRAY_AGG(attr_65_) AS "sub_divs"
+               FROM registry.object_36_ o
+              WHERE o.ID = ANY (users.attr_1815_)
+                AND NOT o.is_deleted
+          ) "org" ON TRUE
+LEFT JOIN LATERAL (
+             SELECT ARRAY_AGG(DISTINCT odd_sub_org.attr_65_) AS "sub_divs"
+               FROM registry.object_36_ odd_org
+          LEFT JOIN registry.object_36_ odd_up_org ON odd_up_org.ID = odd_org.attr_1753_
+                AND odd_up_org.attr_65_ != odd_org.attr_65_
+                AND NOT odd_up_org.is_deleted
+          LEFT JOIN registry.object_15_ odd_users ON odd_users.attr_506_ = odd_org.attr_285_
+                AND NOT odd_users.is_deleted
+          LEFT JOIN registry.object_36_ odd_sub_org ON odd_sub_org.ID = ANY (odd_users.attr_1815_)
+                AND NOT odd_sub_org.is_deleted
+              WHERE odd_org.attr_65_ = ANY (users.attr_1914_)
+                AND NOT odd_org.is_deleted
+                AND odd_up_org.id IS NOT NULL
+          ) "odd_org" ON TRUE
+    WHERE users.id = {user}::INT) as "subdivs",
      EXTRACT(MONTH FROM '{period}'::date)::int as "month_tab",
      EXTRACT(YEAR FROM '{period}'::date)::int as "year_tab",
      date_trunc('month', '{period}'::date) as fdm_tab,
-     date_trunc('month', '{period}'::date) + INTERVAL '1 MONTH - 1 day' as ldm_tab,
+     date_trunc('month', '{period}'::date) + INTERVAL '1 MONTH - 1 day' as ldm_tab
 ),
 /*исходная таблица табеля*/
 source_tab AS (
@@ -99,16 +124,31 @@ base_tab AS (
 SELECT 
 source_tab.*,
 /*сборка информации для ячеек таблицы*/
-CASE WHEN source_tab.id_sotr = 0 THEN CASE WHEN source_tab.holyday is not null THEN 'В' END ELSE CASE WHEN make_date((SELECT year_tab FROM vars), (SELECT month_tab FROM vars), source_tab.day_tab::int ) <= CURRENT_DATE THEN CASE WHEN source_tab.h_hand is not null THEN source_tab.h_hand::TEXT ELSE CASE WHEN EXTRACT( HOUR FROM source_tab.h_asys + INTERVAL '30 minutes' )::INT != COALESCE( source_tab.h_plan, 0) THEN '!' ELSE CASE WHEN source_tab.h_plan is not null THEN EXTRACT( HOUR FROM source_tab.h_asys + INTERVAL '30 minutes' )::TEXT ELSE CASE source_tab.absence WHEN 1 THEN 'О' WHEN 4 THEN 'О' WHEN 5 THEN 'О' WHEN 2 THEN 'А' WHEN 3 THEN 'Б' ELSE CASE WHEN source_tab.otp_plan = 1 THEN 'Оп' ELSE '' END END END END END ELSE CASE WHEN source_tab.h_plan is null THEN CASE source_tab.absence WHEN 1 THEN 'О' WHEN 4 THEN 'О' WHEN 5 THEN 'О' WHEN 2 THEN 'А' WHEN 3 THEN 'Б' ELSE CASE WHEN source_tab.otp_plan = 1 THEN 'Оп' ELSE '' END END ELSE CASE WHEN source_tab.absence is not null OR source_tab.otp_plan is not null THEN '!' ELSE 'Д' END END END END as "html"																																																																									
-,																						
+CASE WHEN source_tab.id_sotr = 0 THEN 
+            CASE WHEN source_tab.holyday is not null THEN 'В' END 
+                 ELSE CASE WHEN make_date((SELECT year_tab FROM vars), (SELECT month_tab FROM vars), source_tab.day_tab::INT ) <= CURRENT_DATE THEN 
+                                CASE WHEN source_tab.h_hand is not null THEN source_tab.h_hand::TEXT 
+                                     ELSE CASE WHEN source_tab.h_asys = '00:00:00'::time THEN  
+                                                    CASE source_tab.absence WHEN 1 THEN 'О' WHEN 4 THEN 'О' WHEN 5 THEN 'О' WHEN 2 THEN 'А' WHEN 3 THEN 'Б' 
+                                                                            ELSE CASE WHEN source_tab.otp_plan = 1 THEN 'Оп' 
+                                                                                      ELSE CASE WHEN source_tab.h_plan is not null THEN '!' 
+  								                                                ELSE '' END END END 
+                                                    ELSE CASE WHEN source_tab.absence is not null OR source_tab.otp_plan is not null THEN EXTRACT( HOUR FROM source_tab.h_asys + INTERVAL '30 minutes' )::TEXT
+                                                              ELSE CASE WHEN EXTRACT( HOUR FROM source_tab.h_asys + INTERVAL '30 minutes' )::INT != COALESCE( source_tab.h_plan, 0) THEN '!'  
+                                   		                              ELSE EXTRACT( HOUR FROM source_tab.h_asys + INTERVAL '30 minutes' )::TEXT END END END END 
+     ELSE CASE source_tab.absence WHEN 1 THEN 'О' WHEN 4 THEN 'О' WHEN 5 THEN 'О' WHEN 2 THEN 'А' WHEN 3 THEN 'Б' 
+                                  ELSE CASE WHEN source_tab.otp_plan = 1 THEN 'Оп' 
+                                            ELSE CASE WHEN source_tab.h_plan is null THEN '' 
+                                                      ELSE 'Д' END 
+END END END END as "html",	
 
 /*отдельные суммы по сотруднику, бригаде, подразделению*/
           SUM( source_tab.h_plan) OVER ( PARTITION BY source_tab.id_sotr ) AS "sum_plan",
-          SUM( COALESCE( source_tab.h_hand, EXTRACT( HOUR FROM source_tab.h_asys + INTERVAL '30 minutes' )::INT ) ) OVER ( PARTITION BY source_tab.id_sotr ) AS "sum_fact",
+          EXTRACT( HOUR FROM SUM( COALESCE( make_time(source_tab.h_hand, 0 , 0), source_tab.h_asys ) ) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) )::INT AS "sum_fact",
           SUM( source_tab.h_plan ) OVER ( PARTITION BY source_tab.name_brigade ) AS "sum_br_plan",
-          SUM( COALESCE( source_tab.h_hand, EXTRACT( HOUR FROM source_tab.h_asys + INTERVAL '30 minutes' )::INT ) ) OVER ( PARTITION BY source_tab.name_brigade ) AS "sum_br_fact",
+          EXTRACT( HOUR FROM SUM( COALESCE( make_time(source_tab.h_hand, 0 , 0), source_tab.h_asys ) ) OVER ( PARTITION BY source_tab.name_brigade ) )::INT AS "sum_br_fact",
           SUM( source_tab.h_plan ) OVER ( PARTITION BY source_tab.name_div ) AS "sum_div_plan",
-          SUM( COALESCE( source_tab.h_hand, EXTRACT( HOUR FROM source_tab.h_asys + INTERVAL '30 minutes' )::INT ) ) OVER ( PARTITION BY source_tab.name_div ) AS "sum_div_fact"
+          EXTRACT( HOUR FROM SUM( COALESCE( make_time(source_tab.h_hand, 0 , 0), source_tab.h_asys ) ) OVER ( PARTITION BY source_tab.name_div ) )::INT AS "sum_div_fact"
 FROM source_tab
 ),
 
