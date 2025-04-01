@@ -87,7 +87,7 @@ SELECT
           CASE WHEN tabel.attr_1908_ THEN 0 ELSE EXTRACT(DAY FROM tabel.attr_1776_) END AS "day_tab",
           tabel.attr_1780_ AS "h_plan",
           tabel.attr_1816_ AS "h_hand",
-          COALESCE( CASE WHEN tabel.attr_1908_ THEN null ELSE asyst.attr_1789_ END, '00:00:00' ) AS "h_asys",
+          COALESCE( CASE WHEN tabel.attr_1908_ THEN null ELSE asyst.sum_h END, '00:00:00' )::time AS "h_asys",
           CASE WHEN gr_otp.id is not null THEN 1 END AS "otp_plan",
           absence.attr_1504_ AS "absence",
           NULL AS "date_period",
@@ -101,9 +101,15 @@ LEFT JOIN registry.object_1544_ division ON CASE WHEN (SELECT mode FROM vars) = 
       AND NOT division.is_deleted
 LEFT JOIN registry.object_1790_ brigade ON CASE WHEN (SELECT mode FROM vars) = 1 THEN tabel.attr_1818_ WHEN (SELECT mode FROM vars) = 2 THEN o.attr_1804_ END = brigade.id
       AND NOT brigade.is_deleted
-LEFT JOIN registry.object_1785_ asyst ON o.id = asyst.attr_1786_
-      AND tabel.attr_1776_ = asyst.attr_1787_::date
-      AND NOT asyst.is_deleted
+/*подключаем суммарное время из AS потому что пропуск может прикладываться несколько раз за день*/
+LEFT JOIN LATERAL (
+             SELECT SUM(attr_1789_) AS "sum_h"
+               FROM registry.object_1785_
+              WHERE o.id = attr_1786_
+                AND tabel.attr_1776_ = attr_1787_::date
+                AND NOT is_deleted
+           GROUP BY tabel.attr_1776_
+          ) asyst ON TRUE
 LEFT JOIN registry.object_1690_ gr_otp ON o.id = gr_otp.attr_1692_
       AND tabel.attr_1776_ >= gr_otp.attr_1693_::date
       AND tabel.attr_1776_ <= gr_otp.attr_1694_::date
@@ -139,7 +145,7 @@ source_tab.*,
 CASE WHEN source_tab.id_sotr != 0 THEN SUM( COALESCE( source_tab.h_plan, 0) ) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) END AS "sum_plan",
 CASE WHEN source_tab.id_sotr != 0 
      THEN COALESCE( SUM( CASE WHEN source_tab.day_tab = 0 THEN source_tab.h_hand END) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) , 
-                    EXTRACT( HOUR FROM SUM( COALESCE( make_time(source_tab.h_hand, 0 , 0), source_tab.h_asys )) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) ) )::INT
+                    EXTRACT( HOUR FROM (SUM( COALESCE( make_time(source_tab.h_hand, 0 , 0), source_tab.h_asys )) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) ) + INTERVAL '30 minutes') )::INT
 END AS "sum_fact",
 SUM( COALESCE( source_tab.h_plan, 0) ) OVER ( PARTITION BY source_tab.name_brigade ) AS "sum_br_plan",
 SUM( COALESCE( source_tab.h_plan, 0) ) OVER ( PARTITION BY source_tab.name_div ) AS "sum_div_plan"

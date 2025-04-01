@@ -1,0 +1,213 @@
+/*Строка вкладок и навигации*/
+
+.system__tabs .el-tabs__header {
+	background: rgb(221, 221, 230);
+  	& [role="tab"] {
+		border-left-color: rgb(191, 191, 208);
+	}
+}
+
+.system__tabs .el-tabs__item.is-top.is-active.is-closable {
+    background-color:rgb(236, 236, 241);
+  	border-left-color: rgb(213, 213, 224);
+  	border-bottom-color: rgb(236, 236, 241);
+}
+
+.system_mainBox {
+    background-color:rgb(236, 236, 241);
+}
+
+.nav-item:hover{
+  	background:transparent;
+    color:rgb(107, 195, 6);
+}
+
+.el-tabs__active-bar:has(~ .el-tabs__item.is-active:hover) {
+	height:3px;
+    padding:0px;
+}
+
+.el-tabs__item {
+  	&.is-active {
+    	color: #198aff;
+    }
+  	&:hover {
+    	color: #198aff;
+  	}
+}
+
+/*редактор интерфейсов*/
+
+.interface_editor .header,
+.interface_editor .panel{
+    background-color:rgb(236, 236, 241)!important;
+  	& .icon_button:hover:not(.mini) {
+    	background-color:rgb(255, 255, 255);
+	}
+}
+
+/*редактор объектов*/
+
+.object_editor {
+	& .tool_box {
+    	background-color:rgb(236, 236, 241);
+    }
+  	& .el-scrollbar__wrap {
+    	background-color:rgb(255, 255, 255);
+	}
+}
+
+/*выравнивание полей*/
+
+.el-form-item {
+    margin-bottom: 0;
+}
+
+.el-form-item__content .xref_field.vue-treeselect, 
+.el-form-item__label .xref_field_label{
+	top:0
+}
+
+/*деревья*/
+.derevo {
+	background-color:rgb(255, 255, 255);
+/* Элементы с role = "group" наследуют ширину родительского элемента */
+	& [role="group"] {
+    	width: 100%; /* Устанавливаем ширину на 100% от родителя */
+    	border-left: 2px solid rgb(95,166,221); /* Выделение левого края синим цветом */
+	}
+/* Элементы с role = "treeitem" уменьшаются по ширине слева */
+	& [role="treeitem"] {
+    	padding-left: calc(18px - 11px); /* Уменьшаем отступ слева */
+	}
+	& .content.custom_scrollbar {
+		overflow: hidden;
+    } 
+	& .a-tree {
+  		& .el-tree {
+			padding-top: 5px !important;
+            height: calc(100vh - 102px);
+    		overflow: hidden auto;
+		}  
+		& .background {
+          	background:RGB(236, 236, 241);
+			z-index: 3000 !important;
+  		}
+    	& .header_fixed{
+			position:relative;
+			/display: none;
+      		& .search_input {
+				width: calc(100% - 140px) !important;
+    			padding: 0px !important; 
+    			margin: 5px 10px 0px 10px !important;
+    			float: none !important;
+    			min-width: 200px;
+			}
+		}
+  	}
+}
+
+/*главный контейнер карточки*/
+.cont_body {
+	background:rgba(236, 236, 241, 1);
+}
+
+/*информационные контейнеры*/
+.cont {
+	background:#fff;
+	border-radius: 10px;
+	border: thin solid rgba(255, 255, 255, 1);
+	box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05);
+  	&.block  .content {
+      	overflow:hidden;
+  	}
+}
+
+/*заголовок первого уровня*/
+.h1 {
+	overflow:hidden;
+	cursor:default;
+	color: rgb(28, 28, 37);
+}
+
+/*заголовок второго уровня*/
+.h2 {
+	overflow:hidden;
+	cursor:default;
+	color: rgb(44, 44, 60);
+}
+
+/* +++++ ag-theme-balham +++++++ */
+
+.ag-theme-balham .ag-cell {
+border: 1px solid #b3b3b3 !important;
+}
+
+.ag-theme-balham .ag-header {
+background-color: rgba(80, 130, 230, 1) !important;
+}
+
+.ag-theme-balham .ag-cell {
+border: 1px solid #b3b3b3 !important;
+}
+
+.ag-theme-balham .ag-row-odd{
+background-color: rgba(80, 130, 230, 0.1) !important;
+}
+.ag-theme-balham .ag-row-selected {
+background: rgba(80, 130, 230, 0.2) !important;
+}
+
+.ag-theme-balham .ag-row-selected:before {
+background: rgba(80, 130, 230, 0.2) !important;
+}
+.ag-theme-balham .ag-root:not(.ag-context-menu-open) .ag-body-viewport:not(.ag-has-focus) .ag-cell-range-selected-1:not(.ag-cell-inline-editing){
+background: rgba(80, 130, 230, 0.2) !important;
+}
+.ag-theme-balham .ag-row-hover {
+background: rgba(80, 130, 230, 0,35) !important;
+}
+
+.ag-theme-balham .ag_grid_row .ag-cell.ag-cell-focus.ag-cell-range-selected{
+background: rgba(80, 130, 230, 0.35) !important;
+}
+
+.ag-theme-balham .ag-header-row .ag-header-cell-text, 
+.ag-theme-balham .ag-header-row .ag-header-cell .ag-icon
+{
+color: rgba(255, 255, 255, 1) !important;
+}
+
+/* ----- ag-theme-balham ------ */
+
+.ag-header-cell-label{
+justify-content: center;
+}
+
+.ag-cell{
+text-align: center;
+}
+
+.el-button--primary.is-plain {
+    width: 220px;
+    color: #1495FF;
+    background: rgba(20, 149, 255, 0.25);
+    border: 1px solid rgba(20, 149, 255, 0.3);
+}
+
+.avias_button .el-button {
+    width: 220px;
+    color: #1495FF;
+    background: rgba(20, 149, 255, 0.25);
+    border: 1px solid rgba(20, 149, 255, 0.3);
+}
+.avias_button2 .el-button {
+    color: #1495FF;
+    background: rgba(20, 149, 255, 0.25);
+    border: 1px solid rgba(20, 149, 255, 0.3);
+}
+ .avias_button_hover .el-button:hover {
+    color: #ecf5ff;
+ background: #409eff;
+}
+
