@@ -75,7 +75,7 @@ SELECT
           EXTRACT(DAY FROM tabel.attr_1776_) AS "day_tab",
           tabel.attr_1780_ AS "h_plan",
           tabel.attr_1816_ AS "h_hand",
-          COALESCE( asyst.attr_1789_, '00:00:00' ) AS "h_asys",
+          COALESCE( asyst.sum_h, '00:00:00' ) AS "h_asys",
           CASE WHEN gr_otp.id is not null THEN 1 END AS "otp_plan",
           absence.attr_1504_ AS "absence",
           NULL AS "date_period",
@@ -89,9 +89,14 @@ LEFT JOIN registry.object_1544_ division ON o.attr_1546_ = division.id
       AND NOT division.is_deleted
 LEFT JOIN registry.object_1790_ brigade ON o.attr_1804_ = brigade.id
       AND NOT brigade.is_deleted
-LEFT JOIN registry.object_1785_ asyst ON o.id = asyst.attr_1786_
-      AND tabel.attr_1776_ = asyst.attr_1787_::date
-      AND NOT asyst.is_deleted
+LEFT JOIN LATERAL (
+             SELECT SUM(attr_1789_) AS "sum_h"
+               FROM registry.object_1785_
+              WHERE o.id = attr_1786_
+                AND tabel.attr_1776_ = attr_1787_::date
+                AND NOT is_deleted
+           GROUP BY tabel.attr_1776_
+          ) asyst ON TRUE
 LEFT JOIN registry.object_1690_ gr_otp ON o.id = gr_otp.attr_1692_
       AND tabel.attr_1776_ >= gr_otp.attr_1693_::date
       AND tabel.attr_1776_ <= gr_otp.attr_1694_::date

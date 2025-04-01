@@ -337,5 +337,3 @@ SELECT *
 FROM T 
 /*убираем строку итого для строки дней*/
 WHERE not (T.name_div = '0' AND T.id_sotr is null)
-AND not (T.id_period is null AND T.id_sotr is not null)
-/*AND T.sum_plan != 0*/
