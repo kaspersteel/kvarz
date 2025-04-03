@@ -57,7 +57,6 @@ source_tab AS (
           '0' AS "name_div",
           NULL AS "id_div",
           NULL AS "name_brigade",
-		  NULL AS "sort_inbrigade",
           NULL AS "id_tab",
           EXTRACT( DAY FROM days ) AS "day_tab",
           NULL AS "h_plan",
@@ -83,7 +82,6 @@ SELECT
           division.attr_1545_ AS "name_div",
           division.id AS "id_div",
           brigade.attr_1793_ AS "name_brigade",
-		  o.attr_1950_ AS "sort_inbrigade",
           tabel.id AS "id_tab",
 		  /*информационная ячейка за период будет "Днём Зеро"*/
           CASE WHEN tabel.attr_1908_ THEN 0 ELSE EXTRACT(DAY FROM tabel.attr_1776_) END AS "day_tab",
@@ -148,20 +146,18 @@ CASE WHEN source_tab.id_sotr != 0 THEN SUM( COALESCE( source_tab.h_plan, 0) ) OV
 CASE WHEN source_tab.id_sotr != 0 
      THEN COALESCE( SUM( CASE WHEN source_tab.day_tab = 0 THEN source_tab.h_hand END) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) , 
                     EXTRACT( HOUR FROM (SUM( COALESCE( make_time(source_tab.h_hand, 0 , 0), source_tab.h_asys )) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) ) + INTERVAL '30 minutes') )::INT
-END AS "sum_fact"
-/*,
+END AS "sum_fact",
 SUM( COALESCE( source_tab.h_plan, 0) ) OVER ( PARTITION BY source_tab.name_brigade ) AS "sum_br_plan",
-SUM( COALESCE( source_tab.h_plan, 0) ) OVER ( PARTITION BY source_tab.name_div ) AS "sum_div_plan"*/
+SUM( COALESCE( source_tab.h_plan, 0) ) OVER ( PARTITION BY source_tab.name_div ) AS "sum_div_plan"
 FROM source_tab
 ORDER BY id_sotr, day_tab
 ),
 /*расчёт дополнительных сумм*/
 sum2_tab AS (
 SELECT
-sum1_tab.*
-/*,																								
+sum1_tab.*,																								
 SUM( CASE WHEN sum1_tab.day_tab = 0 THEN sum1_tab.sum_fact END ) OVER ( PARTITION BY sum1_tab.name_brigade )  AS "sum_br_fact",
-SUM( CASE WHEN sum1_tab.day_tab = 0 THEN sum1_tab.sum_fact END ) OVER ( PARTITION BY sum1_tab.name_div )  AS "sum_div_fact"*/
+SUM( CASE WHEN sum1_tab.day_tab = 0 THEN sum1_tab.sum_fact END ) OVER ( PARTITION BY sum1_tab.name_div )  AS "sum_div_fact"
 
 FROM sum1_tab
 ORDER BY id_sotr, day_tab
@@ -223,41 +219,28 @@ T AS (
           base_tab.card_sotr,
           base_tab.id_sotr,
           base_tab.fio_sotr,
-          /*выделение заголовков подразделений и бригад*/
-          CASE
-                    WHEN base_tab.name_div = '0' THEN NULL
-                    WHEN base_tab.name_brigade IS NULL AND base_tab.id_sotr IS NULL THEN 1
-                    WHEN base_tab.name_brigade IS NULL THEN 2
-                    ELSE 3
-          END AS "lv_div",
-          CASE
-                    WHEN base_tab.name_brigade IS NULL THEN NULL
-                    WHEN base_tab.id_sotr IS NULL THEN 1
-                    ELSE 2
-          END AS "lv_br",
           /*первая колонка таблицы*/
           CASE
                     WHEN base_tab.id_sotr = 0 THEN ''
                     WHEN base_tab.id_sotr IS NOT NULL THEN base_tab.fio_sotr
-                    WHEN base_tab.name_brigade IS NOT NULL THEN '' || base_tab.name_brigade || ''
-                    WHEN base_tab.name_div IS NOT NULL THEN '' || base_tab.name_div || ''
+                    WHEN base_tab.name_brigade IS NOT NULL THEN 'Итого ' || base_tab.name_brigade || ''
+                    WHEN base_tab.name_div IS NOT NULL THEN 'Итого ' || base_tab.name_div || ''
           END AS "first_column",
           base_tab.name_post,
           base_tab.name_div,
           base_tab.id_div,
           base_tab.name_brigade,
-          base_tab.sort_inbrigade,
           /*array_agg (base_tab.h_plan ORDER BY base_tab.day_tab) "arr_plan", 
           array_agg (base_tab.h_asys ORDER BY base_tab.day_tab) "arr_asys", отладочная информация*/
           CASE
                     WHEN base_tab.id_sotr IS NOT NULL THEN MAX(base_tab.sum_plan)
-                    WHEN base_tab.name_brigade IS NOT NULL THEN NULL
-                    ELSE NULL
+                    WHEN base_tab.name_brigade IS NOT NULL THEN MAX(base_tab.sum_br_plan)
+                    ELSE MAX(base_tab.sum_div_plan)
           END AS sum_plan,
           CASE
                     WHEN base_tab.id_sotr IS NOT NULL THEN MAX(base_tab.sum_fact)
-                    WHEN base_tab.name_brigade IS NOT NULL THEN NULL
-                    ELSE NULL
+                    WHEN base_tab.name_brigade IS NOT NULL THEN MAX(base_tab.sum_br_fact)
+                    ELSE MAX(base_tab.sum_div_fact)
           END AS sum_fact,
           CASE
                     WHEN base_tab.id_sotr != 0 THEN MAX(
@@ -339,17 +322,14 @@ FROM base_tab
 /*формулы группировки по сотруднику, а так же бригаде и подразделению - для строк итого*/
 GROUP BY 
 GROUPING SETS (
-(object_tab, card_day, card_period, object_sotr, card_sotr, base_tab.id_sotr, base_tab.fio_sotr, base_tab.id_div, base_tab.name_div, base_tab.sort_inbrigade, base_tab.name_post, base_tab.name_brigade)
+(object_tab, card_day, card_period, object_sotr, card_sotr, base_tab.id_sotr, base_tab.fio_sotr, base_tab.id_div, base_tab.name_div, base_tab.name_post, base_tab.name_brigade)
 , (base_tab.name_brigade, base_tab.name_div)
 , base_tab.name_div
 )
 
 ORDER BY
-name_div,
-lv_div,
+name_div, 
 name_brigade, 
-lv_br,
-sort_inbrigade,
 fio_sotr
 )
 
