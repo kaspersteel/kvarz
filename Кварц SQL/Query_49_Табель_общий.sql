@@ -51,13 +51,14 @@ source_tab AS (
           NULL AS "card_period",
           NULL AS "object_sotr",
           NULL AS "card_sotr",
+          ( SELECT month_tab FROM vars ) as "month_tab",
           0 AS "id_sotr",
           NULL AS "fio_sotr",
           NULL AS "name_post",
           '0' AS "name_div",
           NULL AS "id_div",
           NULL AS "name_brigade",
-		  NULL AS "sort_inbrigade",
+          NULL AS "sort_inbrigade",
           NULL AS "id_tab",
           EXTRACT( DAY FROM days ) AS "day_tab",
           NULL AS "h_plan",
@@ -65,6 +66,8 @@ source_tab AS (
           NULL AS "h_asys",
           NULL AS "otp_plan",
           NULL AS "absence",
+	    NULL AS "note_litera",
+	    NULL AS "note_color",
           days AS "date_period",
           holidays.id AS "holyday"
      FROM GENERATE_SERIES( ( SELECT fdm_tab FROM vars ), ( SELECT ldm_tab FROM vars ), '1 day' ) days
@@ -77,6 +80,7 @@ SELECT
           249 AS "card_period",
           419 AS "object_sotr",
           222 AS "card_sotr",
+          ( SELECT month_tab FROM vars ) as "month_tab",
           o.id AS "id_sotr",
           o.attr_424_ AS "fio_sotr",
           post.attr_504_ AS "name_post",
@@ -92,6 +96,8 @@ SELECT
           COALESCE( CASE WHEN tabel.attr_1908_ THEN null ELSE asyst.sum_h END, '00:00:00' )::time AS "h_asys",
           CASE WHEN gr_otp.id is not null THEN 1 END AS "otp_plan",
           absence.attr_1504_ AS "absence",
+		  notes.attr_1801_ AS "note_litera",
+		  notes.attr_1802_ AS "note_color",
           NULL AS "date_period",
           NULL AS "holyday"
      FROM registry.object_419_ o
@@ -104,14 +110,12 @@ LEFT JOIN registry.object_1544_ division ON CASE WHEN (SELECT mode FROM vars) = 
 LEFT JOIN registry.object_1790_ brigade ON CASE WHEN (SELECT mode FROM vars) = 1 THEN tabel.attr_1818_ WHEN (SELECT mode FROM vars) = 2 THEN o.attr_1804_ END = brigade.id
       AND NOT brigade.is_deleted
 /*подключаем суммарное время из AS потому что пропуск может прикладываться несколько раз за день*/
-LEFT JOIN LATERAL (
-             SELECT SUM(attr_1789_) AS "sum_h"
+LEFT JOIN (
+             SELECT DISTINCT attr_1786_ AS "ref_id",  attr_1787_::date AS "ref_date", SUM(attr_1789_) OVER ( PARTITION BY attr_1786_, attr_1787_::date ) AS "sum_h"
                FROM registry.object_1785_
-              WHERE o.id = attr_1786_
-                AND tabel.attr_1776_ = attr_1787_::date
-                AND NOT is_deleted
-           GROUP BY tabel.attr_1776_
-          ) asyst ON TRUE
+              WHERE NOT is_deleted
+		  ) asyst ON o.id = asyst.ref_id AND tabel.attr_1776_ = asyst.ref_date
+
 LEFT JOIN registry.object_1690_ gr_otp ON o.id = gr_otp.attr_1692_
       AND tabel.attr_1776_ >= gr_otp.attr_1693_::date
       AND tabel.attr_1776_ <= gr_otp.attr_1694_::date
@@ -121,7 +125,12 @@ LEFT JOIN registry.object_1502_ absence ON o.id = absence.attr_1503_
       AND tabel.attr_1776_ >= absence.attr_1505_::date
       AND tabel.attr_1776_ <= absence.attr_1506_::date
       AND NOT absence.is_deleted
-    WHERE NOT o.is_deleted
+LEFT JOIN registry.object_1792_ notes ON o.id = notes.attr_1952_
+      AND tabel.attr_1776_ >= notes.attr_1953_::date
+      AND tabel.attr_1776_ <= notes.attr_1954_::date
+      AND NOT notes.is_deleted
+	  AND notes.attr_1951_  
+WHERE NOT o.is_deleted
       AND CASE
                     WHEN (SELECT division FROM vars) IS NOT NULL THEN 
                     CASE
@@ -159,7 +168,7 @@ ORDER BY id_sotr, day_tab
 sum2_tab AS (
 SELECT
 sum1_tab.*
-/*,																								
+/*требовалось для расчета итого,																								
 SUM( CASE WHEN sum1_tab.day_tab = 0 THEN sum1_tab.sum_fact END ) OVER ( PARTITION BY sum1_tab.name_brigade )  AS "sum_br_fact",
 SUM( CASE WHEN sum1_tab.day_tab = 0 THEN sum1_tab.sum_fact END ) OVER ( PARTITION BY sum1_tab.name_div )  AS "sum_div_fact"*/
 
@@ -184,10 +193,12 @@ CASE WHEN sum2_tab.id_sotr = 0 THEN '<div style="background-color:'||CASE WHEN s
                                    WHEN 2 THEN '<div style="background-color:'||(SELECT c_absence FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'А'||'</div></div> ' 
                                    WHEN 3 THEN '<div style="background-color:'||(SELECT c_absence FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'Б'||'</div></div> ' 
                                    ELSE CASE WHEN sum2_tab.otp_plan = 1 THEN '<div style="background-color:'||(SELECT c_vacation FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'Оп'||'</div></div> ' 
-                                             ELSE CASE WHEN sum2_tab.h_plan is not null THEN '<div style="background-color:'||(SELECT c_alert FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'|| EXTRACT( HOUR FROM sum2_tab.h_asys + INTERVAL '30 minutes' )::INT ||'</div></div> ' 
-  								       ELSE '<div style="background-color:'||(SELECT c_notwork FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||''||'</div></div> ' 
-  							        END
-                                        END 
+                                             ELSE CASE WHEN sum2_tab.note_litera is not null THEN '<div style="background-color:'||sum2_tab.note_color||'40; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||sum2_tab.note_litera||'</div></div> ' 
+													   ELSE CASE WHEN sum2_tab.h_plan is not null THEN '<div style="background-color:'||(SELECT c_alert FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'|| EXTRACT( HOUR FROM sum2_tab.h_asys + INTERVAL '30 minutes' )::INT ||'</div></div> ' 
+																 ELSE '<div style="background-color:'||(SELECT c_notwork FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||''||'</div></div> ' 
+															END
+												  END
+										END 
                               END 
                               ELSE CASE WHEN sum2_tab.absence is not null OR sum2_tab.otp_plan is not null THEN '<div style="background-color:'||(SELECT c_alert FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'|| EXTRACT( HOUR FROM sum2_tab.h_asys + INTERVAL '30 minutes' )::INT ||'</div></div> '
                                         ELSE CASE WHEN EXTRACT( HOUR FROM sum2_tab.h_asys + INTERVAL '30 minutes' )::INT != COALESCE( sum2_tab.h_plan, 0) THEN '<div style="background-color:'||(SELECT c_alert FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'|| EXTRACT( HOUR FROM sum2_tab.h_asys + INTERVAL '30 minutes' )::INT ||'</div></div> ' 
@@ -203,17 +214,18 @@ CASE WHEN sum2_tab.id_sotr = 0 THEN '<div style="background-color:'||CASE WHEN s
                          WHEN 2 THEN '<div style="background-color:'||(SELECT c_absence FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'А'||'</div></div> ' 
                          WHEN 3 THEN '<div style="background-color:'||(SELECT c_absence FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'Б'||'</div></div> ' 
                          ELSE CASE WHEN sum2_tab.otp_plan = 1 THEN '<div style="background-color:'||(SELECT c_vacation FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'Оп'||'</div></div> ' 
-                                   ELSE CASE WHEN sum2_tab.h_plan is null THEN '<div style="background-color:'||(SELECT c_notwork FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||''||'</div></div> ' 
-                                             ELSE '<div style="background-color:'||(SELECT c_work FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'Д'||'</div></div> ' 
-                                        END
-                              END 
+                                   ELSE CASE WHEN sum2_tab.note_litera is not null THEN '<div style="background-color:'||sum2_tab.note_color||'40; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||sum2_tab.note_litera||'</div></div> ' 
+											 ELSE CASE WHEN sum2_tab.h_plan is null THEN '<div style="background-color:'||(SELECT c_notwork FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||''||'</div></div> ' 
+													   ELSE '<div style="background-color:'||(SELECT c_work FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'Д'||'</div></div> ' 
+												  END
+										END
+							  END 
                     END 
           END
 END END as "html"
 FROM sum2_tab
 ORDER BY id_sotr, day_tab
 ),
-
 /*табель*/
 T AS (
    SELECT DISTINCT base_tab.object_tab,
@@ -221,52 +233,53 @@ T AS (
           base_tab.card_period,
           base_tab.object_sotr,
           base_tab.card_sotr,
+          base_tab.month_tab,
           base_tab.id_sotr,
           base_tab.fio_sotr,
-          /*выделение заголовков подразделений и бригад*/
-          CASE
-                    WHEN base_tab.name_div = '0' THEN NULL
-                    WHEN base_tab.name_brigade IS NULL AND base_tab.id_sotr IS NULL THEN 1
-                    WHEN base_tab.name_brigade IS NULL THEN 2
-                    ELSE 3
+		  /*выделение заголовков подразделений и бригад*/
+	    CASE
+			WHEN base_tab.name_div = '0' THEN NULL
+			WHEN base_tab.name_brigade IS NULL AND base_tab.id_sotr IS NULL THEN 1
+			WHEN base_tab.name_brigade IS NULL THEN 2
+			ELSE 3
           END AS "lv_div",
-          CASE
-                    WHEN base_tab.name_brigade IS NULL THEN NULL
-                    WHEN base_tab.id_sotr IS NULL THEN 1
-                    ELSE 2
+	    CASE
+			WHEN base_tab.name_brigade IS NULL THEN NULL
+			WHEN base_tab.id_sotr IS NULL THEN 1
+                  ELSE 2
           END AS "lv_br",
           /*первая колонка таблицы*/
           CASE
-                    WHEN base_tab.id_sotr = 0 THEN ''
-                    WHEN base_tab.id_sotr IS NOT NULL THEN base_tab.fio_sotr
-                    WHEN base_tab.name_brigade IS NOT NULL THEN '' || base_tab.name_brigade || ''
-                    WHEN base_tab.name_div IS NOT NULL THEN '' || base_tab.name_div || ''
+                  WHEN base_tab.id_sotr = 0 THEN ''
+                  WHEN base_tab.id_sotr IS NOT NULL THEN base_tab.fio_sotr
+                  WHEN base_tab.name_brigade IS NOT NULL THEN '' || base_tab.name_brigade || ''
+                  WHEN base_tab.name_div IS NOT NULL THEN '' || base_tab.name_div || ''
           END AS "first_column",
           base_tab.name_post,
           base_tab.name_div,
           base_tab.id_div,
           base_tab.name_brigade,
-          base_tab.sort_inbrigade,
+		  base_tab.sort_inbrigade,
           /*array_agg (base_tab.h_plan ORDER BY base_tab.day_tab) "arr_plan", 
           array_agg (base_tab.h_asys ORDER BY base_tab.day_tab) "arr_asys", отладочная информация*/
           CASE
-                    WHEN base_tab.id_sotr IS NOT NULL THEN MAX(base_tab.sum_plan)
-                    WHEN base_tab.name_brigade IS NOT NULL THEN NULL
-                    ELSE NULL
+                  WHEN base_tab.id_sotr IS NOT NULL THEN MAX(base_tab.sum_plan)
+                  WHEN base_tab.name_brigade IS NOT NULL THEN NULL
+                  ELSE NULL
           END AS sum_plan,
           CASE
-                    WHEN base_tab.id_sotr IS NOT NULL THEN MAX(base_tab.sum_fact)
-                    WHEN base_tab.name_brigade IS NOT NULL THEN NULL
-                    ELSE NULL
+                  WHEN base_tab.id_sotr IS NOT NULL THEN MAX(base_tab.sum_fact)
+                  WHEN base_tab.name_brigade IS NOT NULL THEN NULL
+                  ELSE NULL
           END AS sum_fact,
           CASE
-                    WHEN base_tab.id_sotr != 0 THEN MAX(
-                    CASE
+                  WHEN base_tab.id_sotr != 0 THEN MAX(
+                        CASE
                               WHEN base_tab.day_tab = 0 THEN CASE
                                                                   WHEN base_tab.h_hand IS NOT NULL THEN ( SELECT c_hand FROM vars )
                                                                   ELSE ( SELECT c_notwork FROM vars )
                                                              END
-                    END )
+                        END )
           ELSE ( SELECT c_notwork FROM vars )
 END AS "sum_fact_color",
 /*поколоночный вывод ID записей в реестре табеля*/
@@ -339,7 +352,7 @@ FROM base_tab
 /*формулы группировки по сотруднику, а так же бригаде и подразделению - для строк итого*/
 GROUP BY 
 GROUPING SETS (
-(object_tab, card_day, card_period, object_sotr, card_sotr, base_tab.id_sotr, base_tab.fio_sotr, base_tab.id_div, base_tab.name_div, base_tab.sort_inbrigade, base_tab.name_post, base_tab.name_brigade)
+(object_tab, card_day, card_period, object_sotr, card_sotr, base_tab.month_tab, base_tab.id_sotr, base_tab.fio_sotr, base_tab.id_div, base_tab.name_div, base_tab.sort_inbrigade, base_tab.name_post, base_tab.name_brigade)
 , (base_tab.name_brigade, base_tab.name_div)
 , base_tab.name_div
 )
