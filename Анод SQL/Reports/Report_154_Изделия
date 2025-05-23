@@ -1,0 +1,717 @@
+select o.id,
+header.attr_376_ as header,
+o.attr_1455_,
+nomen.attr_1223_ as obz,
+nomen.attr_376_ as obz2,
+o.attr_2905_ as typ,
+o.attr_582_ as name,
+code.attr_1525_ as kod,
+o.attr_4079_ as count,
+
+CASE
+		WHEN nomen.attr_363_ = 1 THEN
+		1 
+                WHEN nomen.attr_363_ = 9 THEN
+		2
+                WHEN nomen.attr_363_ = 2 THEN
+		3
+		WHEN nomen.attr_363_ IN (8,7,11)  THEN
+		4
+ELSE nomen.attr_363_ END typk,
+
+nomen.attr_363_,
+
+o.attr_374_,
+
+
+
+case when o.attr_1455_ is null then 
+(select 
+coalesce(sum(tokr_op2.sum_time2*comp3.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 39 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_)
+else
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 39 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) end as otrez_op,					/*Отрезная*/
+
+case when o.attr_1455_ is null then 
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 40 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_)
+else
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 40 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) end as tokrn_op,					/*Токарная*/
+
+case when o.attr_1455_ is null then 
+(select 
+coalesce(sum(tokr_op2.sum_time2*comp3.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 42 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_)
+else
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 42 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) end as frez_op,					/*Фрезерная*/
+
+case when o.attr_1455_ is null then 
+(select 
+coalesce(sum(tokr_op2.sum_time2*comp3.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 43 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_)
+else
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 43 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) end as rast_op,					/*Расточная*/
+
+case when o.attr_1455_ is null then 
+(select 
+coalesce(sum(tokr_op2.sum_time2*comp3.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 47 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) 
+else
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 47 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) end as sverl_op,					/*Сверлильная*/
+
+case when o.attr_1455_ is null then 
+(select 
+coalesce(sum(tokr_op2.sum_time2*comp3.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 45 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_)
+else
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 45 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) end as dolb_op,					/*Долбежная*/
+
+case when o.attr_1455_ is null then 
+(select 
+coalesce(sum(tokr_op2.sum_time2*comp3.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 51 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_)
+else
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 51 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) end as shlif_op,					/*Шлифовальная*/
+
+case when o.attr_1455_ is null then 
+(select 
+coalesce(sum(tokr_op2.sum_time2*comp3.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 49 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_)
+else
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 49 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) end as svar_op,					/*Сварочная*/
+
+case when o.attr_1455_ is null then 
+(select 
+coalesce(sum(tokr_op2.sum_time2*comp3.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 44 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_)
+else
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 44 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) end as sles_op,					/*Слесарная*/
+
+case when o.attr_1455_ is null then 
+(select 
+coalesce(sum(tokr_op2.sum_time2*comp3.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 41 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_)
+else
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 41 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) end as term_op,					/*Термическая*/
+
+case when o.attr_1455_ is null then
+(select 
+coalesce(sum(tokr_op2.sum_time2*comp3.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 50 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_)
+else
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 50 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) end as pokr_op,					/*Покрытие*/
+
+case when o.attr_1455_ is null then
+(select 
+coalesce(sum(tokr_op2.sum_time2*comp3.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 55 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_)
+else
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 55 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) end as sles_sbor_op,					/*Слесарно-сборочная*/
+
+case when o.attr_1455_ is null then
+(select 
+coalesce(sum(tokr_op2.sum_time2/**comp3.attr_4079_*/ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 46 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_)
+else
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 46 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) end as tokr1_op,					/*Токарная 1*/
+
+case when o.attr_1455_ is null then
+(select 
+coalesce(sum(tokr_op2.sum_time2*comp3.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 33 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_)
+else
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 33 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) end as tokr_s_chpy_op,					/*Токарная с ЧПУ*/
+
+case when o.attr_1455_ is null then
+(select 
+coalesce(sum(tokr_op2.sum_time2*comp3.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 60 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_)
+else
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 60 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) end as frez_s_chpy_op,					/*Фрезерная с ЧПУ*/
+
+case when o.attr_1455_ is null then
+(select 
+coalesce(sum(tokr_op2.sum_time2*comp3.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 59 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_)
+else
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 59 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) end as rast_s_chpy_op,					/*Расточная с ЧПУ*/
+
+case when o.attr_1455_ is null then
+(select 
+coalesce(sum(tokr_op2.sum_time2*comp3.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 62 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_)
+else
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 62 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) end as gravirov_op,					/*Гравировальная*/
+
+case when o.attr_1455_ is null then
+(select 
+coalesce(sum(tokr_op2.sum_time2*comp3.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 54 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_)
+else
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 54 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) end as komplekt_op,					/*Комплектовочная*/
+
+case when o.attr_1455_ is null then
+(select 
+coalesce(sum(tokr_op2.sum_time2*comp3.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 38 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_)
+else
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 38 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) end as kontrol_op,					/*Контрольная*/
+
+case when o.attr_1455_ is null then
+(select 
+coalesce(sum(tokr_op2.sum_time2*comp3.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 57 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_)
+else
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 57 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) end as markir_op,					/*Маркировочная*/
+
+case when o.attr_1455_ is null then
+(select 
+coalesce(sum(tokr_op2.sum_time2*comp3.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 56 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_)
+else
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 56 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) end as opres_op,					/*Опрессовочная*/
+
+case when o.attr_1455_ is null then
+(select 
+coalesce(sum(tokr_op2.sum_time2*comp3.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 52 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_)
+else
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 52 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) end as preamb_op,					/*Преамбула*/
+
+case when o.attr_1455_ is null then
+(select 
+coalesce(sum(tokr_op2.sum_time2*comp3.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 63 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_)
+else
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 63 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) end as pritir_op,					/*Притирочная*/
+
+case when o.attr_1455_ is null then
+(select 
+coalesce(sum(tokr_op2.sum_time2*comp3.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 48 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_)
+else
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 48 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) end as razval_op,					/*Развальцовка*/
+
+case when o.attr_1455_ is null then
+(select 
+coalesce(sum(tokr_op2.sum_time2*comp3.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 61 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_)
+else
+(select 
+coalesce(sum(tokr_op2.sum_time2*o.attr_4079_ ),0)
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ = 61 group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) end as elektro_op,					/*Электроэрозионная*/
+
+(select 
+coalesce(sum(tokr_op2.sum_time2*comp3.attr_4079_),0)*o.attr_4079_
+from registry.object_301_ o1
+left join registry.object_369_ comp3 on comp3.attr_374_ = o1.id and comp3.is_deleted<>true
+left join registry.object_301_ nomencl on comp3.attr_370_ = nomencl.id and nomencl.is_deleted<>true
+left join registry.object_519_ tech_card on tech_card.attr_520_ = nomencl.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
+left join (select comp2.attr_538_, sum(comp2.attr_1443_) as sum_time2 from registry.object_527_ comp2 where comp2.is_deleted<>true and comp2.attr_586_ not in (53,67) group by comp2.attr_538_) tokr_op2 on tokr_op2.attr_538_=tech_card.id
+where o1.is_deleted<>true and o1.id = o.attr_370_) as itogo_op,					/*всего*/
+
+
+
+
+
+o.attr_4079_ as kol_vo
+
+
+
+
+
+from registry.object_369_ o
+
+left join registry.object_301_ nomen on o.attr_370_ = nomen.id and nomen.is_deleted<>true
+left join registry.object_519_ mk2 on mk2.attr_520_= o.attr_370_ and mk2.attr_2908_ is true and mk2.is_deleted =false
+
+left join registry.object_301_ code on o.attr_370_=code.id
+left join registry.object_301_ header on o.attr_374_=header.id
+
+left join registry.object_400_ mat on nomen.attr_526_=mat.id and mat.is_deleted<>true
+left join registry.object_519_ marsh_card on marsh_card.attr_520_= nomen.id and marsh_card.is_deleted<>true and marsh_card.attr_2908_ = true
+
+
+
+
+
+left join (select o.attr_538_, sum(o.attr_1443_ ) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 39 group by o.attr_538_) otr_op on otr_op.attr_538_=marsh_card.id
+
+
+
+
+
+
+
+
+
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=39
+group by o.attr_538_ 
+) t_otrez on t_otrez.marsh_card_id=marsh_card.id
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=40
+group by o.attr_538_ 
+) t_tokrn on t_tokrn.marsh_card_id=marsh_card.id
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=42
+group by o.attr_538_ 
+) t_frez on t_frez.marsh_card_id=marsh_card.id
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=43
+group by o.attr_538_ 
+) t_rast on t_rast.marsh_card_id=marsh_card.id
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=47
+group by o.attr_538_ 
+) t_sverl on t_sverl.marsh_card_id=marsh_card.id
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=45
+group by o.attr_538_ 
+) t_dolb on t_dolb.marsh_card_id=marsh_card.id
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=51
+group by o.attr_538_ 
+) t_shlif on t_shlif.marsh_card_id=marsh_card.id
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=49
+group by o.attr_538_ 
+) t_svar on t_svar.marsh_card_id=marsh_card.id
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=44
+group by o.attr_538_ 
+) t_sles on t_sles.marsh_card_id=marsh_card.id
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=41
+group by o.attr_538_ 
+) t_term on t_term.marsh_card_id=marsh_card.id
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=50
+group by o.attr_538_ 
+) t_pokr on t_pokr.marsh_card_id=marsh_card.id
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=55
+group by o.attr_538_ 
+) t_sles_sbor on t_sles_sbor.marsh_card_id=marsh_card.id
+left join (select o.attr_538_ as marsh_card_id, array_to_string(array_agg(concat('Шаг №', o.attr_613_,' - ', o.attr_2863_)), '\n') as content_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=53
+group by o.attr_538_ 
+) t_marsh on t_marsh.marsh_card_id=marsh_card.id
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=46
+group by o.attr_538_ 
+) t_tokr1 on t_tokr1.marsh_card_id=marsh_card.id
+
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=33
+group by o.attr_538_ 
+) t_tokr_s_chpy on t_tokr_s_chpy.marsh_card_id=marsh_card.id
+
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=60
+group by o.attr_538_ 
+) t_frez_s_chpy on t_frez_s_chpy.marsh_card_id=marsh_card.id
+
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=59
+group by o.attr_538_ 
+) t_rast_s_chpy on t_rast_s_chpy.marsh_card_id=marsh_card.id
+
+/*Гравировальная*/
+
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=62
+group by o.attr_538_ 
+) t_gravirov on t_gravirov.marsh_card_id=marsh_card.id
+
+/*Комплектовочная*/
+
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=54
+group by o.attr_538_ 
+) t_komplekt on t_komplekt.marsh_card_id=marsh_card.id
+
+/*Контрольная*/
+
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=38
+group by o.attr_538_ 
+) t_kontrol on t_kontrol.marsh_card_id=marsh_card.id
+
+/*Маркировочная*/
+
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=57
+group by o.attr_538_ 
+) t_markir on t_markir.marsh_card_id=marsh_card.id
+
+/*Опрессовочная*/
+
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=56
+group by o.attr_538_ 
+) t_opres on t_opres.marsh_card_id=marsh_card.id
+
+/*Преамбула*/
+
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=52
+group by o.attr_538_ 
+) t_preamb on t_preamb.marsh_card_id=marsh_card.id
+
+/*Притирочная*/
+
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=63
+group by o.attr_538_ 
+) t_pritir on t_pritir.marsh_card_id=marsh_card.id
+
+/*Развальцовка*/
+
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=48
+group by o.attr_538_ 
+) t_razval on t_razval.marsh_card_id=marsh_card.id
+
+/*Электроэрозионная*/
+
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_=61
+group by o.attr_538_ 
+) t_elektro on t_elektro.marsh_card_id=marsh_card.id
+
+left join (select o.attr_538_ as marsh_card_id, sum(o.attr_1443_) as sum_time_op
+from registry.object_527_ o
+where o.is_deleted<>true and o.attr_586_ not in (39, 40,42, 43,47,45,51,49,44,41,50,55,53,46,33,60,59)
+group by o.attr_538_ 
+) t_another on t_another.marsh_card_id=marsh_card.id
+
+left join registry.object_369_ rod on o.attr_1455_ = rod.id
+
+
+where o.is_deleted<>true and o.attr_374_= '{superid}' and nomen.attr_363_ not in (3,6,41,82,7,88)

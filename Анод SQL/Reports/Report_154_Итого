@@ -1,516 +1,69 @@
-   SELECT o.attr_374_,
-          COALESCE(SUM(otr_op.sum_time * o.attr_4079_), 0) + (
-             SELECT COALESCE(t_otrez2.sum_time_op2 * comp_sost.attr_4079_, 0)
-               FROM registry.object_301_ o1
-          LEFT JOIN registry.object_369_ comp_sost ON comp_sost.attr_370_ = o1.id
-                AND comp_sost.is_deleted <> TRUE
-          LEFT JOIN registry.object_519_ marsh_card2 ON marsh_card2.attr_520_ = o1.id
-                AND marsh_card2.is_deleted <> TRUE
-                AND marsh_card2.attr_2908_ = TRUE
-          LEFT JOIN (
-                       SELECT o2.attr_538_ AS marsh_card_id2,
-                              SUM(o2.attr_1443_) AS sum_time_op2
-                         FROM registry.object_527_ o2
-                        WHERE o2.is_deleted <> TRUE
-                          AND o2.attr_586_ = 39
-                     GROUP BY o2.attr_538_
-                    ) t_otrez2 ON t_otrez2.marsh_card_id2 = marsh_card2.id
-              WHERE o1.is_deleted <> TRUE
-                AND o1.id = '{superid}'
-          ) AS otr_op_st,
-          /*Отрезная*/ COALESCE(SUM(tokr_op.sum_time * o.attr_4079_), 0) + (
-             SELECT COALESCE(tokr_op2.sum_time2 * comp_sost.attr_4079_, 0)
-               FROM registry.object_301_ o1
-          LEFT JOIN registry.object_369_ comp_sost ON comp_sost.attr_370_ = o1.id
-                AND comp_sost.is_deleted <> TRUE
-          LEFT JOIN registry.object_519_ marsh_card2 ON marsh_card2.attr_520_ = o1.id
-                AND marsh_card2.is_deleted <> TRUE
-                AND marsh_card2.attr_2908_ = TRUE
-          LEFT JOIN (
-                       SELECT o2.attr_538_,
-                              SUM(o2.attr_1443_) AS sum_time2
-                         FROM registry.object_527_ o2
-                        WHERE o2.is_deleted <> TRUE
-                          AND o2.attr_586_ = 40
-                     GROUP BY o2.attr_538_
-                    ) tokr_op2 ON tokr_op2.attr_538_ = marsh_card2.id
-              WHERE o1.is_deleted <> TRUE
-                AND o1.id = '{superid}'
-          ) AS tokr_op_st,
-          /*Токарная*/ COALESCE(SUM(frez_op.sum_time * o.attr_4079_), 0) + (
-             SELECT COALESCE(frez_op2.sum_time2 * comp_sost.attr_4079_, 0)
-               FROM registry.object_301_ o1
-          LEFT JOIN registry.object_369_ comp_sost ON comp_sost.attr_370_ = o1.id
-                AND comp_sost.is_deleted <> TRUE
-          LEFT JOIN registry.object_519_ marsh_card2 ON marsh_card2.attr_520_ = o1.id
-                AND marsh_card2.is_deleted <> TRUE
-                AND marsh_card2.attr_2908_ = TRUE
-          LEFT JOIN (
-                       SELECT o2.attr_538_,
-                              SUM(o2.attr_1443_) AS sum_time2
-                         FROM registry.object_527_ o2
-                        WHERE o2.is_deleted <> TRUE
-                          AND o2.attr_586_ = 42
-                     GROUP BY o2.attr_538_
-                    ) frez_op2 ON frez_op2.attr_538_ = marsh_card2.id
-              WHERE o1.is_deleted <> TRUE
-                AND o1.id = '{superid}'
-          ) AS frez_op_st,
-          /*Фрезерная*/ COALESCE(SUM(rast_op.sum_time * o.attr_4079_), 0) + (
-             SELECT COALESCE(rast_op2.sum_time2 * comp_sost.attr_4079_, 0)
-               FROM registry.object_301_ o1
-          LEFT JOIN registry.object_369_ comp_sost ON comp_sost.attr_370_ = o1.id
-                AND comp_sost.is_deleted <> TRUE
-          LEFT JOIN registry.object_519_ marsh_card2 ON marsh_card2.attr_520_ = o1.id
-                AND marsh_card2.is_deleted <> TRUE
-                AND marsh_card2.attr_2908_ = TRUE
-          LEFT JOIN (
-                       SELECT o2.attr_538_,
-                              SUM(o2.attr_1443_) AS sum_time2
-                         FROM registry.object_527_ o2
-                        WHERE o2.is_deleted <> TRUE
-                          AND o2.attr_586_ = 43
-                     GROUP BY o2.attr_538_
-                    ) rast_op2 ON rast_op2.attr_538_ = marsh_card2.id
-              WHERE o1.is_deleted <> TRUE
-                AND o1.id = '{superid}'
-          ) AS rast_op_st,
-          /*Расточная*/ COALESCE(SUM(sverl_op.sum_time * o.attr_4079_), 0) + (
-             SELECT COALESCE(sverl_op2.sum_time2 * comp_sost.attr_4079_, 0)
-               FROM registry.object_301_ o1
-          LEFT JOIN registry.object_369_ comp_sost ON comp_sost.attr_370_ = o1.id
-                AND comp_sost.is_deleted <> TRUE
-          LEFT JOIN registry.object_519_ marsh_card2 ON marsh_card2.attr_520_ = o1.id
-                AND marsh_card2.is_deleted <> TRUE
-                AND marsh_card2.attr_2908_ = TRUE
-          LEFT JOIN (
-                       SELECT o2.attr_538_,
-                              SUM(o2.attr_1443_) AS sum_time2
-                         FROM registry.object_527_ o2
-                        WHERE o2.is_deleted <> TRUE
-                          AND o2.attr_586_ = 47
-                     GROUP BY o2.attr_538_
-                    ) sverl_op2 ON sverl_op2.attr_538_ = marsh_card2.id
-              WHERE o1.is_deleted <> TRUE
-                AND o1.id = '{superid}'
-          ) AS sverl_op_st,
-          /*Сверлильная*/ COALESCE(SUM(dolb_op.sum_time * o.attr_4079_), 0) + (
-             SELECT COALESCE(dolb_op2.sum_time2 * comp_sost.attr_4079_, 0)
-               FROM registry.object_301_ o1
-          LEFT JOIN registry.object_369_ comp_sost ON comp_sost.attr_370_ = o1.id
-                AND comp_sost.is_deleted <> TRUE
-          LEFT JOIN registry.object_519_ marsh_card2 ON marsh_card2.attr_520_ = o1.id
-                AND marsh_card2.is_deleted <> TRUE
-                AND marsh_card2.attr_2908_ = TRUE
-          LEFT JOIN (
-                       SELECT o2.attr_538_,
-                              SUM(o2.attr_1443_) AS sum_time2
-                         FROM registry.object_527_ o2
-                        WHERE o2.is_deleted <> TRUE
-                          AND o2.attr_586_ = 45
-                     GROUP BY o2.attr_538_
-                    ) dolb_op2 ON dolb_op2.attr_538_ = marsh_card2.id
-              WHERE o1.is_deleted <> TRUE
-                AND o1.id = '{superid}'
-          ) AS dolb_op_st,
-          /*Долбежная*/ COALESCE(SUM(shlif_op.sum_time * o.attr_4079_), 0) + (
-             SELECT COALESCE(shlif_op2.sum_time2 * comp_sost.attr_4079_, 0)
-               FROM registry.object_301_ o1
-          LEFT JOIN registry.object_369_ comp_sost ON comp_sost.attr_370_ = o1.id
-                AND comp_sost.is_deleted <> TRUE
-          LEFT JOIN registry.object_519_ marsh_card2 ON marsh_card2.attr_520_ = o1.id
-                AND marsh_card2.is_deleted <> TRUE
-                AND marsh_card2.attr_2908_ = TRUE
-          LEFT JOIN (
-                       SELECT o2.attr_538_,
-                              SUM(o2.attr_1443_) AS sum_time2
-                         FROM registry.object_527_ o2
-                        WHERE o2.is_deleted <> TRUE
-                          AND o2.attr_586_ = 51
-                     GROUP BY o2.attr_538_
-                    ) shlif_op2 ON shlif_op2.attr_538_ = marsh_card2.id
-              WHERE o1.is_deleted <> TRUE
-                AND o1.id = '{superid}'
-          ) AS shlif_op_st,
-          /*Шлифовальная*/ COALESCE(SUM(svar_op.sum_time * o.attr_4079_), 0) + (
-             SELECT COALESCE(svar_op2.sum_time2 * comp_sost.attr_4079_, 0)
-               FROM registry.object_301_ o1
-          LEFT JOIN registry.object_369_ comp_sost ON comp_sost.attr_370_ = o1.id
-                AND comp_sost.is_deleted <> TRUE
-          LEFT JOIN registry.object_519_ marsh_card2 ON marsh_card2.attr_520_ = o1.id
-                AND marsh_card2.is_deleted <> TRUE
-                AND marsh_card2.attr_2908_ = TRUE
-          LEFT JOIN (
-                       SELECT o2.attr_538_,
-                              SUM(o2.attr_1443_) AS sum_time2
-                         FROM registry.object_527_ o2
-                        WHERE o2.is_deleted <> TRUE
-                          AND o2.attr_586_ = 49
-                     GROUP BY o2.attr_538_
-                    ) svar_op2 ON svar_op2.attr_538_ = marsh_card2.id
-              WHERE o1.is_deleted <> TRUE
-                AND o1.id = '{superid}'
-          ) AS svar_op_st,
-          /*Сварочная*/ COALESCE(SUM(sles_op.sum_time * o.attr_4079_), 0) + (
-             SELECT COALESCE(sles_op2.sum_time2 * comp_sost.attr_4079_, 0)
-               FROM registry.object_301_ o1
-          LEFT JOIN registry.object_369_ comp_sost ON comp_sost.attr_370_ = o1.id
-                AND comp_sost.is_deleted <> TRUE
-          LEFT JOIN registry.object_519_ marsh_card2 ON marsh_card2.attr_520_ = o1.id
-                AND marsh_card2.is_deleted <> TRUE
-                AND marsh_card2.attr_2908_ = TRUE
-          LEFT JOIN (
-                       SELECT o2.attr_538_,
-                              SUM(o2.attr_1443_) AS sum_time2
-                         FROM registry.object_527_ o2
-                        WHERE o2.is_deleted <> TRUE
-                          AND o2.attr_586_ = 44
-                     GROUP BY o2.attr_538_
-                    ) sles_op2 ON sles_op2.attr_538_ = marsh_card2.id
-              WHERE o1.is_deleted <> TRUE
-                AND o1.id = '{superid}'
-          ) AS sles_op_st,
-          /*Слесарная*/ COALESCE(SUM(term_op.sum_time * o.attr_4079_), 0) + (
-             SELECT COALESCE(term_op2.sum_time2 * comp_sost.attr_4079_, 0)
-               FROM registry.object_301_ o1
-          LEFT JOIN registry.object_369_ comp_sost ON comp_sost.attr_370_ = o1.id
-                AND comp_sost.is_deleted <> TRUE
-          LEFT JOIN registry.object_519_ marsh_card2 ON marsh_card2.attr_520_ = o1.id
-                AND marsh_card2.is_deleted <> TRUE
-                AND marsh_card2.attr_2908_ = TRUE
-          LEFT JOIN (
-                       SELECT o2.attr_538_,
-                              SUM(o2.attr_1443_) AS sum_time2
-                         FROM registry.object_527_ o2
-                        WHERE o2.is_deleted <> TRUE
-                          AND o2.attr_586_ = 41
-                     GROUP BY o2.attr_538_
-                    ) term_op2 ON term_op2.attr_538_ = marsh_card2.id
-              WHERE o1.is_deleted <> TRUE
-                AND o1.id = '{superid}'
-          ) AS term_op_st,
-          /*Термическая*/ COALESCE(SUM(pokr_op.sum_time * o.attr_4079_), 0) + (
-             SELECT COALESCE(pokr_op2.sum_time2 * comp_sost.attr_4079_, 0)
-               FROM registry.object_301_ o1
-          LEFT JOIN registry.object_369_ comp_sost ON comp_sost.attr_370_ = o1.id
-                AND comp_sost.is_deleted <> TRUE
-          LEFT JOIN registry.object_519_ marsh_card2 ON marsh_card2.attr_520_ = o1.id
-                AND marsh_card2.is_deleted <> TRUE
-                AND marsh_card2.attr_2908_ = TRUE
-          LEFT JOIN (
-                       SELECT o2.attr_538_,
-                              SUM(o2.attr_1443_) AS sum_time2
-                         FROM registry.object_527_ o2
-                        WHERE o2.is_deleted <> TRUE
-                          AND o2.attr_586_ = 50
-                     GROUP BY o2.attr_538_
-                    ) pokr_op2 ON pokr_op2.attr_538_ = marsh_card2.id
-              WHERE o1.is_deleted <> TRUE
-                AND o1.id = '{superid}'
-          ) AS pokr_op_st,
-          /*Покрытие*/ COALESCE(SUM(sles_sbor_op.sum_time * o.attr_4079_), 0) + (
-             SELECT COALESCE(sles_sbor_op2.sum_time2 * comp_sost.attr_4079_, 0)
-               FROM registry.object_301_ o1
-          LEFT JOIN registry.object_369_ comp_sost ON comp_sost.attr_370_ = o1.id
-                AND comp_sost.is_deleted <> TRUE
-          LEFT JOIN registry.object_519_ marsh_card2 ON marsh_card2.attr_520_ = o1.id
-                AND marsh_card2.is_deleted <> TRUE
-                AND marsh_card2.attr_2908_ = TRUE
-          LEFT JOIN (
-                       SELECT o2.attr_538_,
-                              SUM(o2.attr_1443_) AS sum_time2
-                         FROM registry.object_527_ o2
-                        WHERE o2.is_deleted <> TRUE
-                          AND o2.attr_586_ = 55
-                     GROUP BY o2.attr_538_
-                    ) sles_sbor_op2 ON sles_sbor_op2.attr_538_ = marsh_card2.id
-              WHERE o1.is_deleted <> TRUE
-                AND o1.id = '{superid}'
-          ) AS sles_sbor_op_st,
-          /*Слесарно-Сборочная*/ COALESCE(SUM(tokr1_op.sum_time * o.attr_4079_), 0) + (
-             SELECT COALESCE(tokr1_op2.sum_time2 * comp_sost.attr_4079_, 0)
-               FROM registry.object_301_ o1
-          LEFT JOIN registry.object_369_ comp_sost ON comp_sost.attr_370_ = o1.id
-                AND comp_sost.is_deleted <> TRUE
-          LEFT JOIN registry.object_519_ marsh_card2 ON marsh_card2.attr_520_ = o1.id
-                AND marsh_card2.is_deleted <> TRUE
-                AND marsh_card2.attr_2908_ = TRUE
-          LEFT JOIN (
-                       SELECT o2.attr_538_,
-                              SUM(o2.attr_1443_) AS sum_time2
-                         FROM registry.object_527_ o2
-                        WHERE o2.is_deleted <> TRUE
-                          AND o2.attr_586_ = 46
-                     GROUP BY o2.attr_538_
-                    ) tokr1_op2 ON tokr1_op2.attr_538_ = marsh_card2.id
-              WHERE o1.is_deleted <> TRUE
-                AND o1.id = '{superid}'
-          ) AS tokr1_op_st,
-          /*Токарная1*/ COALESCE(SUM(tokr_chpy_op.sum_time * o.attr_4079_), 0) + (
-             SELECT COALESCE(tokr_chpy_op2.sum_time2 * comp_sost.attr_4079_, 0)
-               FROM registry.object_301_ o1
-          LEFT JOIN registry.object_369_ comp_sost ON comp_sost.attr_370_ = o1.id
-                AND comp_sost.is_deleted <> TRUE
-          LEFT JOIN registry.object_519_ marsh_card2 ON marsh_card2.attr_520_ = o1.id
-                AND marsh_card2.is_deleted <> TRUE
-                AND marsh_card2.attr_2908_ = TRUE
-          LEFT JOIN (
-                       SELECT o2.attr_538_,
-                              SUM(o2.attr_1443_) AS sum_time2
-                         FROM registry.object_527_ o2
-                        WHERE o2.is_deleted <> TRUE
-                          AND o2.attr_586_ = 33
-                     GROUP BY o2.attr_538_
-                    ) tokr_chpy_op2 ON tokr_chpy_op2.attr_538_ = marsh_card2.id
-              WHERE o1.is_deleted <> TRUE
-                AND o1.id = '{superid}'
-          ) AS tokr_chpy_op_st,
-          /*Токарная с ЧПУ*/ COALESCE(SUM(frez_chpy_op.sum_time * o.attr_4079_), 0) + (
-             SELECT COALESCE(frez_chpy_op2.sum_time2 * comp_sost.attr_4079_, 0)
-               FROM registry.object_301_ o1
-          LEFT JOIN registry.object_369_ comp_sost ON comp_sost.attr_370_ = o1.id
-                AND comp_sost.is_deleted <> TRUE
-          LEFT JOIN registry.object_519_ marsh_card2 ON marsh_card2.attr_520_ = o1.id
-                AND marsh_card2.is_deleted <> TRUE
-                AND marsh_card2.attr_2908_ = TRUE
-          LEFT JOIN (
-                       SELECT o2.attr_538_,
-                              SUM(o2.attr_1443_) AS sum_time2
-                         FROM registry.object_527_ o2
-                        WHERE o2.is_deleted <> TRUE
-                          AND o2.attr_586_ = 60
-                     GROUP BY o2.attr_538_
-                    ) frez_chpy_op2 ON frez_chpy_op2.attr_538_ = marsh_card2.id
-              WHERE o1.is_deleted <> TRUE
-                AND o1.id = '{superid}'
-          ) AS frez_chpy_op_st,
-          /*Фрезерная с ЧПУ*/ COALESCE(SUM(rast_chpy_op.sum_time * o.attr_4079_), 0) + (
-             SELECT COALESCE(rast_chpy_op2.sum_time2 * comp_sost.attr_4079_, 0)
-               FROM registry.object_301_ o1
-          LEFT JOIN registry.object_369_ comp_sost ON comp_sost.attr_370_ = o1.id
-                AND comp_sost.is_deleted <> TRUE
-          LEFT JOIN registry.object_519_ marsh_card2 ON marsh_card2.attr_520_ = o1.id
-                AND marsh_card2.is_deleted <> TRUE
-                AND marsh_card2.attr_2908_ = TRUE
-          LEFT JOIN (
-                       SELECT o2.attr_538_,
-                              SUM(o2.attr_1443_) AS sum_time2
-                         FROM registry.object_527_ o2
-                        WHERE o2.is_deleted <> TRUE
-                          AND o2.attr_586_ = 59
-                     GROUP BY o2.attr_538_
-                    ) rast_chpy_op2 ON rast_chpy_op2.attr_538_ = marsh_card2.id
-              WHERE o1.is_deleted <> TRUE
-                AND o1.id = '{superid}'
-          ) AS rast_chpy_op_st,
-          /*Расточная с ЧПУ*/ COALESCE(SUM(gravir_op.sum_time * o.attr_4079_), 0) + (
-             SELECT COALESCE(gravir_op2.sum_time2 * comp_sost.attr_4079_, 0)
-               FROM registry.object_301_ o1
-          LEFT JOIN registry.object_369_ comp_sost ON comp_sost.attr_370_ = o1.id
-                AND comp_sost.is_deleted <> TRUE
-          LEFT JOIN registry.object_519_ marsh_card2 ON marsh_card2.attr_520_ = o1.id
-                AND marsh_card2.is_deleted <> TRUE
-                AND marsh_card2.attr_2908_ = TRUE
-          LEFT JOIN (
-                       SELECT o2.attr_538_,
-                              SUM(o2.attr_1443_) AS sum_time2
-                         FROM registry.object_527_ o2
-                        WHERE o2.is_deleted <> TRUE
-                          AND o2.attr_586_ = 62
-                     GROUP BY o2.attr_538_
-                    ) gravir_op2 ON gravir_op2.attr_538_ = marsh_card2.id
-              WHERE o1.is_deleted <> TRUE
-                AND o1.id = '{superid}'
-          ) AS gravir_op_st,
-          /*Гравировальная*/ COALESCE(SUM(kontr_op.sum_time * o.attr_4079_), 0) + (
-             SELECT COALESCE(kontr_op2.sum_time2 * comp_sost.attr_4079_, 0)
-               FROM registry.object_301_ o1
-          LEFT JOIN registry.object_369_ comp_sost ON comp_sost.attr_370_ = o1.id
-                AND comp_sost.is_deleted <> TRUE
-          LEFT JOIN registry.object_519_ marsh_card2 ON marsh_card2.attr_520_ = o1.id
-                AND marsh_card2.is_deleted <> TRUE
-                AND marsh_card2.attr_2908_ = TRUE
-          LEFT JOIN (
-                       SELECT o2.attr_538_,
-                              SUM(o2.attr_1443_) AS sum_time2
-                         FROM registry.object_527_ o2
-                        WHERE o2.is_deleted <> TRUE
-                          AND o2.attr_586_ = 38
-                     GROUP BY o2.attr_538_
-                    ) kontr_op2 ON kontr_op2.attr_538_ = marsh_card2.id
-              WHERE o1.is_deleted <> TRUE
-                AND o1.id = '{superid}'
-          ) AS kontr_op_st,
-          /*Контрольная*/ COALESCE(SUM(kompl_op.sum_time * o.attr_4079_), 0) + (
-             SELECT COALESCE(kompl_op2.sum_time2 * comp_sost.attr_4079_, 0)
-               FROM registry.object_301_ o1
-          LEFT JOIN registry.object_369_ comp_sost ON comp_sost.attr_370_ = o1.id
-                AND comp_sost.is_deleted <> TRUE
-          LEFT JOIN registry.object_519_ marsh_card2 ON marsh_card2.attr_520_ = o1.id
-                AND marsh_card2.is_deleted <> TRUE
-                AND marsh_card2.attr_2908_ = TRUE
-          LEFT JOIN (
-                       SELECT o2.attr_538_,
-                              SUM(o2.attr_1443_) AS sum_time2
-                         FROM registry.object_527_ o2
-                        WHERE o2.is_deleted <> TRUE
-                          AND o2.attr_586_ = 54
-                     GROUP BY o2.attr_538_
-                    ) kompl_op2 ON kompl_op2.attr_538_ = marsh_card2.id
-              WHERE o1.is_deleted <> TRUE
-                AND o1.id = '{superid}'
-          ) AS kompl_op_st,
-          /*Комплектовочная*/ COALESCE(SUM(markir_op.sum_time * o.attr_4079_), 0) + (
-             SELECT COALESCE(markir_op2.sum_time2 * comp_sost.attr_4079_, 0)
-               FROM registry.object_301_ o1
-          LEFT JOIN registry.object_369_ comp_sost ON comp_sost.attr_370_ = o1.id
-                AND comp_sost.is_deleted <> TRUE
-          LEFT JOIN registry.object_519_ marsh_card2 ON marsh_card2.attr_520_ = o1.id
-                AND marsh_card2.is_deleted <> TRUE
-                AND marsh_card2.attr_2908_ = TRUE
-          LEFT JOIN (
-                       SELECT o2.attr_538_,
-                              SUM(o2.attr_1443_) AS sum_time2
-                         FROM registry.object_527_ o2
-                        WHERE o2.is_deleted <> TRUE
-                          AND o2.attr_586_ = 57
-                     GROUP BY o2.attr_538_
-                    ) markir_op2 ON markir_op2.attr_538_ = marsh_card2.id
-              WHERE o1.is_deleted <> TRUE
-                AND o1.id = '{superid}'
-          ) AS markir_op_st,
-          /*Маркировочная*/ COALESCE(SUM(opress_op.sum_time * o.attr_4079_), 0) + (
-             SELECT COALESCE(opress_op2.sum_time2 * comp_sost.attr_4079_, 0)
-               FROM registry.object_301_ o1
-          LEFT JOIN registry.object_369_ comp_sost ON comp_sost.attr_370_ = o1.id
-                AND comp_sost.is_deleted <> TRUE
-          LEFT JOIN registry.object_519_ marsh_card2 ON marsh_card2.attr_520_ = o1.id
-                AND marsh_card2.is_deleted <> TRUE
-                AND marsh_card2.attr_2908_ = TRUE
-          LEFT JOIN (
-                       SELECT o2.attr_538_,
-                              SUM(o2.attr_1443_) AS sum_time2
-                         FROM registry.object_527_ o2
-                        WHERE o2.is_deleted <> TRUE
-                          AND o2.attr_586_ = 56
-                     GROUP BY o2.attr_538_
-                    ) opress_op2 ON opress_op2.attr_538_ = marsh_card2.id
-              WHERE o1.is_deleted <> TRUE
-                AND o1.id = '{superid}'
-          ) AS opress_op_st,
-          /*Опрессовочная*/ COALESCE(SUM(pream_op.sum_time * o.attr_4079_), 0) + (
-             SELECT COALESCE(pream_op2.sum_time2 * comp_sost.attr_4079_, 0)
-               FROM registry.object_301_ o1
-          LEFT JOIN registry.object_369_ comp_sost ON comp_sost.attr_370_ = o1.id
-                AND comp_sost.is_deleted <> TRUE
-          LEFT JOIN registry.object_519_ marsh_card2 ON marsh_card2.attr_520_ = o1.id
-                AND marsh_card2.is_deleted <> TRUE
-                AND marsh_card2.attr_2908_ = TRUE
-          LEFT JOIN (
-                       SELECT o2.attr_538_,
-                              SUM(o2.attr_1443_) AS sum_time2
-                         FROM registry.object_527_ o2
-                        WHERE o2.is_deleted <> TRUE
-                          AND o2.attr_586_ = 52
-                     GROUP BY o2.attr_538_
-                    ) pream_op2 ON pream_op2.attr_538_ = marsh_card2.id
-              WHERE o1.is_deleted <> TRUE
-                AND o1.id = '{superid}'
-          ) AS pream_op_st,
-          /*Преамбула*/ COALESCE(SUM(pritir_op.sum_time * o.attr_4079_), 0) + (
-             SELECT COALESCE(pritir_op2.sum_time2 * comp_sost.attr_4079_, 0)
-               FROM registry.object_301_ o1
-          LEFT JOIN registry.object_369_ comp_sost ON comp_sost.attr_370_ = o1.id
-                AND comp_sost.is_deleted <> TRUE
-          LEFT JOIN registry.object_519_ marsh_card2 ON marsh_card2.attr_520_ = o1.id
-                AND marsh_card2.is_deleted <> TRUE
-                AND marsh_card2.attr_2908_ = TRUE
-          LEFT JOIN (
-                       SELECT o2.attr_538_,
-                              SUM(o2.attr_1443_) AS sum_time2
-                         FROM registry.object_527_ o2
-                        WHERE o2.is_deleted <> TRUE
-                          AND o2.attr_586_ = 63
-                     GROUP BY o2.attr_538_
-                    ) pritir_op2 ON pritir_op2.attr_538_ = marsh_card2.id
-              WHERE o1.is_deleted <> TRUE
-                AND o1.id = '{superid}'
-          ) AS pritir_op_st,
-          /*Притирочная*/ COALESCE(SUM(razval_op.sum_time * o.attr_4079_), 0) + (
-             SELECT COALESCE(razval_op2.sum_time2 * comp_sost.attr_4079_, 0)
-               FROM registry.object_301_ o1
-          LEFT JOIN registry.object_369_ comp_sost ON comp_sost.attr_370_ = o1.id
-                AND comp_sost.is_deleted <> TRUE
-          LEFT JOIN registry.object_519_ marsh_card2 ON marsh_card2.attr_520_ = o1.id
-                AND marsh_card2.is_deleted <> TRUE
-                AND marsh_card2.attr_2908_ = TRUE
-          LEFT JOIN (
-                       SELECT o2.attr_538_,
-                              SUM(o2.attr_1443_) AS sum_time2
-                         FROM registry.object_527_ o2
-                        WHERE o2.is_deleted <> TRUE
-                          AND o2.attr_586_ = 48
-                     GROUP BY o2.attr_538_
-                    ) razval_op2 ON razval_op2.attr_538_ = marsh_card2.id
-              WHERE o1.is_deleted <> TRUE
-                AND o1.id = '{superid}'
-          ) AS razval_op_st,
-          /*Развальцовка*/ COALESCE(SUM(elektro_op.sum_time * o.attr_4079_), 0) + (
-             SELECT COALESCE(elektro_op2.sum_time2 * comp_sost.attr_4079_, 0)
-               FROM registry.object_301_ o1
-          LEFT JOIN registry.object_369_ comp_sost ON comp_sost.attr_370_ = o1.id
-                AND comp_sost.is_deleted <> TRUE
-          LEFT JOIN registry.object_519_ marsh_card2 ON marsh_card2.attr_520_ = o1.id
-                AND marsh_card2.is_deleted <> TRUE
-                AND marsh_card2.attr_2908_ = TRUE
-          LEFT JOIN (
-                       SELECT o2.attr_538_,
-                              SUM(o2.attr_1443_) AS sum_time2
-                         FROM registry.object_527_ o2
-                        WHERE o2.is_deleted <> TRUE
-                          AND o2.attr_586_ = 61
-                     GROUP BY o2.attr_538_
-                    ) elektro_op2 ON elektro_op2.attr_538_ = marsh_card2.id
-              WHERE o1.is_deleted <> TRUE
-                AND o1.id = '{superid}'
-          ) AS elektro_op_st,
-          /*Электроэрозионная*/ COALESCE(SUM(another_op.sum_time * o.attr_4079_), 0) AS suma_op_st /*Все*/
-
-
-from registry.object_369_ o
- 
-left join registry.object_301_ nomen on o.attr_370_ = nomen.id and nomen.is_deleted<>true
-left join registry.object_519_ tech_card on tech_card.attr_520_ = nomen.id and tech_card.is_deleted<>true and tech_card.attr_2908_ = true
-left join (select o.attr_538_, sum(o.attr_1443_ ) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 39 group by o.attr_538_) otr_op on otr_op.attr_538_=tech_card.id
-left join (select o.attr_538_, sum(o.attr_1443_) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 40 group by o.attr_538_) tokr_op on tokr_op.attr_538_=tech_card.id
-left join (select o.attr_538_, sum(o.attr_1443_ ) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 42 group by o.attr_538_) frez_op on frez_op.attr_538_=tech_card.id
-left join (select o.attr_538_, sum(o.attr_1443_ ) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 43 group by o.attr_538_) rast_op on rast_op.attr_538_=tech_card.id
-left join (select o.attr_538_, sum(o.attr_1443_ ) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 47 group by o.attr_538_) sverl_op on sverl_op.attr_538_=tech_card.id
-left join (select o.attr_538_, sum(o.attr_1443_ ) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 45 group by o.attr_538_) dolb_op on dolb_op.attr_538_=tech_card.id
-left join (select o.attr_538_, sum(o.attr_1443_ ) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 51 group by o.attr_538_) shlif_op on shlif_op.attr_538_=tech_card.id
-left join (select o.attr_538_, sum(o.attr_1443_ ) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 49 group by o.attr_538_) svar_op on svar_op.attr_538_=tech_card.id
-left join (select o.attr_538_, sum(o.attr_1443_ ) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 44 group by o.attr_538_) sles_op on sles_op.attr_538_=tech_card.id
-left join (select o.attr_538_, sum(o.attr_1443_ ) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 41 group by o.attr_538_) term_op on term_op.attr_538_=tech_card.id
-left join (select o.attr_538_, sum(o.attr_1443_ ) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 50 group by o.attr_538_) pokr_op on pokr_op.attr_538_=tech_card.id
-left join (select o.attr_538_, sum(o.attr_1443_ ) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 55 group by o.attr_538_) sles_sbor_op on sles_sbor_op.attr_538_=tech_card.id
-left join (select o.attr_538_, sum(o.attr_1443_) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 46 group by o.attr_538_) tokr1_op on tokr1_op.attr_538_=tech_card.id
-left join (select o.attr_538_, sum(o.attr_1443_ ) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 33 group by o.attr_538_) tokr_chpy_op on tokr_chpy_op.attr_538_=tech_card.id
-left join (select o.attr_538_, sum(o.attr_1443_ ) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 60 group by o.attr_538_) frez_chpy_op on frez_chpy_op.attr_538_=tech_card.id
-left join (select o.attr_538_, sum(o.attr_1443_ ) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 59 group by o.attr_538_) rast_chpy_op on rast_chpy_op.attr_538_=tech_card.id
-left join (select o.attr_538_, sum(o.attr_1443_ ) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 62 group by o.attr_538_) gravir_op on gravir_op.attr_538_=tech_card.id
-left join (select o.attr_538_, sum(o.attr_1443_ ) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 38 group by o.attr_538_) kontr_op on kontr_op.attr_538_=tech_card.id
-left join (select o.attr_538_, sum(o.attr_1443_) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 54 group by o.attr_538_) kompl_op on kompl_op.attr_538_=tech_card.id
-left join (select o.attr_538_, sum(o.attr_1443_ ) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 57 group by o.attr_538_) markir_op on markir_op.attr_538_=tech_card.id
-left join (select o.attr_538_, sum(o.attr_1443_ ) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 56 group by o.attr_538_) opress_op on opress_op.attr_538_=tech_card.id
-left join (select o.attr_538_, sum(o.attr_1443_ ) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 52 group by o.attr_538_) pream_op on pream_op.attr_538_=tech_card.id
-left join (select o.attr_538_, sum(o.attr_1443_) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 63 group by o.attr_538_) pritir_op on pritir_op.attr_538_=tech_card.id
-left join (select o.attr_538_, sum(o.attr_1443_ ) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 48 group by o.attr_538_) razval_op on razval_op.attr_538_=tech_card.id
-left join (select o.attr_538_, sum(o.attr_1443_ ) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ = 61 group by o.attr_538_) elektro_op on elektro_op.attr_538_=tech_card.id
-left join (select o.attr_538_, sum(o.attr_1443_ ) as sum_time from registry.object_527_ o where o.is_deleted<>true and o.attr_586_ not in (67,53) group by o.attr_538_) another_op on another_op.attr_538_=tech_card.id
-left join registry.object_369_ rod on o.attr_1455_ = rod.id
-
-where o.is_deleted<>true and o.attr_374_  = '{superid}'
-
-group by o.attr_374_
-
-
+SELECT 
+    o.attr_374_,
+    /*Отрезная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 39 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS otr_op_st,
+    /*Токарная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 40 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS tokr_op_st,
+    /*Фрезерная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 42 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS frez_op_st,
+    /*Расточная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 43 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS rast_op_st,
+    /*Сверлильная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 47 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS sverl_op_st,
+    /*Долбежная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 45 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS dolb_op_st,
+    /*Шлифовальная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 51 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS shlif_op_st,
+    /*Сварочная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 49 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS svar_op_st,
+    /*Слесарная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 44 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS sles_op_st,
+    /*Термическая*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 41 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS term_op_st,
+    /*Покрытие*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 50 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS pokr_op_st,
+    /*Слесарно-Сборочная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 55 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS sles_sbor_op_st,
+    /*Токарная1*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 46 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS tokr1_op_st,
+    /*Токарная с ЧПУ*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 33 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS tokr_chpy_op_st,
+    /*Фрезерная с ЧПУ*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 60 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS frez_chpy_op_st,
+    /*Расточная с ЧПУ*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 59 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS rast_chpy_op_st,
+    /*Гравировальная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 62 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS gravir_op_st,
+    /*Контрольная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 38 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS kontr_op_st,
+    /*Комплектовочная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 54 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS kompl_op_st,
+    /*Маркировочная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 57 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS markir_op_st,
+    /*Опрессовочная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 56 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS opress_op_st,
+    /*Преамбула*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 52 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS pream_op_st,
+    /*Притирочная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 63 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS pritir_op_st,
+    /*Развальцовка*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 48 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS razval_op_st,
+    /*Электроэрозионная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 61 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS elektro_op_st,
+    /*Все*/
+    COALESCE(SUM(CASE WHEN tech_ops.type NOT IN (67, 53) THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS all_op_st
+FROM registry.object_369_ o
+LEFT JOIN registry.object_301_ nomen ON o.attr_370_ = nomen.id AND NOT nomen.is_deleted
+LEFT JOIN registry.object_519_ tech_card ON tech_card.attr_520_ = nomen.id AND NOT tech_card.is_deleted AND tech_card.attr_2908_
+LEFT JOIN (
+    SELECT 
+        attr_538_ AS "link_tech_card", 
+        attr_586_ AS "type",
+        SUM(attr_1443_) AS "sum_time"
+    FROM registry.object_527_
+    WHERE NOT is_deleted
+    GROUP BY attr_538_, attr_586_
+) tech_ops ON tech_ops.link_tech_card = tech_card.id
+WHERE NOT o.is_deleted 
+     AND o.attr_374_ = '{superid}'
+GROUP BY o.attr_374_
