@@ -1,0 +1,360 @@
+/* переменные Кварц */
+:root {
+    /* общий фон в системе */
+    --c-back-main: rgba(241, 243, 249, 1); 
+    /* цвет рамок в системе */
+    --c-bord-main: rgba(191, 191, 208, 1);
+    /* фон кнопок редакторов при наведении */
+    --c-back-btn-editor-hover: rgba(255, 255, 255, 1);
+    /* край кнопок редакторов при наведении */
+    --out-btn-editor-hover: 1px solid rgb(221, 221, 230);
+    /* фон верхней строки вкладок */
+    --c-back-sysheader: rgba(255, 255, 255, .8);
+    /* фон колокольчика уведомлений */
+    --c-back-sysnav-bell: rgba(0, 0, 0, 0);
+    /* текст колокольчика уведомлений */
+    --c-text-sysnav-bell: rgba(107, 195, 6, 1);
+    /* текст вкладок */
+    --c-text-systabs: rgba(48, 48, 51, 1);
+    /* текст вкладок и меню при наведении */
+    --c-text-systabs-hover: rgba(67, 102, 173, 1);
+    /* нижний край вкладок */
+    --c-bord-btm-systabs: var(--c-back-main, rgba(245, 246, 250, 1));
+    /* левый край вкладок */
+    --c-bord-lft-systabs: var(--c-bord-main, rgba(228, 231, 237, 1));
+    /* левый край активной вкладки */
+    --c-bord-lft-systabs-active: rgba(113, 183, 154, 1);
+    /* левый край группы элементов дерева */
+    --bord-lft-tree-group: 2px solid rgb(95, 166, 221);
+    /* край области элементов компонента-дерева */
+    --bord-tree: 1px solid rgb(228, 231, 237);
+    /* нижний край заголовка компонента-дерева */
+    --bord-btm-tree-header: 1px solid rgb(228, 231, 237);
+    /* правый край заголовка компонента-дерева */
+    --bord-rgt-tree-header: 1px solid var(--c-back-main, rgba(245, 246, 250, 1));
+    /* край инфоконтейнера */
+    --bord-infocont: 1px solid var(--c-bord-main, rgba(245, 246, 250, 1));
+    --s: rgb(128, 114, 101);
+    --s: rgba(244, 244, 245, 1);
+}
+
+/* Переменные AG Grid (реестр, аналитическая) для светлых тем*/
+[class*=ag-theme-]:not([class*="-dark"]) {
+     /* фон заголовка */   
+    --ag-header-background-color: rgba(208, 230, 228, 1) !important; /*rgba(183, 245, 226, 0.95)*/
+    /* текст заголовка */
+    --ag-header-foreground-color: rgba(90, 90, 84, .9) !important;
+    /* выделение в таблице (rgba(0, 145, 234, 0.2)) */
+    --ag-range-selection-background-color: rgba(0, 145, 234, 0.2) !important;
+    /* фон таблицы (#fff) */
+    --ag-background-color: rgba(255, 255, 255, 1) !important;
+    /* "полосатая" строка (#fcfdfe) */
+    --ag-odd-row-background-color: rgba(209, 217, 219, .2) !important;
+    --ag-selected-row-background-color: rgba(33, 150, 243, 0.3) !important;
+    --ag-row-hover-color: rgba(33, 150, 243, 0.1) !important;
+    --ag-column-hover-color: rgba(33, 150, 243, 0.1) !important;
+    --ag-border-color: rgba(235, 238, 245, 1) !important;
+    --ag-row-border-color: rgba(189, 195, 199, 0.58) !important;
+}
+
+/* Настройка AG Grid */
+.ag-header {
+    background: var(--ag-header-background-color) !important;
+    color: var(--ag-header-foreground-color) !important;
+    border-bottom-color: var(--ag-border-color) !important;
+}
+
+.ag-row {
+    border-bottom-color: var(--ag-row-border-color) !important;
+}
+
+.ag-row-odd {
+    background-color: var(--ag-odd-row-background-color) !important;
+}
+
+.ag-row-hover {
+    background-color: var(--ag-row-hover-color) !important;
+}
+
+.ag-column-hover {
+    background-color: var(--ag-column-hover-color) !important;
+}
+
+.ag-header-cell-label {
+    justify-content: center;
+	font-size: 13px;
+	font-weight: 500;
+}
+
+.ag-cell {
+    text-align: left;
+}
+
+/* Системное меню*/
+.system_menuShadow,
+.system_menuShadow1 {
+    background: var(--c-back-sysheader, rgb(240, 240, 240)) !important;
+
+    & .el-submenu__title {
+        background: var(--c-back-sysheader, rgba(255, 255, 240)) !important;
+
+        &:hover,
+        :focus {
+            background-color: transparent;
+            color: var(--c-text-systabs-hover, rgb(64, 158, 255));
+        }
+    }
+
+    & .el-menu-item {
+        background: var(--c-back-sysheader, rgba(255, 255, 240)) !important;
+
+        &.is-active {
+            color: #303133;
+        }
+
+        &:hover,
+        :focus {
+            background-color: rgba (255, 255, 255, .5);
+            color: var(--c-text-systabs-hover, rgb(64, 158, 255));
+        }
+
+    }
+
+    & .collapse-button {
+        background: rgba(255, 255, 255, .3);
+
+        &:focus {
+            color: #303133;
+        }
+
+        &:hover {
+            color: rgba(67, 107, 173, 1);
+        }
+    }
+}
+
+/*Строка вкладок и навигации*/
+.system__tabs {
+    &>.el-tabs__header {
+        background: var(--c-back-sysheader, rgb(240, 240, 240));
+    }
+
+    & .el-tabs__item.is-top.is-closable {
+        border-left-color: var(--c-bord-lft-systabs, rgb(228, 231, 237));
+    }
+
+    & .el-tabs__item.is-top.is-active.is-closable {
+        background-color: var(--c-back-main, rgb(255, 255, 255));
+        border-left-color: var(--c-bord-lft-systabs-active, var(--c-bord-lft-systabs, rgb(228, 231, 237)));
+        border-bottom-color: var(--c-bord-btm-systabs, rgb(255, 255, 255));
+    }
+}
+
+.system_mainBox {
+    background-color: var(--c-back-main, rgb(255, 255, 255));
+}
+
+.nav-item:hover {
+    background: var(--c-back-sysnav-bell, rgba(0, 0, 0, 0));
+    color: var(--c-text-sysnav-bell, rgba(0, 0, 0, 1));
+}
+
+.el-tabs__active-bar:has(~ .el-tabs__item.is-active:hover) {
+    height: 3px;
+    padding: 0px;
+}
+
+.el-tabs__item {
+    &.is-active {
+        color: var(--c-text-systabs, rgb(64, 158, 255));
+    }
+
+    &:hover {
+        color: var(--c-text-systabs-hover, rgb(64, 158, 255));
+    }
+}
+
+/*настройка кнопок таблиц*/
+.toolbar .el-button {
+    background-color: transparent;
+}
+
+/*редактор интерфейсов*/
+.interface_editor .header,
+.interface_editor .panel {
+    background-color: var(--c-back-main, rgb(255, 255, 255)) !important;
+
+    & .icon_button:hover:not(.mini) {
+        background-color: var(--c-back-btn-editor-hover, rgb(233, 235, 237));
+        outline: var(--out-btn-editor-hover, 0px);
+    }
+}
+
+/*редакторы*/
+[class$="_editor"] {
+
+    /*панели настроек*/
+    /& .tool_box {
+        background-color: var(--c-back-main, rgb(255, 255, 255));
+    }
+
+    /*фон дерева элементов*/
+    & .el-scrollbar__wrap {
+        background-color: rgb(255, 255, 255);
+    }
+}
+
+/*выравнивание полей*/
+.el-form-item {
+    margin-bottom: 0;
+}
+
+.el-form-item__content .xref_field.vue-treeselect,
+.el-form-item__label .xref_field_label {
+    top: 0
+}
+
+/*деактивированные поля*/
+.xref_field.vue-treeselect--disabled .vue-treeselect__control {
+    background-color: rgb(241, 241, 243);
+    border-color: rgb(228, 231, 237);
+}
+
+/*деревья (компоненты)*/
+.derevo {
+    background-color: rgb(255, 255, 255);
+
+    /* Элементы с role = "group" наследуют ширину родительского элемента */
+    & [role="group"] {
+        width: 100%;
+        /* Устанавливаем ширину на 100% от родителя */
+        border-left: var(--bord-lft-tree-group, 2px solid rgb(95, 166, 221));
+        /* Выделение левого края группы элементов */
+    }
+
+    /* Элементы с role = "treeitem" уменьшаются по ширине слева */
+    & [role="treeitem"] {
+        padding-left: calc(18px - 11px);
+        /* Уменьшаем отступ слева */
+    }
+
+    & .content.custom_scrollbar {
+        overflow: hidden;
+    }
+
+    & .a-tree {
+        & .el-tree {
+            padding-top: 5px !important;
+            height: calc(100vh - 102px);
+            overflow: hidden auto;
+            border-right: var(--bord-tree, 1px solid rgb(228, 231, 237));
+        }
+
+        & .background {
+            background: var(--c-back-main, rgb(255, 255, 255));
+            z-index: 3000 !important;
+        }
+
+        & .header_fixed {
+            position: relative;
+            //display: none;
+            border-bottom: var(--bord-btm-tree-header, 1px solid rgb(228, 231, 237));
+            border-right: var(--bord-rgt-tree-header, 1px solid rgb(228, 231, 237));
+
+            & .search_input {
+                width: calc(100% - 140px) !important;
+                padding: 0px !important;
+                margin: 5px 10px 0px 10px !important;
+                float: none !important;
+                min-width: 200px;
+            }
+        }
+    }
+}
+
+/*главный контейнер карточки*/
+.cont_body {
+    background: var(--c-back-main, rgb(255, 255, 255));
+}
+
+/*информационные контейнеры*/
+.cont {
+    background: var(--c-back-main, #fff);
+    border-radius: 10px;
+    border: var(--bord-infocont, 1px solid var(--c-back-main, #fff));
+
+    //box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.0);
+    &.block .content {
+        overflow: hidden;
+    }
+}
+
+/*контейнер с вкладками*/
+.cont_tab .tabs_container {
+    font-style: normal;
+    font-weight: normal;
+    font-size: 14px;
+
+    & .tab {
+        min-height: 35px;
+        height: auto !important;
+        width: auto !important;
+        color: rgba(94, 93, 95, 1);
+        font-weight: 400;
+        text-align: left;
+        transition: color 0.08s cubic-bezier(0.645, 0.045, 0.355, 1), background-color 0.08s cubic-bezier(0.645, 0.045, 0.355, 1);
+
+        &:hover {
+            color: var(--c-text-systabs-hover, rgba(20, 149, 255, .75));
+            background-color: rgba(255, 255, 255, 1);
+        }
+
+        &.active {
+            color: rgba(94, 93, 95, 1);
+            font-weight: 600;
+            background-color: transparent;
+        }
+    }
+
+    &.position_top {
+        background: transparent;
+
+        & .tab {
+            white-space: nowrap;
+            padding: 10px 20px 10px 20px;
+            border-bottom: 1px solid #ebeef5;
+
+            &.active {
+                border-bottom: 3px solid rgba(248, 184, 120, 0.4);
+            }
+        }
+    }
+
+    &.position_right {
+        width: 140px;
+        background: var(--c-back-main, rgb(255, 255, 255));
+
+        & .tab {
+            padding: 30px 0px 10px 10px;
+            border-left: 1px solid #ebeef5;
+
+            &.active {
+                border-left: 5px solid rgba(20, 149, 255, 0.35);
+            }
+        }
+    }
+}
+
+/*заголовок первого уровня*/
+.h1 {
+    overflow: hidden;
+    cursor: default;
+    color: rgb(28, 28, 37);
+}
+
+/*заголовок второго уровня*/
+.h2 {
+    overflow: hidden;
+    cursor: default;
+    color: rgb(44, 44, 60);
+}

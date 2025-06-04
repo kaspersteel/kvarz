@@ -1,0 +1,69 @@
+SELECT 
+    o.attr_374_,
+    /*Отрезная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 39 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS otr_op_st,
+    /*Токарная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 40 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS tokr_op_st,
+    /*Фрезерная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 42 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS frez_op_st,
+    /*Расточная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 43 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS rast_op_st,
+    /*Сверлильная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 47 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS sverl_op_st,
+    /*Долбежная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 45 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS dolb_op_st,
+    /*Шлифовальная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 51 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS shlif_op_st,
+    /*Сварочная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 49 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS svar_op_st,
+    /*Слесарная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 44 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS sles_op_st,
+    /*Термическая*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 41 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS term_op_st,
+    /*Покрытие*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 50 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS pokr_op_st,
+    /*Слесарно-Сборочная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 55 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS sles_sbor_op_st,
+    /*Токарная1*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 46 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS tokr1_op_st,
+    /*Токарная с ЧПУ*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 33 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS tokr_chpy_op_st,
+    /*Фрезерная с ЧПУ*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 60 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS frez_chpy_op_st,
+    /*Расточная с ЧПУ*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 59 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS rast_chpy_op_st,
+    /*Гравировальная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 62 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS gravir_op_st,
+    /*Контрольная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 38 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS kontr_op_st,
+    /*Комплектовочная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 54 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS kompl_op_st,
+    /*Маркировочная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 57 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS markir_op_st,
+    /*Опрессовочная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 56 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS opress_op_st,
+    /*Преамбула*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 52 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS pream_op_st,
+    /*Притирочная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 63 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS pritir_op_st,
+    /*Развальцовка*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 48 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS razval_op_st,
+    /*Электроэрозионная*/
+    COALESCE(SUM(CASE WHEN tech_ops.type = 61 THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS elektro_op_st,
+    /*Все*/
+    COALESCE(SUM(CASE WHEN tech_ops.type NOT IN (67, 53) THEN tech_ops.sum_time ELSE 0 END * o.attr_4079_), 0) AS all_op_st
+FROM registry.object_369_ o
+LEFT JOIN registry.object_301_ nomen ON o.attr_370_ = nomen.id AND NOT nomen.is_deleted
+LEFT JOIN registry.object_519_ tech_card ON tech_card.attr_520_ = nomen.id AND NOT tech_card.is_deleted AND tech_card.attr_2908_
+LEFT JOIN (
+    SELECT 
+        attr_538_ AS "link_tech_card", 
+        attr_586_ AS "type",
+        SUM(attr_1443_) AS "sum_time"
+    FROM registry.object_527_
+    WHERE NOT is_deleted
+    GROUP BY attr_538_, attr_586_
+) tech_ops ON tech_ops.link_tech_card = tech_card.id
+WHERE NOT o.is_deleted 
+     AND o.attr_374_ = '{superid}'
+GROUP BY o.attr_374_

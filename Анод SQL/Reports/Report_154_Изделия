@@ -1,0 +1,120 @@
+WITH tech_ops AS (
+   SELECT o1.id AS "nomen_id",
+          comp_struct.attr_4079_ AS "comp_struct_count",
+          comp_struct.is_deleted AS "comp_struct_deleted",
+          tech_card.id AS "tech_card_id",
+          tech_op.attr_586_ AS "type",
+          SUM(tech_op.attr_1443_) AS "sum_time"
+     FROM registry.object_301_ o1
+LEFT JOIN registry.object_369_ comp_struct ON comp_struct.attr_374_ = o1.id
+      AND NOT comp_struct.is_deleted
+LEFT JOIN registry.object_301_ nomen_comp ON comp_struct.attr_370_ = nomen_comp.id
+      AND NOT nomen_comp.is_deleted
+LEFT JOIN registry.object_519_ tech_card ON tech_card.attr_520_ = nomen_comp.id
+      AND NOT tech_card.is_deleted
+      AND tech_card.attr_2908_ = TRUE
+LEFT JOIN registry.object_527_ tech_op ON tech_op.attr_538_ = tech_card.id
+      AND NOT tech_op.is_deleted
+    WHERE NOT o1.is_deleted
+ GROUP BY o1.id,
+          tech_card.id,
+          tech_op.attr_586_,
+          comp_struct.id 
+)
+SELECT 
+    o.id,
+    header.attr_376_ AS header,
+    o.attr_1455_,
+    nomen.attr_1223_ AS obz,
+    nomen.attr_376_ AS obz2,
+    o.attr_2905_ AS typ,
+    o.attr_582_ AS name,
+    nomen.attr_1525_ AS kod,
+    o.attr_4079_ AS count,
+
+    CASE
+        WHEN nomen.attr_363_ = 1 THEN 1
+        WHEN nomen.attr_363_ = 9 THEN 2
+        WHEN nomen.attr_363_ = 2 THEN 3
+        WHEN nomen.attr_363_ IN (8,7,11) THEN 4
+        ELSE nomen.attr_363_
+    END AS typk,
+
+    nomen.attr_363_,
+
+    o.attr_374_,
+
+    /*Отрезная*/
+    COALESCE(SUM(CASE WHEN operation_times.type = 39 THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0) AS otrez_op,
+    /*Токарная*/
+    COALESCE(SUM(CASE WHEN operation_times.type = 40 THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0) AS tokrn_op,
+    /*Фрезерная*/
+    COALESCE(SUM(CASE WHEN operation_times.type = 42 THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0) AS frez_op,
+    /*Расточная*/
+    COALESCE(SUM(CASE WHEN operation_times.type = 43 THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0) AS rast_op,
+    /*Сверлильная*/
+    COALESCE(SUM(CASE WHEN operation_times.type = 47 THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0) AS sverl_op,
+    /*Долбежная*/
+    COALESCE(SUM(CASE WHEN operation_times.type = 45 THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0) AS dolb_op,
+    /*Шлифовальная*/
+    COALESCE(SUM(CASE WHEN operation_times.type = 51 THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0) AS shlif_op,
+    /*Сварочная*/
+    COALESCE(SUM(CASE WHEN operation_times.type = 49 THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0) AS svar_op,
+    /*Слесарная*/
+    COALESCE(SUM(CASE WHEN operation_times.type = 44 THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0) AS sles_op,
+    /*Термическая*/
+    COALESCE(SUM(CASE WHEN operation_times.type = 41 THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0) AS term_op,
+    /*Покрытие*/
+    COALESCE(SUM(CASE WHEN operation_times.type = 50 THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0) AS pokr_op,
+    /*Слесарно-сборочная*/
+    COALESCE(SUM(CASE WHEN operation_times.type = 55 THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0) AS sles_sbor_op,
+    /*Токарная 1*/
+    COALESCE(SUM(CASE WHEN operation_times.type = 46 THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0) AS tokr1_op,
+    /*Токарная с ЧПУ*/
+    COALESCE(SUM(CASE WHEN operation_times.type = 33 THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0) AS tokr_s_chpy_op,
+    /*Фрезерная с ЧПУ*/
+    COALESCE(SUM(CASE WHEN operation_times.type = 60 THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0) AS frez_s_chpy_op,
+    /*Расточная с ЧПУ*/
+    COALESCE(SUM(CASE WHEN operation_times.type = 59 THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0) AS rast_s_chpy_op,
+    /*Гравировальная*/
+    COALESCE(SUM(CASE WHEN operation_times.type = 62 THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0) AS gravirov_op,
+    /*Комплектовочная*/
+    COALESCE(SUM(CASE WHEN operation_times.type = 54 THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0) AS komplekt_op,
+    /*Контрольная*/
+    COALESCE(SUM(CASE WHEN operation_times.type = 38 THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0) AS kontrol_op,
+    /*Маркировочная*/
+    COALESCE(SUM(CASE WHEN operation_times.type = 57 THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0) AS markir_op,
+    /*Опрессовочная*/
+    COALESCE(SUM(CASE WHEN operation_times.type = 56 THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0) AS opres_op,
+    /*Преамбула*/
+    COALESCE(SUM(CASE WHEN operation_times.type = 52 THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0) AS preamb_op,
+    /*Притирочная*/
+    COALESCE(SUM(CASE WHEN operation_times.type = 63 THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0) AS pritir_op,
+    /*Развальцовка*/
+    COALESCE(SUM(CASE WHEN operation_times.type = 48 THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0) AS razval_op,
+    /*Электроэрозионная*/
+    COALESCE(SUM(CASE WHEN operation_times.type = 61 THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0) AS elektro_op,
+    /*всего*/
+    COALESCE(SUM(CASE WHEN operation_times.type NOT IN (53,67) THEN operation_times.sum_time * COALESCE(CASE WHEN o.attr_1455_ is NULL THEN operation_times.comp_struct_count ELSE o.attr_4079_ END, 1) ELSE 0 END), 0)AS itogo_op,
+
+    o.attr_4079_ AS kol_vo
+
+FROM registry.object_369_ o
+
+LEFT JOIN registry.object_301_ nomen ON o.attr_370_ = nomen.id AND NOT nomen.is_deleted
+LEFT JOIN registry.object_301_ header ON o.attr_374_ = header.id
+LEFT JOIN tech_ops operation_times ON operation_times.nomen_id = o.attr_370_
+
+WHERE NOT o.is_deleted
+  AND o.attr_374_ = '{superid}'
+  AND nomen.attr_363_ NOT IN (3,6,41,82,7,88)
+
+GROUP BY 
+    o.id,
+    header.attr_376_,
+    o.attr_1455_,
+    nomen.id,
+    o.attr_2905_,
+    o.attr_582_,
+    o.attr_4079_,
+    o.attr_374_

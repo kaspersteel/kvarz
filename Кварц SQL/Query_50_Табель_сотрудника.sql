@@ -27,16 +27,21 @@ SELECT
           CASE WHEN tabel.attr_1908_ THEN 0 ELSE EXTRACT(DAY FROM tabel.attr_1776_) END AS "day_tab",
           tabel.attr_1780_ AS "h_plan",
           tabel.attr_1816_ AS "h_hand",
-          COALESCE( CASE WHEN tabel.attr_1908_ THEN null ELSE asyst.attr_1789_ END, '00:00:00' ) AS "h_asys",
+          COALESCE( CASE WHEN tabel.attr_1908_ THEN null ELSE asyst.sum_h END, '00:00:00' ) AS "h_asys",
           CASE WHEN gr_otp.id is not null THEN 1 END AS "otp_plan",
           absence.attr_1504_ AS "absence",
           tabel.attr_1776_ AS "date_period"
      FROM registry.object_419_ o
 LEFT JOIN registry.object_1774_ tabel ON o.id = tabel.attr_1775_
       AND NOT tabel.is_deleted
-LEFT JOIN registry.object_1785_ asyst ON o.id = asyst.attr_1786_
-      AND tabel.attr_1776_ = asyst.attr_1787_::date
-      AND NOT asyst.is_deleted
+LEFT JOIN LATERAL (
+             SELECT SUM(attr_1789_) AS "sum_h"
+               FROM registry.object_1785_
+              WHERE o.id = attr_1786_
+                AND tabel.attr_1776_ = attr_1787_::date
+                AND NOT is_deleted
+           GROUP BY tabel.attr_1776_
+          ) asyst ON TRUE
 LEFT JOIN registry.object_1690_ gr_otp ON o.id = gr_otp.attr_1692_
       AND tabel.attr_1776_ >= gr_otp.attr_1693_::date
       AND tabel.attr_1776_ <= gr_otp.attr_1694_::date
@@ -241,4 +246,3 @@ base_tab.month_tab
 select T.* from T 
 WHERE T.fio_sotr is not null
 AND not (T.id_period is null AND T.id_sotr is not null)
-/*AND T.sum_plan != 0*/
