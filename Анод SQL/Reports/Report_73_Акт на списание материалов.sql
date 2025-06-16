@@ -1,45 +1,4 @@
-   SELECT sprav_tape_mat.id,
-          CASE
-                    WHEN sprav_tape_mat.id = 6 THEN 'шт'
-                    ELSE CASE
-                              WHEN o1.form_sort = 2 THEN 'кг'
-                              ELSE 'кг/мм'
-                    END
-          END AS units,
-          o1.name_ed_hran,
-          CASE
-                    WHEN sprav_tape_mat.id = 6 THEN cur_task_m::text
-                    ELSE CASE
-                              WHEN o1.form_sort = 2 THEN cur_task_m::text
-                              ELSE cur_task_m || '/' || cur_task_l
-                    END
-          END AS limits,
-          CASE
-                    WHEN sprav_tape_mat.id = 6 THEN cur_task_m::text
-                    ELSE CASE
-                              WHEN o1.form_sort = 2 THEN ed_hran_cur_bal_m::text
-                              ELSE ed_hran_cur_bal_m || '/' || ed_hran_cur_bal_l
-                    END
-          END AS released,
-          CASE
-                    WHEN sprav_tape_mat.id = 6 THEN '0'
-                    ELSE CASE
-                              WHEN o1.form_sort = 2 THEN expected_bal_m::text
-                              ELSE expected_bal_m || '/' || expected_bal_l
-                    END
-          END AS expected_balance,
-          CASE
-                    WHEN sprav_tape_mat.id = 6 THEN '0'
-                    ELSE CASE
-                              WHEN o1.form_sort = 2 THEN return_m::text
-                              ELSE return_m || '/' || return_l
-                    END
-          END AS returned,
-          mas_orders,
-          mas_izdel,
-          mas_description,
-          mas_detal
-     FROM (
+  WITH base AS (
              SELECT ed_hran.id AS ed_hran_id,
                     ed_hran.attr_2214_ AS form_sort,
                     ed_hran.attr_1663_ AS mat_id,
@@ -47,8 +6,8 @@
                     ed_hran.attr_1665_ AS tr_id,
                     ed_hran.attr_2943_ AS type_mat,
                     ed_hran.attr_2204_ AS name_ed_hran,
-                    ARRAY_TO_STRING(ARRAY_AGG(orders.attr_607_), '; ') AS mas_orders,
-                    ARRAY_TO_STRING(ARRAY_AGG(DISTINCT (izdel.attr_1410_)), '; ') AS mas_izdel,
+                    ARRAY_TO_STRING(ARRAY_AGG(DISTINCT orders.attr_607_), '; ') AS mas_orders,
+                    ARRAY_TO_STRING(ARRAY_AGG(DISTINCT izdel.attr_1410_), '; ') AS mas_izdel,
                     ARRAY_TO_STRING(
                     ARRAY_AGG(DISTINCT (comp_orders.attr_1410_)),
                     '; '
@@ -57,6 +16,7 @@
                     ARRAY_AGG(DISTINCT (comp_orders.attr_1413_)),
                     '; '
                     ) AS mas_detal,
+					
                     (
                        SELECT CASE
                                         WHEN units_eq.attr_2943_ = 6 THEN 0
@@ -72,6 +32,7 @@
                      GROUP BY poz_work.id,
                               units_eq.attr_2943_
                     ) AS cur_task_l,
+					
                     (
                        SELECT CASE
                                         WHEN units_eq.attr_2943_ = 6 THEN SUM(comp_poz_work.attr_2103_)
@@ -87,44 +48,16 @@
                      GROUP BY poz_work.id,
                               units_eq.attr_2943_
                     ) AS cur_task_m,
+					
+					
                     ed_hran.attr_1675_ AS ed_hran_cur_bal_m,
                     ed_hran.attr_2209_ AS ed_hran_cur_bal_l,
-                    (
-                    ed_hran.attr_1675_ - (
-                       SELECT CASE
-                                        WHEN units_eq.attr_2943_ = 6 THEN SUM(comp_poz_work.attr_2103_)
-                                        ELSE SUM(
-                                        comp_poz_work.attr_2107_ * comp_poz_work.attr_2103_
-                                        )
-                              END AS amoun_massa
-                         FROM registry.object_3168_ poz_work
-                    LEFT JOIN registry.object_2094_ comp_poz_work ON poz_work.id = comp_poz_work.attr_3175_
-                    LEFT JOIN registry.object_1659_ units_eq ON poz_work.attr_3169_ = units_eq.id
-                        WHERE poz_work.is_deleted <> TRUE
-                          AND poz_work.id = position_of_task.id
-                     GROUP BY poz_work.id,
-                              units_eq.attr_2943_
-                    )
-                    ) AS expected_bal_m,
-                    (
-                    ed_hran.attr_2209_ - (
-                       SELECT CASE
-                                        WHEN units_eq.attr_2943_ = 6 THEN 0
-                                        ELSE SUM(
-                                        (comp_poz_work.attr_2588_ + 2) * comp_poz_work.attr_2103_
-                                        )
-                              END AS leight
-                         FROM registry.object_3168_ poz_work
-                    LEFT JOIN registry.object_2094_ comp_poz_work ON poz_work.id = comp_poz_work.attr_3175_
-                    LEFT JOIN registry.object_1659_ units_eq ON poz_work.attr_3169_ = units_eq.id
-                        WHERE poz_work.is_deleted <> TRUE
-                          AND poz_work.id = position_of_task.id
-                     GROUP BY poz_work.id,
-                              units_eq.attr_2943_
-                    )
-                    ) AS expected_bal_l,
-                    position_of_task.attr_3252_ AS return_m,
-                    position_of_task.attr_3251_ AS return_l
+                    position_of_task.attr_3235_ AS expected_bal_m,
+                    position_of_task.attr_3236_ AS expected_bal_l,
+                    CASE WHEN position_of_task.attr_3244_ = 2 AND position_of_task.attr_3244_ is not null THEN position_of_task.attr_3252_ END AS return_m,
+                    CASE WHEN position_of_task.attr_3244_ = 2 AND position_of_task.attr_3244_ is not null THEN position_of_task.attr_3251_ END AS return_l,
+					position_of_task.attr_3191_ AS sdal,
+					position_of_task.attr_3192_ AS prinyal
                FROM registry.object_2093_ task
           LEFT JOIN registry.object_3168_ position_of_task ON position_of_task.attr_3173_ = task.id
                 AND position_of_task.is_deleted <> TRUE
@@ -149,5 +82,53 @@
                     ed_hran.attr_2943_,
                     ed_hran.attr_2204_,
                     position_of_task.id
-          ) o1
-LEFT JOIN registry.object_1344_ sprav_tape_mat ON o1.type_mat = sprav_tape_mat.id
+          )
+		 
+		 SELECT sprav_tape_mat.id,
+          CASE
+                    WHEN sprav_tape_mat.id = 6 THEN 'шт'
+                    ELSE CASE
+                              WHEN form_sort = 2 THEN 'кг'
+                              ELSE 'кг/мм'
+                    END
+          END AS units,
+          name_ed_hran,
+          CASE
+                    WHEN sprav_tape_mat.id = 6 THEN cur_task_m::text
+                    ELSE CASE
+                              WHEN form_sort = 2 THEN cur_task_m::text
+                              ELSE cur_task_m || '/' || cur_task_l
+                    END
+          END AS limits,
+          CASE
+                    WHEN sprav_tape_mat.id = 6 THEN cur_task_m::text
+                    ELSE CASE
+                              WHEN form_sort = 2 THEN ed_hran_cur_bal_m::text
+                              ELSE ed_hran_cur_bal_m || '/' || ed_hran_cur_bal_l
+                    END
+          END AS released,
+          CASE
+                    WHEN sprav_tape_mat.id = 6 THEN '0'
+                    ELSE CASE
+                              WHEN form_sort = 2 THEN expected_bal_m::text
+                              ELSE expected_bal_m || '/' || expected_bal_l
+                    END
+          END AS expected_balance,
+          CASE
+                    WHEN sprav_tape_mat.id = 6 THEN '0'
+                    ELSE CASE
+                              WHEN form_sort = 2 THEN return_m::text
+                              ELSE return_m || '/' || return_l
+                    END
+          END AS returned,
+          mas_orders,
+          mas_izdel,
+          mas_description,
+          mas_detal,
+		  sdal_sotr.attr_1894_ AS sdal_fio,
+		  prinyal_sotr.attr_1894_ AS prinyal_fio
+		  
+     FROM  base
+LEFT JOIN registry.object_1344_ sprav_tape_mat ON base.type_mat = sprav_tape_mat.id
+LEFT JOIN registry.object_17_ sdal_sotr ON base.sdal = sdal_sotr.id
+LEFT JOIN registry.object_17_ prinyal_sotr ON base.prinyal = prinyal_sotr.id
