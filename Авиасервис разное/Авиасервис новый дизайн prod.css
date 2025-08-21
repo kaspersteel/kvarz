@@ -40,7 +40,7 @@
 /* Переменные AG Grid (реестр, аналитическая) для светлых тем*/
 [class*=ag-theme-]:not([class*="-dark"]) {
      /* фон заголовка */   
-    --ag-header-background-color: rgba(	76, 137, 195, 1) !important; /*rgba(183, 245, 226, 0.95)*/
+    --ag-header-background-color: rgba(76, 137, 195, 1) !important; /*rgba(183, 245, 226, 0.95)*/
     /* текст заголовка */
     --ag-header-foreground-color: rgba(255, 255, 255, 1) !important;
     /* выделение в таблице (rgba(0, 145, 234, 0.2)) */
@@ -48,12 +48,12 @@
     /* фон таблицы (#fff) */
     --ag-background-color: rgba(255, 255, 255, 1) !important;
     /* "полосатая" строка (#fcfdfe) */
-    --ag-odd-row-background-color: rgba(209, 217, 219, .2) !important;
-    --ag-selected-row-background-color: rgba(33, 150, 243, 0.3) !important;
-    --ag-row-hover-color: rgba(33, 150, 243, 0.1) !important;
+    --ag-odd-row-background-color: rgba(76, 137, 112, 0.1) !important;
+    --ag-selected-row-background-color: rgba(231, 181, 127, 0.24) !important;
+    --ag-row-hover-color: rgba(127, 127, 127, 0.16) !important;
     --ag-column-hover-color: rgba(33, 150, 243, 0.1) !important;
     --ag-border-color: rgba(235, 238, 245, 1) !important;
-    --ag-row-border-color: rgba(189, 195, 199, 0.58) !important;
+    --ag-row-border-color: rgba(255, 255, 255, 1) !important;
 }
 
 /* Настройка AG Grid */
@@ -62,7 +62,7 @@
     color: var(--ag-header-foreground-color) !important;
     border-bottom-color: var(--ag-border-color) !important;
 }
-/*
+
 .ag-row {
     border-bottom-color: var(--ag-row-border-color) !important;
 }
@@ -71,13 +71,23 @@
     background-color: var(--ag-odd-row-background-color) !important;
 }
 
+ .ag-row-selected {
+	background: var(--ag-selected-row-background-color) !important;
+}
+
+ .ag-row-selected:before {
+	background: var(--ag-selected-row-background-color) !important;
+}
+
 .ag-row-hover {
     background-color: var(--ag-row-hover-color) !important;
+  	//outline: 1px solid rgba(76, 137, 112, 0.84);
+	//outline-offset: -1px;
 }
 
 .ag-column-hover {
     background-color: var(--ag-column-hover-color) !important;
-}*/
+}
 
 .ag-header-cell-label {
     justify-content: center;
@@ -87,7 +97,7 @@
 
 .ag-cell {
     text-align: left;
-    border: 1px solid rgb(121, 192, 187) !important;
+    border: none !important /*1px solid rgba(76, 137, 112, .6) !important; /*121, 192, 187 или 76, 137, 112*/
 }
 .registry .toolbar-box{
 	padding:10px 21px !important;
@@ -97,7 +107,7 @@
     //border-radius: 15px;
 }
 
-/* +++++ ag-theme-balham +++++++ */
+/* +++++ ag-theme-balham +++++++ оставлено на память о старом дизайне*/
 /*
 .ag-theme-balham .ag-cell {
 border: 1px solid rgb(179, 179, 179) !important;
@@ -106,34 +116,6 @@ border: 1px solid rgb(179, 179, 179) !important;
 /*.ag-theme-balham .ag-header {
 background-color: rgba(80, 130, 230, 1) !important;
 }*/
-
-.ag-theme-balham .ag-row-odd{
-background-color: rgba(80, 130, 230, 0.1) !important;
-}
-.ag-theme-balham .ag-row-selected {
-background: rgba(80, 130, 230, 0.2) !important;
-}
-
-.ag-theme-balham .ag-row-selected:before {
-background: rgba(80, 130, 230, 0.2) !important;
-}
-.ag-theme-balham .ag-root:not(.ag-context-menu-open) .ag-body-viewport:not(.ag-has-focus) .ag-cell-range-selected-1:not(.ag-cell-inline-editing){
-background: rgba(80, 130, 230, 0.2) !important;
-}
-.ag-theme-balham .ag-row-hover {
-background: rgba(80, 130, 230, 0.35) !important;
-}
-
-.ag-theme-balham .ag_grid_row .ag-cell.ag-cell-focus.ag-cell-range-selected{
-background: rgba(80, 130, 230, 0.35) !important;
-}
-/*
-.ag-theme-balham .ag-header-row .ag-header-cell-text, 
-.ag-theme-balham .ag-header-row .ag-header-cell .ag-icon
-{
-color: rgba(255, 255, 255, 1) !important;
-}
-*/
 
 /*Строка вкладок и навигации*/
 .system__tabs > .el-tabs__header {
@@ -297,7 +279,7 @@ color: rgba(255, 255, 255, 1) !important;
     		overflow: hidden auto;
 		}  
 		& .background {
-          	background:RGB(255, 255, 255);
+          	//background:RGB(255, 255, 255);
 			z-index: 3000 !important;
   		}
     	& .header_fixed{
