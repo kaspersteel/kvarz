@@ -8,11 +8,11 @@
     /* край кнопок редакторов при наведении */
     //--out-btn-editor-hover: 1px solid rgb(221, 221, 230);
     /* фон верхней строки вкладок */
-    //--c-back-sysheader: rgba(255, 255, 255, .8);
+    --c-back-sysheader: rgba(224, 238, 250, 1);
     /* фон колокольчика уведомлений */
-    //--c-back-sysnav-bell: rgba(0, 0, 0, 0);
+    --c-back-sysnav-bell: rgba(0, 0, 0, 0);
     /* текст колокольчика уведомлений */
-    //--c-text-sysnav-bell: rgba(107, 195, 6, 1);
+    --c-text-sysnav-bell: rgba(107, 195, 6, 1);
     /* текст вкладок */
     //--c-text-systabs: rgba(48, 48, 51, 1);
     /* текст вкладок и меню при наведении */
@@ -24,13 +24,13 @@
     /* левый край активной вкладки */
     //--c-bord-lft-systabs-active: rgba(113, 183, 154, 1);
     /* левый край группы элементов дерева */
-    //--bord-lft-tree-group: 2px solid rgb(95, 166, 221);
+    --bord-lft-tree-group: 2px solid rgb(95, 166, 221);
     /* край области элементов компонента-дерева */
-    //--bord-tree: 1px solid rgb(228, 231, 237);
+    --bord-tree: 1px solid rgb(228, 231, 237);
     /* нижний край заголовка компонента-дерева */
-    //--bord-btm-tree-header: 1px solid rgb(228, 231, 237);
+    --bord-btm-tree-header: 1px solid rgb(228, 231, 237);
     /* правый край заголовка компонента-дерева */
-    //--bord-rgt-tree-header: 1px solid var(--c-back-main, rgba(245, 246, 250, 1));
+    --bord-rgt-tree-header: 1px solid var(--c-back-main, rgba(245, 246, 250, 1));
     /* край инфоконтейнера */
     //--bord-infocont: 1px solid var(--c-bord-main, rgba(245, 246, 250, 1));
     //--s: rgb(128, 114, 101);
@@ -39,27 +39,33 @@
 
 /* Переменные AG Grid (реестр, аналитическая) для светлых тем*/
 [class*=ag-theme-]:not([class*="-dark"]) {
-     /* фон заголовка */   
+     /*цвет фона заголовка */   
     --ag-header-background-color: rgba(76, 137, 195, 1) !important; /*rgba(183, 245, 226, 0.95)*/
-    /* текст заголовка */
+    /* цвет текста заголовка */
     --ag-header-foreground-color: rgba(255, 255, 255, 1) !important;
     /* выделение в таблице (rgba(0, 145, 234, 0.2)) */
     --ag-range-selection-background-color: rgba(0, 145, 234, 0.2) !important;
-    /* фон таблицы (#fff) */
+    /* цвет фона таблицы (#fff) */
     --ag-background-color: rgba(255, 255, 255, 1) !important;
-    /* "полосатая" строка (#fcfdfe) */
-    --ag-odd-row-background-color: rgba(76, 137, 112, 0.1) !important;
+    /* цвет "полосатой" строки (#fcfdfe) */
+    --ag-odd-row-background-color: rgba(245, 236, 231, 0.54) !important; /*rgba(76, 137, 112, 0.1)*/
+  	/* цвет выделенной строки */
     --ag-selected-row-background-color: rgba(231, 181, 127, 0.24) !important;
+  	/* цвет подсвеченной строки */
     --ag-row-hover-color: rgba(127, 127, 127, 0.16) !important;
+  	/* цвет подсвеченной колонки */  
     --ag-column-hover-color: rgba(33, 150, 243, 0.1) !important;
+    /* цвет рамки таблицы */
     --ag-border-color: rgba(235, 238, 245, 1) !important;
+    /* цвет рамки строки */
     --ag-row-border-color: rgba(255, 255, 255, 1) !important;
+    /* цвет рамки ячейки */
+    --ag-cell-border-color: rgba(255, 255, 255, 1) !important;
 }
 
 /* Настройка AG Grid */
 .ag-header {
     background: var(--ag-header-background-color) !important;
-    color: var(--ag-header-foreground-color) !important;
     border-bottom-color: var(--ag-border-color) !important;
 }
 
@@ -71,11 +77,11 @@
     background-color: var(--ag-odd-row-background-color) !important;
 }
 
- .ag-row-selected {
+.ag-row-selected {
 	background: var(--ag-selected-row-background-color) !important;
 }
 
- .ag-row-selected:before {
+.ag-row-selected:before {
 	background: var(--ag-selected-row-background-color) !important;
 }
 
@@ -90,6 +96,7 @@
 }
 
 .ag-header-cell-label {
+    color: var(--ag-header-foreground-color) !important;
     justify-content: center;
 	font-size: 12px;
 	font-weight: 500;
@@ -97,8 +104,29 @@
 
 .ag-cell {
     text-align: left;
-    border: none !important /*1px solid rgba(76, 137, 112, .6) !important; /*121, 192, 187 или 76, 137, 112*/
+	border: 0px solid var(--ag-cell-border-color) !important; /*121, 192, 187 или 76, 137, 112*/
+  	display:flex;
+  	align-items:center;
+  	/* ячейка с кнопкой*/
+    &:has(.cell-btn) {
+    	justify-content:center;
+  	}
+  	/* кнопка внутри ячейки*/
+  	& .cell-btn {
+        font-size: 22px;
+      	cursor: pointer;
+      	/* кнопка с анимацией увеличения*/
+		&.scale-btn {
+  			& [class*=el-icon-] {
+  				transition: transform 0.3s ease;
+  				&:hover {
+  					transform: scale(1.35);
+				}
+			}
+		}
+	}
 }
+
 .registry .toolbar-box{
 	padding:10px 21px !important;
 }
@@ -119,7 +147,7 @@ background-color: rgba(80, 130, 230, 1) !important;
 
 /*Строка вкладок и навигации*/
 .system__tabs > .el-tabs__header {
-	background: rgb(224, 238, 250);
+	background: var(--c-back-sysheader);
   	& .el-tabs__nav {
     	border: unset;
     	border-radius: unset;
@@ -140,14 +168,15 @@ background-color: rgba(80, 130, 230, 1) !important;
       		margin:5px 2px;
       		&.is-closable {
 	    		&.is-active {
-      				color: #198aff;
-    				background-color: rgb(255, 250, 250);
-	  				outline: 1px solid rgba(185, 230, 230, .2);
+      				color: #864788;
+    				background-color: rgb(250, 255, 255);
+	  				outline: 1px solid rgba(185, 230, 230, .3);
   				}
-  				&:hover  {
-	    			color: #198aff;
-    				background-color: rgb(255, 250, 250);
-  					outline: 1px solid rgba(185, 230, 230, .2);
+  				&:not(.is-active):hover {
+	    			color: #864788;
+    				background-color: rgb(255, 255, 255, .44);
+                  	backdrop-filter: blur(10px);
+  					outline: 1px solid rgba(255, 255, 255, .5);
   				}
 			}
 		}
@@ -157,7 +186,9 @@ background-color: rgba(80, 130, 230, 1) !important;
 .system_mainBox {
     background-color:rgba(255, 255, 255, 1);
 }
-
+.box_userInfo {
+	background: var(--c-back-sysheader);
+}
 .nav-item:hover {
   	background:transparent;
     color:rgb(107, 195, 6);
@@ -189,72 +220,6 @@ background-color: rgba(80, 130, 230, 1) !important;
 	}
 }
 */
-
-/*контейнер с вкладками*/
-.cont_tab .tabs_container {
-    font-style: normal;
-	font-weight: normal;
-	font-size: 14px;
-  	& .tab {
-    	min-height: 35px;
-    	height: auto !important;
-   		width: auto !important;
-    	color: #656769;
-		font-weight: 400;
-     	text-align: left;
-		transition: color 0.08s cubic-bezier(0.645, 0.045, 0.355, 1);
-    	&:hover {
-        	color: rgba(20, 149, 255, .75);
-    	}
-    	&.active {
-			color: #5E666E;
-			font-weight: 600;
-      	}
-	}
-	&.position_top{
-		background-color: rgba(240, 240, 240, 0);
-		& .tab{
-      		white-space: nowrap;
-      		padding: 10px 20px 10px 20px;
-  			border-bottom: 1px solid #ebeef5;	
-      		&.active {
-				border-bottom: 3px solid rgba(20, 149, 255, 0.35);
-			}
-		}
-  	}
-  	&.position_right{
-      	width:140px;
-		background-color: rgba(240, 240, 240, 1);
-		& .tab {
-      	padding: 30px 0px 10px 10px;
-  		border-left: 1px solid #ebeef5;	
-      		&.active {
-				border-left: 5px solid rgba(20, 149, 255, 0.35);
-			}
-      	}
-	}
-    &.position_left {
-      	width:140px;
-		background-color: rgba(240, 240, 240, 1);
-		& .tab {
-      	padding: 30px 0px 10px 10px;
-  		border-right: 1px solid #ebeef5;	
-      		&.active {
-				border-right: 5px solid rgba(20, 149, 255, 0.35);
-			}
-      	}
-	}
-}
-
-/*выравнивание полей*/
-.el-form-item {
-    margin-bottom: 0;
-}
-
-.el-form-item__content .xref_field.vue-treeselect, 
-.el-form-item__label .xref_field_label{
-	top:0
-}
 
 /*деревья*/
 .derevo {
@@ -296,6 +261,16 @@ background-color: rgba(80, 130, 230, 1) !important;
   	}
 }
 
+/*выравнивание полей*/
+.el-form-item {
+    margin-bottom: 0;
+}
+
+.el-form-item__content .xref_field.vue-treeselect, 
+.el-form-item__label .xref_field_label {
+	top:0
+}
+
 /*главный контейнер карточки*/
 .cont_body {
 	background:rgba(255, 255, 255, 1);
@@ -304,13 +279,77 @@ background-color: rgba(80, 130, 230, 1) !important;
 /*информационные контейнеры*/
 .cont {
 	background:#fff;
-	border: 1px solid rgba(220,230,245,.5);
+	border: 1px solid rgba(64, 64, 64,.3);
 	border-radius:8px;
-	box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.25);
-  	&.content {
-      	overflow:hidden;
+	box-shadow: 1px 1px 3px rgba(64, 64, 82, 0.14);
+  	& .content {
+      	overflow:hidden !important;
   	}
 }
+
+.cont_modal {
+	background:#fff;
+  	& .content {
+      	overflow:hidden !important;
+  	}
+}
+
+/*контейнер с вкладками*/
+.cont_tab .tabs_container {
+    font-style: normal;
+	font-weight: normal;
+	font-size: 14px;
+  	& .tab {
+    	min-height: 35px;
+    	height: auto !important;
+   		width: auto !important;
+    	color: #656769;
+		font-weight: 400;
+     	text-align: left;
+		transition: color 0.08s cubic-bezier(0.645, 0.045, 0.355, 1);
+    	&:hover {
+        	color: rgba(20, 149, 255, .75);
+    	}
+    	&.active {
+			color: #5E666E;
+			font-weight: 600;
+      	}
+	}
+	&.position_top{
+		background-color: rgba(240, 240, 240, 0);
+		& .tab{
+      		white-space: nowrap;
+      		padding: 10px 20px 10px 20px;
+  			border-bottom: 1px solid #ebeef5;	
+      		&.active {
+				border-bottom: 3px solid rgba(20, 149, 255, 0.35);
+			}
+		}
+  	}
+  	&.position_right{
+      	width:140px;
+		background-color: rgba(240, 240, 240, 1);
+		& .tab {
+      		padding: 30px 0px 10px 10px;
+  			border-left: 1px solid #ebeef5;	
+      		&.active {
+				border-left: 5px solid rgba(20, 149, 255, 0.35);
+			}
+      	}
+	}
+    &.position_left {
+      	width:140px;
+		background-color: rgba(240, 240, 240, 1);
+		& .tab {
+      		padding: 30px 0px 10px 10px;
+  			border-right: 1px solid #ebeef5;	
+      		&.active {
+				border-right: 5px solid rgba(20, 149, 255, 0.35);
+			}
+      	}
+	}
+}
+
 /*контейнер-flexbox-row*/
 .flex-cont>.content {
 	display:flex !important;
@@ -339,14 +378,14 @@ background-color: rgba(80, 130, 230, 1) !important;
 }
 
 .el-button--primary.is-plain {
-    width: 220px;
+    //width: 220px;
     color: #1495FF;
     background: rgba(20, 149, 255, 0.25);
     border: 1px solid rgba(20, 149, 255, 0.3);
 }
 
 .avias_button .el-button {
-    width: 220px;
+    //width: 220px;
     color: #1495FF;
     background: rgba(20, 149, 255, 0.25);
     border: 1px solid rgba(20, 149, 255, 0.3);
