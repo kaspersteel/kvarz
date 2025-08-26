@@ -21,6 +21,7 @@ expanded AS (
   JOIN registry.object_4002_ ts ON ts.id = intervals.id
   WHERE o.attr_4032_ = CURRENT_DATE
   AND o.attr_4007_ && (SELECT search_range FROM time)
+  AND not o.is_deleted
 
   UNION ALL
 
@@ -60,7 +61,8 @@ merged AS (
     MAX(end_time) AS "interval_end"
   FROM grouped
   GROUP BY id, client, hist , grp
-)
+), 
+merged_data AS (
 SELECT
     merged.id,
     merged.client, 
@@ -70,25 +72,47 @@ SELECT
     to_char(merged.interval_begin, 'HH24:MI')  || ' - ' || to_char(merged.interval_end, 'HH24:MI') AS "time_proc",
 MAX (CASE 
     WHEN diaries.attr_650_ IS NOT NULL
-         AND diaries.attr_650_ + INTERVAL '10 minutes' BETWEEN (CURRENT_TIMESTAMP + merged.interval_begin) AND (CURRENT_TIMESTAMP + merged.interval_end)
-         AND CURRENT_TIMESTAMP > (CURRENT_TIMESTAMP + merged.interval_end) THEN 'Выполнено'
+         AND diaries.attr_650_ + INTERVAL '10 minutes' BETWEEN (CURRENT_DATE + merged.interval_begin) AND (CURRENT_DATE + merged.interval_end)
+         AND CURRENT_TIMESTAMP > (CURRENT_DATE + merged.interval_end) THEN 'Выполнено'
 
     WHEN diaries.attr_650_ IS NOT NULL
-         AND diaries.attr_650_ + INTERVAL '10 minutes' BETWEEN (CURRENT_TIMESTAMP + merged.interval_begin) AND (CURRENT_TIMESTAMP + merged.interval_end)
-         AND CURRENT_TIMESTAMP BETWEEN (CURRENT_TIMESTAMP + merged.interval_begin) AND (CURRENT_TIMESTAMP + merged.interval_end) THEN 'Исполняется'
+         AND diaries.attr_650_ + INTERVAL '10 minutes' BETWEEN (CURRENT_DATE + merged.interval_begin) AND (CURRENT_DATE + merged.interval_end)
+         AND CURRENT_TIMESTAMP BETWEEN (CURRENT_DATE + merged.interval_begin) AND (CURRENT_DATE + merged.interval_end) THEN 'Исполняется'
 
     WHEN diaries.attr_650_ IS NULL
          AND CURRENT_TIME > (merged.interval_begin + INTERVAL '10 minutes') THEN 'Просрочено'
 
     WHEN diaries.attr_650_ IS NOT NULL
-         AND diaries.attr_650_ BETWEEN ((CURRENT_TIMESTAMP + merged.interval_begin) - INTERVAL '10 minutes') AND (CURRENT_TIMESTAMP + merged.interval_begin) THEN 'Ожидает'
+         AND diaries.attr_650_ BETWEEN ((CURRENT_DATE + merged.interval_begin) - INTERVAL '10 minutes') AND (CURRENT_DATE + merged.interval_begin) THEN 'Ожидает'
 		 
 	WHEN diaries.attr_650_ IS NOT NULL THEN 'Дневник создан вручную'
 
     WHEN diaries.id IS NULL THEN 'Назначено'
 
     ELSE ''
-END) AS "status"
+END) AS "status",
+
+MAX (CASE 
+    WHEN diaries.attr_650_ IS NOT NULL
+         AND diaries.attr_650_ + INTERVAL '10 minutes' BETWEEN (CURRENT_DATE + merged.interval_begin) AND (CURRENT_DATE + merged.interval_end)
+         AND CURRENT_TIMESTAMP > (CURRENT_DATE + merged.interval_end) THEN '#A8A8A8'
+
+    WHEN diaries.attr_650_ IS NOT NULL
+         AND diaries.attr_650_ + INTERVAL '10 minutes' BETWEEN (CURRENT_DATE + merged.interval_begin) AND (CURRENT_DATE + merged.interval_end)
+         AND CURRENT_TIMESTAMP BETWEEN (CURRENT_DATE + merged.interval_begin) AND (CURRENT_DATE + merged.interval_end) THEN '#7CBF7C'
+
+    WHEN diaries.attr_650_ IS NULL
+         AND CURRENT_TIME > (merged.interval_begin + INTERVAL '10 minutes') THEN '#D46A6A'
+
+    WHEN diaries.attr_650_ IS NOT NULL
+         AND diaries.attr_650_ BETWEEN ((CURRENT_DATE + merged.interval_begin) - INTERVAL '10 minutes') AND (CURRENT_DATE + merged.interval_begin) THEN '#E3D27A'
+		 
+	WHEN diaries.attr_650_ IS NOT NULL THEN '#9C7AA3'
+
+    WHEN diaries.id IS NULL THEN '#5A9BD5'
+
+    ELSE '#fff'
+END) AS "row_color"
 
 FROM merged
 LEFT JOIN registry.object_45_ clients ON clients.id = merged.client
@@ -99,4 +123,21 @@ AND diaries.attr_650_ >= CURRENT_TIMESTAMP - INTERVAL '60 minutes' --'2025-08-18
 AND diaries.attr_650_  < CURRENT_TIMESTAMP + INTERVAL '60 minutes' --'2025-08-18 10:25:00'
 AND diaries.attr_331_ = CURRENT_DATE
 GROUP BY merged.id, merged.client, merged.hist, merged.interval_begin, merged.interval_end, clients.id
-ORDER BY merged.interval_begin, clients.attr_69_
+
+UNION ALL
+
+SELECT
+    null AS "id",
+    null AS "client", 
+    null AS "hist",
+    '' AS "fio",
+	null AS "diary",
+	null AS "time_proc",
+	'нет назначений' AS "status",
+	'#C1B7A4' AS "row_color"
+WHERE NOT EXISTS (SELECT 1 FROM merged)
+)
+
+SELECT * FROM merged_data
+
+ORDER BY time_proc, fio
