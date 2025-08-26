@@ -1,499 +1,328 @@
 @echo off
-chcp 65001 >nul
 setlocal enabledelayedexpansion
 
-:: Инициализация файлов
-set "MSG_FILE=%~dp0manage_routs_temp.log"
-set "LOG_FILE=%~dp0manage_routs_logfile.log"
-if exist "%MSG_FILE%" del "%MSG_FILE%"
-echo. > "%MSG_FILE%"
-if not exist "%LOG_FILE%" echo. > "%LOG_FILE%"
+chcp 65001 >nul
 
-:: Получение текущей даты и времени для логов
-set "CURRENT_TIME=%date:~6,4%-%date:~3,2%-%date:~0,2% %time:~0,8%"
+rem --- Функция очистки пробелов (trim) ---
+:trim_input
+rem %1 - входная переменная, %2 - выходная переменная
+setlocal enabledelayedexpansion
+set "str=!%~1!"
+:trim_loop_start
+if "!str:~0,1!"==" " set "str=!str:~1!" & goto trim_loop_start
+:trim_loop_end
+if "!str:~-1!"==" " set "str=!str:~0,-1!" & goto trim_loop_end
+endlocal & set "%~2=%str%"
+exit /b 0
 
-:: Проверка запуска с правами администратора
+rem --- Проверка прав администратора ---
 net session >nul 2>&1
-if %errorlevel% NEQ 0 (
-    echo Запустите скрипт с правами администратора! > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Ошибка: Скрипт запущен без прав администратора >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
+if errorlevel 1 (
+    echo Запустите скрипт с правами администратора!
     pause
     exit /b 1
 )
 
-:: Инициализация счетчика интерфейсов
-set "INTERFACE_COUNT=0"
+rem --- Временные файлы ---
+set "TMP_SUFFIX=%random%"
+set "MSG_FILE=%~dp0manage_routes_temp_%TMP_SUFFIX%.log"
+set "LOG_FILE=%~dp0manage_routes_logfile.log"
 
-:: Диагностика: вывод всех интерфейсов с их статусами
-echo Физические интерфейсы с их статусами: > "%MSG_FILE%"
-echo LOG: [%CURRENT_TIME%] Выполняется диагностика интерфейсов >> "%LOG_FILE%"
-powershell -NoProfile -Command "Get-NetAdapter | Select-Object Name, Status | Out-String -Width 4096" >> "%MSG_FILE%"
+rem --- Получение текущего времени ---
+for /f "tokens=1-3 delims=/: " %%a in ("%date% %time%") do (
+    set CURRENT_TIME=%%c-%%a-%%b %time:~0,8%
+)
+
+rem --- Получить список интерфейсов с IPv4 ---
+echo Получение списка сетевых интерфейсов...
+powershell -NoProfile -Command ^
+"try {
+    $adapters = Get-NetAdapter | Where-Object { $_.Status -eq 'Up' }
+    $ips = Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -in $adapters.Name }
+    if ($ips.Count -eq 0) { Write-Error 'Нет активных IPv4 интерфейсов' ; exit 1 }
+    $uniqueNames = $ips | Select-Object -ExpandProperty InterfaceAlias -Unique
+    $uniqueNames | ForEach-Object { Write-Output $_ }
+} catch {
+    Write-Error $_
+    exit 1
+}" > "%MSG_FILE%" 2>&1
+
 if errorlevel 1 (
-    echo Ошибка при получении списка интерфейсов. >> "%MSG_FILE%"
+    echo Ошибка при получении интерфейсов:
+    type "%MSG_FILE%"
     echo LOG: [%CURRENT_TIME%] Ошибка PowerShell при получении интерфейсов >> "%LOG_FILE%"
+    del "%MSG_FILE%"
+    pause
+    exit /b 1
 )
-type "%MSG_FILE%"
-del "%MSG_FILE%"
 
-:: Получение списка интерфейсов с IPv4-адресами (исключая Loopback)
-echo Получение интерфейсов с IPv4-адресами... > "%MSG_FILE%"
-echo LOG: [%CURRENT_TIME%] Получение интерфейсов с IPv4 >> "%LOG_FILE%"
-for /f "usebackq tokens=*" %%I in (`powershell -NoProfile -Command "Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -ne 'Loopback Pseudo-Interface 1' } | Select-Object -ExpandProperty InterfaceAlias | Sort-Object -Unique"`) do (
+rem --- Считать интерфейсы в переменные ---
+set INTERFACE_COUNT=0
+for /f "usebackq delims=" %%i in ("%MSG_FILE%") do (
     set /a INTERFACE_COUNT+=1
-    set "INTF_!INTERFACE_COUNT!=%%I"
-    echo DEBUG: Set INTF_!INTERFACE_COUNT!=%%I >> "%LOG_FILE%"
+    set "INTF_!INTERFACE_COUNT!=%%i"
 )
-echo LOG: [%CURRENT_TIME%] Найдено интерфейсов: !INTERFACE_COUNT! >> "%LOG_FILE%"
-type "%MSG_FILE%"
 del "%MSG_FILE%"
 
-:: Проверка наличия интерфейсов
-if !INTERFACE_COUNT! EQU 0 (
-    echo Не найдено сетевых интерфейсов с IPv4-адресами. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Ошибка: Нет интерфейсов с IPv4 >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
+if %INTERFACE_COUNT% EQU 0 (
+    echo Не найдено активных IPv4 интерфейсов.
     pause
     exit /b 1
 )
 
-:: Вывод списка интерфейсов
-echo Выберите интерфейс: > "%MSG_FILE%"
-for /L %%i in (1,1,!INTERFACE_COUNT!) do (
-    echo   %%i. !INTF_%%i! >> "%MSG_FILE%"
+rem --- Вывести интерфейсы ---
+echo Доступные интерфейсы:
+for /l %%i in (1,1,%INTERFACE_COUNT%) do (
+    echo  %%i. !INTF_%%i!
 )
-echo   0. Отмена >> "%MSG_FILE%"
-echo LOG: [%CURRENT_TIME%] Отображен список интерфейсов >> "%LOG_FILE%"
-type "%MSG_FILE%"
-del "%MSG_FILE%"
+echo  0. Отмена
 
-:: Выбор интерфейса
+rem --- Выбор интерфейса ---
 :select_interface
-echo. > "%MSG_FILE%"
 set /p USER_CHOICE=Введите номер интерфейса (0 - отмена): 
+call :trim_input USER_CHOICE USER_CHOICE
+
 if "!USER_CHOICE!"=="" (
-    echo Некорректный ввод. Введите номер из списка. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Некорректный ввод номера интерфейса >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-    goto :select_interface
+    echo Некорректный ввод. Повторите.
+    goto select_interface
 )
-:: Проверка, что введено число
 for /f "delims=0123456789" %%x in ("!USER_CHOICE!") do (
-    echo Некорректный ввод. Введите номер из списка. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Введено не число: !USER_CHOICE! >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-    goto :select_interface
+    echo Некорректный ввод. Введите число.
+    goto select_interface
 )
-:: Проверка диапазона
 if !USER_CHOICE! LSS 0 (
-    echo Некорректный ввод. Введите номер из списка. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Номер меньше 0: !USER_CHOICE! >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-    goto :select_interface
+    echo Некорректный ввод. Повторите.
+    goto select_interface
 )
-if !USER_CHOICE! GTR !INTERFACE_COUNT! (
-    echo Некорректный ввод. Введите номер из списка. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Номер больше количества интерфейсов: !USER_CHOICE! >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-    goto :select_interface
-)
-
-if "!USER_CHOICE!"=="0" (
-    echo Отмена выбора интерфейса. Выход. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Выбрана отмена интерфейса >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-    goto :cleanup
-)
-
-:: Исправление: правильное получение имени интерфейса
-set "INTERFACE_NAME=!INTF_!USER_CHOICE!!"
-if "!INTERFACE_NAME!"=="" (
-    echo Ошибка: Не удалось определить имя интерфейса для выбора !USER_CHOICE!. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Ошибка: INTF_!USER_CHOICE! не определен >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-    pause
-    goto :select_interface
-)
-echo Выбран интерфейс: !INTERFACE_NAME! > "%MSG_FILE%"
-echo LOG: [%CURRENT_TIME%] Выполнен выбор интерфейса: !INTERFACE_NAME! >> "%LOG_FILE%"
-type "%MSG_FILE%"
-del "%MSG_FILE%"
-
-:: Получение IPv4 адреса выбранного интерфейса
-set "IP_ADDR="
-for /f "usebackq tokens=*" %%i in (`powershell -NoProfile -Command "(Get-NetIPAddress -InterfaceAlias \"!INTERFACE_NAME!\" -AddressFamily IPv4 -ErrorAction SilentlyContinue).IPAddress"`) do (
-    set "IP_ADDR=%%i"
-)
-if errorlevel 1 (
-    echo Ошибка при выполнении PowerShell для получения IP-адреса. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Ошибка PowerShell при получении IP для !INTERFACE_NAME! >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-    pause
-    exit /b 1
-)
-if "!IP_ADDR!"=="" (
-    echo Внимание: не удалось получить IPv4 адрес для интерфейса "!INTERFACE_NAME!". > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] IP-адрес не найден для !INTERFACE_NAME! >> "%LOG_FILE%"
-) else (
-    echo IP адрес интерфейса: !IP_ADDR! > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Получен IP-адрес: !IP_ADDR! >> "%LOG_FILE%"
-)
-type "%MSG_FILE%"
-del "%MSG_FILE%"
-
-:: Текущие маршруты для интерфейса
-echo Текущие маршруты для интерфейса "!INTERFACE_NAME!": > "%MSG_FILE%"
-echo LOG: [%CURRENT_TIME%] Запрос маршрутов для !INTERFACE_NAME! >> "%LOG_FILE%"
-powershell -NoProfile -Command "Get-NetRoute -InterfaceAlias '!INTERFACE_NAME!' | Select-Object DestinationPrefix, NextHop | Out-String -Width 4096" >> "%MSG_FILE%"
-if errorlevel 1 (
-    echo Ошибка при получении маршрутов для интерфейса "!INTERFACE_NAME!". >> "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Ошибка PowerShell при получении маршрутов >> "%LOG_FILE%"
-)
-type "%MSG_FILE%"
-del "%MSG_FILE%"
-
-:: Получение шлюза для интерфейса
-set "GATEWAY="
-for /f "usebackq tokens=*" %%g in (`powershell -NoProfile -Command "(Get-NetRoute -InterfaceAlias '!INTERFACE_NAME!' -DestinationPrefix '0.0.0.0/0' -ErrorAction SilentlyContinue | Select-Object -First 1).NextHop"`) do (
-    set "GATEWAY=%%g"
-)
-if "!GATEWAY!"=="" (
-    for /f "usebackq tokens=*" %%g in (`powershell -NoProfile -Command "(Get-NetRoute -InterfaceAlias '!INTERFACE_NAME!' -ErrorAction SilentlyContinue | Where-Object { $_.NextHop -ne '0.0.0.0' } | Select-Object -First 1).NextHop"`) do (
-        set "GATEWAY=%%g"
+if !USER_CHOICE! GTR %INTERFACE_COUNT% (
+    if !USER_CHOICE! NEQ 0 (
+        echo Некорректный ввод. Повторите.
+        goto select_interface
     )
 )
+
+if !USER_CHOICE! EQU 0 (
+    echo Отмена.
+    exit /b 0
+)
+
+set "SELECTED_INTF=!INTF_%USER_CHOICE%!"
+echo Выбран интерфейс: !SELECTED_INTF!
+
+rem --- Получение IP и маски выбранного интерфейса ---
+powershell -NoProfile -Command ^
+"try {
+    $ip = Get-NetIPAddress -InterfaceAlias '%SELECTED_INTF%' -AddressFamily IPv4 | Select-Object -First 1
+    if (-not $ip) { Write-Error 'IP-адрес не найден' ; exit 1 }
+    Write-Output $ip.IPAddress
+    Write-Output $ip.PrefixLength
+} catch {
+    Write-Error $_
+    exit 1
+}" > "%MSG_FILE%" 2>&1
+
 if errorlevel 1 (
-    echo Ошибка при выполнении PowerShell для получения шлюза. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Ошибка PowerShell при получении шлюза для !INTERFACE_NAME! >> "%LOG_FILE%"
+    echo Ошибка при получении IP-адреса интерфейса:
     type "%MSG_FILE%"
+    echo LOG: [%CURRENT_TIME%] Ошибка PowerShell при получении IP интерфейса >> "%LOG_FILE%"
     del "%MSG_FILE%"
     pause
     exit /b 1
 )
-if "!GATEWAY!"=="" (
-    echo Внимание: шлюз для интерфейса "!INTERFACE_NAME!" не определен. Маршруты могут быть недоступны. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Шлюз не найден для !INTERFACE_NAME! >> "%LOG_FILE%"
-) else (
-    echo Шлюз для интерфейса "!INTERFACE_NAME!": !GATEWAY! > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Получен шлюз: !GATEWAY! >> "%LOG_FILE%"
+
+set /p INTF_IP=<"%MSG_FILE%"
+set /p INTF_PREFIX=<"%MSG_FILE%"  & set /a skip=1
+for /f "skip=1 delims=" %%a in ("%MSG_FILE%") do (
+    set INTF_PREFIX=%%a
+    goto :break_loop
 )
-type "%MSG_FILE%"
+:break_loop
 del "%MSG_FILE%"
 
-:: Основной цикл
-:main_loop
-echo Выберите действие: > "%MSG_FILE%"
-echo LOG: [%CURRENT_TIME%] Запрос действия пользователя >> "%LOG_FILE%"
-call :get_action_choice "Выберите действие"
-echo LOG: [%CURRENT_TIME%] Выбрано действие: !CHOICE! >> "%LOG_FILE%"
-type "%MSG_FILE%"
-del "%MSG_FILE%"
-if !CHOICE!==0 (
-    echo Отмена. Завершение работы. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Выбрана отмена >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-    goto :ask_restart
+rem --- Конвертация префикса в маску ---
+call :prefix_to_mask %INTF_PREFIX% INTF_MASK
+
+echo IP интерфейса: %INTF_IP%
+echo Маска интерфейса: %INTF_MASK%
+
+rem --- Главное меню ---
+:main_menu
+echo.
+echo Выберите действие:
+echo  1. Добавить маршрут
+echo  2. Удалить маршрут
+echo  0. Выход
+set /p ACTION_CHOICE=Введите номер действия: 
+call :trim_input ACTION_CHOICE ACTION_CHOICE
+
+if "!ACTION_CHOICE!"=="" (
+    echo Некорректный ввод. Повторите.
+    goto main_menu
+)
+for /f "delims=0123456789" %%x in ("!ACTION_CHOICE!") do (
+    echo Некорректный ввод. Введите число.
+    goto main_menu
+)
+if !ACTION_CHOICE! LSS 0 (
+    echo Некорректный ввод. Повторите.
+    goto main_menu
+)
+if !ACTION_CHOICE! GTR 2 (
+    if !ACTION_CHOICE! NEQ 0 (
+        echo Некорректный ввод. Повторите.
+        goto main_menu
+    )
 )
 
-:: Добавление маршрута
-if !CHOICE!==1 (
-    goto :ask_route_type
+if !ACTION_CHOICE! EQU 0 (
+    echo Выход.
+    exit /b 0
 )
 
-:: Удаление маршрута
-if !CHOICE!==2 (
-    goto :delete_route
+rem --- Запрос IP назначения ---
+:input_dest_ip
+set /p DEST_IP=Введите IP назначения (0 - отмена): 
+call :trim_input DEST_IP DEST_IP
+if "!DEST_IP!"=="0" (
+    echo Отмена операции.
+    goto main_menu
 )
-
-goto :main_loop
-
-:ask_route_type
-echo. > "%MSG_FILE%"
-call :get_yesno_choice "Постоянный маршрут?"
-echo LOG: [%CURRENT_TIME%] Запрос типа маршрута, выбрано: !CHOICE! >> "%LOG_FILE%"
-type "%MSG_FILE%"
-del "%MSG_FILE%"
-if !CHOICE!==0 (
-    echo Отмена добавления маршрута. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Отмена добавления маршрута >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-    goto :main_loop
-)
-if !CHOICE!==1 (
-    set "ROUTE_PARAM=-p"
-) else (
-    set "ROUTE_PARAM="
-)
-
-:input_target_net_add
-echo. > "%MSG_FILE%"
-set /p TARGET_NET=Введите IP адрес назначения (0 - отмена): 
-if "!TARGET_NET!"=="0" (
-    echo Отмена добавления маршрута. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Отмена ввода IP адреса добавления >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-    goto :main_loop
-)
-call :check_ip !TARGET_NET!
+call :check_ip_validity "%DEST_IP%"
 if errorlevel 1 (
-    echo Некорректный IP адрес. Попробуйте ещё раз. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Некорректный IP: !TARGET_NET! >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-    goto :input_target_net_add
+    echo Некорректный IP. Повторите.
+    goto input_dest_ip
 )
 
-:input_target_mask_add
-echo. > "%MSG_FILE%"
-set /p TARGET_MASK=Введите маску подсети (0 - отмена): 
-if "!TARGET_MASK!"=="0" (
-    echo Отмена добавления маршрута. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Отмена ввода маски подсети >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-    goto :main_loop
+rem --- Запрос маски подсети ---
+:input_mask
+set /p DEST_MASK=Введите маску подсети (например 255.255.255.0) (0 - отмена): 
+call :trim_input DEST_MASK DEST_MASK
+if "!DEST_MASK!"=="0" (
+    echo Отмена операции.
+    goto main_menu
 )
-call :check_mask !TARGET_MASK!
+call :check_mask_validity "%DEST_MASK%"
 if errorlevel 1 (
-    echo Некорректная маску подсети. Попробуйте ещё раз. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Некорректная маска: !TARGET_MASK! >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-    goto :input_target_mask_add
+    echo Некорректная маска. Повторите.
+    goto input_mask
 )
 
-echo Добавляем маршрут: !ROUTE_PARAM! add !TARGET_NET! mask !TARGET_MASK! !GATEWAY! > "%MSG_FILE%"
-echo LOG: [%CURRENT_TIME%] Попытка добавить маршрут: !ROUTE_PARAM! !TARGET_NET! !TARGET_MASK! !GATEWAY! >> "%LOG_FILE%"
-if "!GATEWAY!"=="" (
-    echo Ошибка: шлюз не определен для интерфейса "!INTERFACE_NAME!". Нельзя добавить маршрут. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Шлюз не определен >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-) else (
-    route !ROUTE_PARAM! add !TARGET_NET! mask !TARGET_MASK! !GATEWAY!
+rem --- Проверка принадлежности IP к сети интерфейса ---
+call :check_ip_in_subnet "%DEST_IP%" "%INTF_IP%" "%INTF_MASK%"
+if errorlevel 1 (
+    echo Внимание: введённый IP не принадлежит подсети выбранного интерфейса.
+    set /p CONTINUE_CHOICE=Продолжить? (д/н): 
+    call :trim_input CONTINUE_CHOICE CONTINUE_CHOICE
+    if /i "!CONTINUE_CHOICE!" NEQ "д" (
+        echo Отмена операции.
+        goto main_menu
+    )
+)
+
+rem --- Добавление или удаление маршрута ---
+if !ACTION_CHOICE! EQU 1 (
+    rem Добавление маршрута
+    set /p PERMANENT=Сделать маршрут постоянным? (д/н): 
+    call :trim_input PERMANENT PERMANENT
+    if /i "!PERMANENT!"=="д" (
+        set "PERMANENT_FLAG=-p"
+    ) else (
+        set "PERMANENT_FLAG="
+    )
+    route add %DEST_IP% mask %DEST_MASK% %INTF_IP% %PERMANENT_FLAG% > "%MSG_FILE%" 2>&1
     if errorlevel 1 (
-        echo Ошибка при добавлении маршрута. > "%MSG_FILE%"
+        echo Ошибка при добавлении маршрута:
+        type "%MSG_FILE%"
         echo LOG: [%CURRENT_TIME%] Ошибка добавления маршрута >> "%LOG_FILE%"
     ) else (
-        echo Маршрут добавлен успешно. > "%MSG_FILE%"
-        echo LOG: [%CURRENT_TIME%] Маршрут добавлен успешно >> "%LOG_FILE%"
+        echo Маршрут успешно добавлен.
+        echo LOG: [%CURRENT_TIME%] Маршрут добавлен >> "%LOG_FILE%"
     )
-    type "%MSG_FILE%"
     del "%MSG_FILE%"
-)
-echo.
-goto :main_loop
-
-:delete_route
-:input_target_net_del
-echo. > "%MSG_FILE%"
-set /p DEL_TARGET_NET=Введите IP адрес назначения для удаления (0 - отмена): 
-if "!DEL_TARGET_NET!"=="0" (
-    echo Отмена удаления маршрута. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Отмена ввода IP для удаления >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-    goto :main_loop
-)
-call :check_ip !DEL_TARGET_NET!
-if errorlevel 1 (
-    echo Некорректный IP адрес. Попробуйте ещё раз. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Некорректный IP для удаления: !DEL_TARGET_NET! >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-    goto :input_target_net_del
-)
-
-:input_target_mask_del
-echo. > "%MSG_FILE%"
-set /p DEL_TARGET_MASK=Введите маску подсети для удаления (0 - отмена): 
-if "!DEL_TARGET_MASK!"=="0" (
-    echo Отмена удаления маршрута. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Отмена ввода маски для удаления >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-    goto :main_loop
-)
-call :check_mask !DEL_TARGET_MASK!
-if errorlevel 1 (
-    echo Некорректная маска подсети. Попробуйте ещё раз. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Некорректная маска для удаления: !DEL_TARGET_MASK! >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-    goto :input_target_mask_del
-)
-
-echo Удаляем маршрут: delete !DEL_TARGET_NET! mask !DEL_TARGET_MASK! !GATEWAY! > "%MSG_FILE%"
-echo LOG: [%CURRENT_TIME%] Попытка удалить маршрут: !DEL_TARGET_NET! !DEL_TARGET_MASK! !GATEWAY! >> "%LOG_FILE%"
-if "!GATEWAY!"=="" (
-    echo Ошибка: шлюз не определен для интерфейса "!INTERFACE_NAME!". Нельзя удалить маршрут. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Шлюз не определен для удаления >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-) else (
-    route delete !DEL_TARGET_NET! mask !DEL_TARGET_MASK! !GATEWAY!
+) else if !ACTION_CHOICE! EQU 2 (
+    rem Удаление маршрута
+    route delete %DEST_IP% mask %DEST_MASK% > "%MSG_FILE%" 2>&1
     if errorlevel 1 (
-        echo Ошибка при удалении маршрута. > "%MSG_FILE%"
+        echo Ошибка при удалении маршрута:
+        type "%MSG_FILE%"
         echo LOG: [%CURRENT_TIME%] Ошибка удаления маршрута >> "%LOG_FILE%"
     ) else (
-        echo Маршрут удалён успешно. > "%MSG_FILE%"
-        echo LOG: [%CURRENT_TIME%] Маршрут удален успешно >> "%LOG_FILE%"
+        echo Маршрут успешно удалён.
+        echo LOG: [%CURRENT_TIME%] Маршрут удалён >> "%LOG_FILE%"
     )
-    type "%MSG_FILE%"
     del "%MSG_FILE%"
 )
-echo.
-goto :main_loop
 
-:check_ip
+goto main_menu
+
+rem --------------------
+rem --- Функции проверки и конвертации ---
+
+:prefix_to_mask
+rem %1 - префикс, %2 - выходная переменная
+setlocal enabledelayedexpansion
+set /a bits=%~1
+set /a mask=0xffffffff << (32 - bits)
+set "m1=!mask:~24,8!"
+set "m2=!mask:~16,8!"
+set "m3=!mask:~8,8!"
+set "m4=!mask:~0,8!"
+endlocal & set "%~2=%~1"
+rem Лучше сделать через powershell для корректности:
+for /f "delims=" %%a in ('powershell -NoProfile -Command ^
+    "(0..3 | ForEach-Object { (($args[0] -band (0xFF000000 -shr ($_*8))) -shr (24 - ($_*8)) }) -join \".\" )" ^
+    -args (0xffffffff << (32 - %bits%) -band 0xffffffff)') do set "%2=%%a"
+exit /b 0
+
+:check_ip_validity
+rem %1 - IP для проверки
 setlocal enabledelayedexpansion
 set "ip=%~1"
-set "octet_count=0"
-for %%i in (%ip:.= %) do set /a octet_count+=1
-if !octet_count! NEQ 4 (
-    endlocal & exit /b 1
-)
 for /f "tokens=1-4 delims=." %%a in ("!ip!") do (
     for %%x in (%%a %%b %%c %%d) do (
-        set /a octet=%%x 2>nul
-        if "!octet!"=="" (
+        set /a oct=%%x 2>nul
+        if "!oct!"=="" (
             endlocal & exit /b 1
         )
-        if !octet! LSS 0 (
+        if !oct! LSS 0 (
             endlocal & exit /b 1
         )
-        if !octet! GTR 255 (
+        if !oct! GTR 255 (
             endlocal & exit /b 1
         )
     )
 )
 endlocal & exit /b 0
 
-:check_mask
+:check_mask_validity
+rem %1 - маска
 setlocal enabledelayedexpansion
 set "mask=%~1"
-set "valid_masks=0.0.0.0 128.0.0.0 192.0.0.0 224.0.0.0 240.0.0.0 248.0.0.0 252.0.0.0 254.0.0.0 255.0.0.0 255.128.0.0 255.192.0.0 255.224.0.0 255.240.0.0 255.248.0.0 255.252.0.0 255.254.0.0 255.255.0.0 255.255.128.0 255.255.192.0 255.255.224.0 255.255.240.0 255.255.248.0 255.255.252.0 255.255.254.0 255.255.255.0 255.255.255.128 255.255.255.192 255.255.255.224 255.255.255.240 255.255.255.248 255.255.255.252 255.255.255.254 255.255.255.255"
-echo !valid_masks! | findstr /C:"!mask!" >nul
-if errorlevel 1 (
-    endlocal & exit /b 1
+set "valid_masks=128.0.0.0 192.0.0.0 224.0.0.0 240.0.0.0 248.0.0.0 252.0.0.0 254.0.0.0 255.0.0.0 255.128.0.0 255.192.0.0 255.224.0.0 255.240.0.0 255.248.0.0 255.252.0.0 255.254.0.0 255.255.0.0 255.255.128.0 255.255.192.0 255.255.224.0 255.255.240.0 255.255.248.0 255.255.252.0 255.255.254.0 255.255.255.0 255.255.255.128 255.255.255.192 255.255.255.224 255.255.255.240 255.255.255.248 255.255.255.252 255.255.255.254 255.255.255.255"
+for %%m in (%valid_masks%) do (
+    if "!mask!"=="%%m" (
+        endlocal & exit /b 0
+    )
 )
-endlocal & exit /b 0
+endlocal & exit /b 1
 
-:get_action_choice
-setlocal enabledelayedexpansion
-set "prompt=%~1"
-set "choice="
-:choice_input
-echo. > "%MSG_FILE%"
-set /p choice=%prompt% [1-Добавить, 2-Удалить, 0-Отмена]: 
-if "!choice!"=="" (
-    echo Некорректный ввод. Введите 1, 2 или 0. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Некорректный ввод действия: пустой >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-    goto :choice_input
-)
-if "!choice!"=="1" (
-    endlocal & set "CHOICE=1" & exit /b 0
-) else if "!choice!"=="2" (
-    endlocal & set "CHOICE=2" & exit /b 0
-) else if "!choice!"=="0" (
-    endlocal & set "CHOICE=0" & exit /b 0
-) else (
-    echo Некорректный ввод. Введите 1, 2 или 0. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Некорректный ввод действия: !choice! >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-    goto :choice_input
-)
-
-:get_yesno_choice
-setlocal enabledelayedexpansion
-set "prompt=%~1"
-set "choice="
-:yn_choice_input
-echo. > "%MSG_FILE%"
-set /p choice=%prompt% [1-Да, 2-Нет, 0-Отмена]: 
-if "!choice!"=="" (
-    echo Некорректный ввод. Введите 1, 2 или 0. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Некорректный ввод Да/Нет: пустой >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-    goto :yn_choice_input
-)
-if "!choice!"=="1" (
-    endlocal & set "CHOICE=1" & exit /b 0
-) else if "!choice!"=="2" (
-    endlocal & set "CHOICE=2" & exit /b 0
-) else if "!choice!"=="0" (
-    endlocal & set "CHOICE=0" & exit /b 0
-) else (
-    echo Некорректный ввод. Введите 1, 2 или 0. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Некорректный ввод Да/Нет: !choice! >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-    goto :yn_choice_input
-)
-
-:ask_restart
-echo. > "%MSG_FILE%"
-call :get_yesno_choice "Перезапустить интерфейс \"!INTERFACE_NAME!\"?"
-echo LOG: [%CURRENT_TIME%] Запрос перезапуска интерфейса, выбрано: !CHOICE! >> "%LOG_FILE%"
-type "%MSG_FILE%"
-del "%MSG_FILE%"
-if !CHOICE!==1 (
-    echo Перезапуск интерфейса "!INTERFACE_NAME!"... > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Начало перезапуска интерфейса !INTERFACE_NAME! >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-    netsh interface set interface name="!INTERFACE_NAME!" admin=disable
-    timeout /t 3 /nobreak >nul
-    netsh interface set interface name="!INTERFACE_NAME!" admin=enable
-    echo Интерфейс перезапущен. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Интерфейс !INTERFACE_NAME! перезапущен >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-) else if !CHOICE!==2 (
-    echo Интерфейс не перезапускался. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Перезапуск интерфейса отклонен >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-) else (
-    echo Отмена выбора перезагрузки интерфейса. > "%MSG_FILE%"
-    echo LOG: [%CURRENT_TIME%] Отмена перезапуска интерфейса >> "%LOG_FILE%"
-    type "%MSG_FILE%"
-    del "%MSG_FILE%"
-)
-goto :main_loop
-
-:cleanup
-set "INTERFACE_COUNT="
-set "INTF_="
-set "IP_ADDR="
-set "GATEWAY="
-set "USER_CHOICE="
-set "INTERFACE_NAME="
-set "CHOICE="
-set "ROUTE_PARAM="
-set "TARGET_NET="
-set "TARGET_MASK="
-set "DEL_TARGET_NET="
-set "DEL_TARGET_MASK="
-echo Работа скрипта завершена. > "%MSG_FILE%"
-echo LOG: [%CURRENT_TIME%] Скрипт завершен, переменные очищены >> "%LOG_FILE%"
-type "%MSG_FILE%"
-del "%MSG_FILE%"
-endlocal
-exit /b 0
+:check_ip_in_subnet
+rem %1 - IP для проверки, %2 - IP интерфейса, %3 - маска интерфейса
+powershell -NoProfile -Command ^
+"try {
+    $ipCheck = [System.Net.IPAddress]::Parse('%~1')
+    $ipIntf = [System.Net.IPAddress]::Parse('%~2')
+    $mask = [System.Net.IPAddress]::Parse('%~3')
+    $ipCheckBytes = $ipCheck.GetAddressBytes()
+    $ipIntfBytes = $ipIntf.GetAddressBytes()
+    $maskBytes = $mask.GetAddressBytes()
+    for ($i=0; $i -lt 4; $i++) {
+        if (($ipCheckBytes[$i] -band $maskBytes[$i]) -ne ($ipIntfBytes[$i] -band $maskBytes[$i])) {
+            exit 1
+        }
+    }
+    exit 0
+} catch {
+    exit 1
+}"
+exit /b %errorlevel%
