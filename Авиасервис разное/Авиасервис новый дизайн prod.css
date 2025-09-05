@@ -42,7 +42,7 @@
      /*цвет фона заголовка */   
     --ag-header-background-color: rgba(76, 137, 195, 1) !important; /*rgba(183, 245, 226, 0.95)*/
     /* цвет текста заголовка */
-    --ag-header-foreground-color: rgba(255, 255, 255, 1) !important;
+    --ag-header-text-color: rgba(255, 255, 255, 1) !important;
     /* выделение в таблице (rgba(0, 145, 234, 0.2)) */
     --ag-range-selection-background-color: rgba(0, 145, 234, 0.2) !important;
     /* цвет фона таблицы (#fff) */
@@ -52,7 +52,7 @@
   	/* цвет выделенной строки */
     --ag-selected-row-background-color: rgba(231, 181, 127, 0.24) !important;
   	/* цвет подсвеченной строки */
-    --ag-row-hover-color: rgba(127, 127, 127, 0.16) !important;
+    --ag-row-hover-color: rgba(211, 211, 211, 0.46) !important;
   	/* цвет подсвеченной колонки */  
     --ag-column-hover-color: rgba(33, 150, 243, 0.1) !important;
     /* цвет рамки таблицы */
@@ -96,7 +96,7 @@
 }
 
 .ag-header-cell-label {
-    color: var(--ag-header-foreground-color) !important;
+    color: var(--ag-header-text-color) !important;
     justify-content: center;
 	font-size: 12px;
 	font-weight: 500;
@@ -107,8 +107,7 @@
 	border: 0px solid var(--ag-cell-border-color) !important; /*121, 192, 187 или 76, 137, 112*/
   	display:flex;
   	align-items:center;
-  	/* ячейка с кнопкой*/
-    &:has(.cell-btn) {
+  	&:has(.cell-btn, .cell-icon) {
     	justify-content:center;
   	}
   	/* кнопка внутри ячейки*/
@@ -117,13 +116,17 @@
       	cursor: pointer;
       	/* кнопка с анимацией увеличения*/
 		&.scale-btn {
-  			& [class*=el-icon-] {
+  			& i {
   				transition: transform 0.3s ease;
   				&:hover {
   					transform: scale(1.35);
 				}
 			}
 		}
+	}
+  	/* иконка внутри ячейки*/
+	& .cell-icon {
+		font-size: 22px;
 	}
 }
 
@@ -269,6 +272,38 @@ background-color: rgba(80, 130, 230, 1) !important;
 .el-form-item__content .xref_field.vue-treeselect, 
 .el-form-item__label .xref_field_label {
 	top:0
+}
+
+.xref_multi_field_label {
+    top: 0;
+}
+
+.xref_multi_field {
+    &.vue-treeselect {
+        top: 0;
+    }
+
+    & .vue-treeselect__multi-value {
+        margin-bottom: 0;
+    }
+
+    & .vue-treeselect__multi-value-item-container {
+        padding: 5px 4px;
+    }
+
+    & .report_editor .vue-treeselect__single-value,
+    .vue-treeselect-helper-zoom-effect-off {
+        line-height: 40px;
+    }
+
+    & .vue-treeselect__limit-tip {
+        padding: 5px 5px;
+      	line-height: 20px;
+    }
+
+    & .vue-treeselect__multi-value-item {
+        border-radius: 8px;
+    }
 }
 
 /*главный контейнер карточки*/
