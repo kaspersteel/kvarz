@@ -62,6 +62,7 @@ FOREACH x IN ARRAY tab_invoice.ids_tab_invoice LOOP
           attr_127_, -- ед. хран.
      	  attr_130_, -- кол-во образцов
           attr_131_, -- номера образцов
+          attr_132_, -- лаборатории
           attr_272_, -- №пп
           attr_285_, -- приходная накладная
      	  attr_289_, -- на печать
@@ -69,16 +70,18 @@ FOREACH x IN ARRAY tab_invoice.ids_tab_invoice LOOP
           )
    SELECT id_new_request,
    		  x,
-          COALESCE(mat_dir.attr_856_, 1)::text,
+          COALESCE(mat_dir.attr_856_, up_mat_dir.attr_856_, 1)::text,
           samples.n::text,
+          COALESCE(mat_dir.attr_755_, up_mat_dir.attr_755_),
           i,
           id_invoice,
      	  TRUE,
  		  do_user
      FROM registry.object_30_ smp
 LEFT JOIN registry.object_58_ mat_dir ON mat_dir.id = smp.attr_94_ AND NOT mat_dir.is_deleted
+LEFT JOIN registry.object_58_ up_mat_dir ON up_mat_dir.id = mat_dir.attr_61_ AND NOT up_mat_dir.is_deleted
 LEFT JOIN LATERAL ( SELECT string_agg(concat_ws(', ', smp.attr_97_||'-'||gs.seq_num), ' ,') AS n
-                      FROM generate_series(1, COALESCE(mat_dir.attr_856_, 1)) AS gs(seq_num) 
+                      FROM generate_series(1, COALESCE(mat_dir.attr_856_, up_mat_dir.attr_856_, 1)) AS gs(seq_num) 
                     ) samples ON true
     WHERE smp.id = x; 
 
