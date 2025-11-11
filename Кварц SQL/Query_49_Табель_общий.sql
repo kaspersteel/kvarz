@@ -1,8 +1,10 @@
 WITH 
 /*таблица переменных*/
 vars AS ( SELECT
-      /*mode - режим учёта места работы. 1 - из графика, 2 - из оргструктуры*/ 
+      /* mode - режим учёта места работы. 1 - из графика, 2 - из оргструктуры*/ 
      {mode}::int as "mode",    
+      /* unlegal - показывать неоформленных */
+     {unlegal}::boolean as "unlegal",    
      {division}::int as "division",
      {period}::date as "period",
      (    SELECT (
@@ -131,7 +133,24 @@ LEFT JOIN registry.object_1792_ notes ON o.id = notes.attr_1952_
       AND NOT notes.is_deleted
 	  AND notes.attr_1951_  
 WHERE NOT o.is_deleted
-      AND CASE
+	/*Новикова О.А. 09.10.25  по просьбе Баранова убираем из  табеля уволенных сотрудников, в неоформленных могут находиться сотрудники, которые уволены, но работают неофиц. - их показываем*/
+	/*показываем неоформленных, если установлен флаг unlegal.*/
+  	/*с проверкой на уволенность.*/
+  	/* AND CASE WHEN ( SELECT unlegal FROM vars ) THEN 
+                    CASE WHEN NOT (NOT o.attr_1685_ AND NOT ((o.attr_1496_ is null) OR (o.attr_1496_ >= ( SELECT period FROM vars )))) THEN TRUE 
+                         ELSE FALSE 
+                    END
+               ELSE CASE WHEN NOT o.attr_1685_ AND ((o.attr_1496_ is null) OR (o.attr_1496_ >= ( SELECT period FROM vars ))) THEN TRUE 
+                         ELSE FALSE 
+                    END
+          END*/
+  	/*без проверки а уволенность*/
+  	  AND CASE WHEN ( SELECT unlegal FROM vars ) THEN TRUE 
+           	   ELSE CASE WHEN NOT o.attr_1685_ THEN TRUE 
+                         ELSE FALSE 
+                    END
+          END
+      AND CASE 
                     WHEN (SELECT division FROM vars) IS NOT NULL THEN 
                     CASE
                               WHEN division.id = (SELECT division FROM vars) THEN TRUE
