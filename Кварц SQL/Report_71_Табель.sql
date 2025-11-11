@@ -3,6 +3,8 @@ WITH
 vars AS ( SELECT 
      {division}::int as "division",
      '{period}'::date as "period",
+      /* unlegal - показывать неоформленных */
+     {unlegal}::boolean as "unlegal",
      (    SELECT (
              SELECT ARRAY_AGG(DISTINCT divs)
                FROM UNNEST(odd_org.sub_divs || org.sub_divs) AS "divs"
@@ -75,7 +77,7 @@ SELECT
           EXTRACT(DAY FROM tabel.attr_1776_) AS "day_tab",
           tabel.attr_1780_ AS "h_plan",
           tabel.attr_1816_ AS "h_hand",
-          COALESCE( asyst.sum_h, '00:00:00' ) AS "h_asys",
+          COALESCE( asyst.sum_h, '00:00:00' )::time AS "h_asys",
           CASE WHEN gr_otp.id is not null THEN 1 END AS "otp_plan",
           absence.attr_1504_ AS "absence",
           NULL AS "date_period",
@@ -107,6 +109,11 @@ LEFT JOIN registry.object_1502_ absence ON o.id = absence.attr_1503_
       AND tabel.attr_1776_ <= absence.attr_1506_::date
       AND NOT absence.is_deleted
     WHERE NOT o.is_deleted
+  	  AND CASE WHEN ( SELECT unlegal FROM vars ) THEN TRUE 
+           	   ELSE CASE WHEN NOT o.attr_1685_ THEN TRUE 
+                         ELSE FALSE 
+                    END
+          END
       AND CASE
                     WHEN (SELECT division FROM vars) != 0 THEN 
                     CASE
