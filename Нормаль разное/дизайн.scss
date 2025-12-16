@@ -243,12 +243,12 @@
     }
 
     & .a-tree {
-        & .el-tree {
-            padding-top: 5px !important;
-            height: calc(100vh - 102px);
-            overflow: hidden auto;
-            border-right: var(--bord-tree, 1px solid rgb(228, 231, 237));
-        }
+        height:calc(100% - 60px);
+  		& .el-tree {
+          	padding-top: 5px !important;
+            height: 100%;
+    		overflow: hidden auto;
+		}
 
         & .background {
             background: var(--c-back-main, rgb(255, 255, 255));
