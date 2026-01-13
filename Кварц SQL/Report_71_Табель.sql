@@ -39,16 +39,15 @@ LEFT JOIN LATERAL (
 /*исходная таблица табеля*/
 source_tab AS (
 /*заготовка под строку дней недели*/
-     SELECT NULL AS "object_tab",
-          NULL AS "card_tab",
-          NULL AS "object_sotr",
-          NULL AS "card_sotr",
+     SELECT 
           0 AS "id_sotr",
           NULL AS "fio_sotr",
           NULL AS "name_post",
+          NULL AS "fired_date",
           '0' AS "name_div",
           NULL AS "id_div",
           NULL AS "name_brigade",
+          NULL AS "sort_inbrigade",
           NULL AS "id_tab",
           EXTRACT( DAY FROM days ) AS "day_tab",
           NULL AS "h_plan",
@@ -63,21 +62,20 @@ LEFT JOIN registry.object_757_ holidays ON holidays.attr_789_ = days
       AND NOT holidays.is_deleted
 UNION ALL
 SELECT
-	    1774 AS "object_tab",
-          223 AS "card_tab",
-          419 AS "object_sotr",
-          222 AS "card_sotr",
           o.id AS "id_sotr",
           o.attr_424_ AS "fio_sotr",
           post.attr_504_ AS "name_post",
+          o.attr_1496_ AS "fired_date",
           division.attr_1545_ AS "name_div",
           division.id AS "id_div",
           brigade.attr_1793_ AS "name_brigade",
+	      o.attr_1950_ AS "sort_inbrigade",
           tabel.id AS "id_tab",
-          EXTRACT(DAY FROM tabel.attr_1776_) AS "day_tab",
+		  /*информационная ячейка за период будет "Днём Зеро"*/
+          CASE WHEN tabel.attr_1908_ THEN 0 ELSE EXTRACT(DAY FROM tabel.attr_1776_) END AS "day_tab",
           tabel.attr_1780_ AS "h_plan",
           tabel.attr_1816_ AS "h_hand",
-          COALESCE( asyst.sum_h, '00:00:00' )::time AS "h_asys",
+          COALESCE( CASE WHEN tabel.attr_1908_ THEN null ELSE asyst.sum_h END, '00:00:00' )::time AS "h_asys",
           CASE WHEN gr_otp.id is not null THEN 1 END AS "otp_plan",
           absence.attr_1504_ AS "absence",
           NULL AS "date_period",
@@ -91,14 +89,12 @@ LEFT JOIN registry.object_1544_ division ON o.attr_1546_ = division.id
       AND NOT division.is_deleted
 LEFT JOIN registry.object_1790_ brigade ON o.attr_1804_ = brigade.id
       AND NOT brigade.is_deleted
-LEFT JOIN LATERAL (
-             SELECT SUM(attr_1789_) AS "sum_h"
+/*подключаем суммарное время из AS потому что пропуск может прикладываться несколько раз за день*/
+LEFT JOIN (
+             SELECT DISTINCT attr_1786_ AS "ref_id",  attr_1787_::date AS "ref_date", SUM(attr_1789_) OVER ( PARTITION BY attr_1786_, attr_1787_::date ) AS "sum_h"
                FROM registry.object_1785_
-              WHERE o.id = attr_1786_
-                AND tabel.attr_1776_ = attr_1787_::date
-                AND NOT is_deleted
-           GROUP BY tabel.attr_1776_
-          ) asyst ON TRUE
+              WHERE NOT is_deleted
+		  ) asyst ON o.id = asyst.ref_id AND tabel.attr_1776_ = asyst.ref_date
 LEFT JOIN registry.object_1690_ gr_otp ON o.id = gr_otp.attr_1692_
       AND tabel.attr_1776_ >= gr_otp.attr_1693_::date
       AND tabel.attr_1776_ <= gr_otp.attr_1694_::date
@@ -109,13 +105,15 @@ LEFT JOIN registry.object_1502_ absence ON o.id = absence.attr_1503_
       AND tabel.attr_1776_ <= absence.attr_1506_::date
       AND NOT absence.is_deleted
     WHERE NOT o.is_deleted
-  	  AND CASE WHEN ( SELECT unlegal FROM vars ) THEN TRUE 
-           	   ELSE CASE WHEN NOT o.attr_1685_ THEN TRUE 
+	/*показываем неоформленных, если установлен флаг unlegal.*/
+  	/*без проверки а уволенность*/
+  	  AND CASE WHEN ( SELECT unlegal FROM vars ) THEN TRUE /*если выбран показ неоформленных, показываем всех*/
+           	   ELSE CASE WHEN NOT o.attr_1685_ THEN TRUE /*если выбрано скрывать неоформленных, показываем тех, кто не "не оформлен"*/
                          ELSE FALSE 
                     END
           END
-      AND CASE
-                    WHEN (SELECT division FROM vars) != 0 THEN 
+      AND CASE 
+                    WHEN (SELECT division FROM vars) IS NOT NULL THEN 
                     CASE
                               WHEN division.id = (SELECT division FROM vars) THEN TRUE
                               ELSE FALSE
@@ -136,6 +134,7 @@ base_tab AS (
 SELECT 
 source_tab.*,
 /*сборка информации для ячеек таблицы*/
+CASE WHEN source_tab.day_tab != 0 THEN
 CASE WHEN source_tab.id_sotr = 0 THEN 
             CASE WHEN source_tab.holyday is not null THEN 'В' END 
                  ELSE CASE WHEN make_date((SELECT year_tab FROM vars), (SELECT month_tab FROM vars), source_tab.day_tab::INT ) <= CURRENT_DATE THEN 
@@ -152,47 +151,64 @@ CASE WHEN source_tab.id_sotr = 0 THEN
                                   ELSE CASE WHEN source_tab.otp_plan = 1 THEN 'Оп' 
                                             ELSE CASE WHEN source_tab.h_plan is null THEN '' 
                                                       ELSE 'Д' END 
-END END END END as "html",	
+END END END END END as "html",	
 
 /*отдельные суммы по сотруднику, бригаде, подразделению*/
-          SUM( source_tab.h_plan) OVER ( PARTITION BY source_tab.id_sotr ) AS "sum_plan",
-          EXTRACT( HOUR FROM SUM( COALESCE( make_time(source_tab.h_hand, 0 , 0), source_tab.h_asys ) ) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) )::INT AS "sum_fact",
-          SUM( source_tab.h_plan ) OVER ( PARTITION BY source_tab.name_brigade ) AS "sum_br_plan",
-          EXTRACT( HOUR FROM SUM( COALESCE( make_time(source_tab.h_hand, 0 , 0), source_tab.h_asys ) ) OVER ( PARTITION BY source_tab.name_brigade ) )::INT AS "sum_br_fact",
-          SUM( source_tab.h_plan ) OVER ( PARTITION BY source_tab.name_div ) AS "sum_div_plan",
-          EXTRACT( HOUR FROM SUM( COALESCE( make_time(source_tab.h_hand, 0 , 0), source_tab.h_asys ) ) OVER ( PARTITION BY source_tab.name_div ) )::INT AS "sum_div_fact"
+CASE WHEN source_tab.id_sotr != 0 THEN SUM( COALESCE( source_tab.h_plan, 0) ) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) END AS "sum_plan",
+CASE WHEN source_tab.id_sotr != 0 
+     THEN COALESCE( SUM( CASE WHEN source_tab.day_tab = 0 THEN source_tab.h_hand END) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) , 
+                    EXTRACT( HOUR FROM (SUM( COALESCE( make_time(source_tab.h_hand, 0 , 0), source_tab.h_asys )) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) ) + INTERVAL '30 minutes') )::INT
+END AS "sum_fact"
 FROM source_tab
+ORDER BY id_sotr, day_tab
 ),
 
 /*табель*/
 T AS (
       SELECT DISTINCT 
-          base_tab.object_tab,
-          base_tab.card_tab,
-          base_tab.object_sotr,
-          base_tab.card_sotr,
+          /*тип строки*/
+          CASE
+                  WHEN base_tab.id_sotr = 0 THEN 'dates'
+                  WHEN base_tab.id_sotr IS NOT NULL THEN 'sotr'
+                  WHEN base_tab.name_brigade IS NOT NULL THEN 'brigade'
+                  WHEN base_tab.name_div IS NOT NULL THEN 'division'
+          END AS "row_type",
           base_tab.id_sotr,
           base_tab.fio_sotr,
-            /*первая колонка таблицы*/
+		  /*выделение заголовков подразделений и бригад*/
+	    CASE
+			WHEN base_tab.name_div = '0' THEN NULL
+			WHEN base_tab.name_brigade IS NULL AND base_tab.id_sotr IS NULL THEN 1
+			WHEN base_tab.name_brigade IS NULL THEN 2
+			ELSE 3
+          END AS "lv_div",
+	    CASE
+			WHEN base_tab.name_brigade IS NULL THEN NULL
+			WHEN base_tab.id_sotr IS NULL THEN 1
+                  ELSE 2
+          END AS "lv_br",
+          /*первая колонка таблицы*/
           CASE
-                    WHEN base_tab.id_sotr = 0 THEN ''
-                    WHEN base_tab.id_sotr IS NOT NULL THEN base_tab.fio_sotr
-                    WHEN base_tab.name_brigade IS NOT NULL THEN 'Итого ' || base_tab.name_brigade || ''
-                    WHEN base_tab.name_div IS NOT NULL THEN 'Итого ' || base_tab.name_div || ''
+                  WHEN base_tab.id_sotr = 0 THEN NULL
+                  WHEN base_tab.id_sotr IS NOT NULL THEN base_tab.fio_sotr
+                  WHEN base_tab.name_brigade IS NOT NULL THEN '' || base_tab.name_brigade || ''
+                  WHEN base_tab.name_div IS NOT NULL THEN '' || base_tab.name_div || ''
           END AS "first_column",
           base_tab.name_post,
+          base_tab.fired_date,
           base_tab.name_div,
           base_tab.id_div,
           base_tab.name_brigade,
+	    base_tab.sort_inbrigade,
           CASE
-                    WHEN base_tab.id_sotr IS NOT NULL THEN MAX(base_tab.sum_plan)
-                    WHEN base_tab.name_brigade IS NOT NULL THEN MAX(base_tab.sum_br_plan)
-                    ELSE MAX(base_tab.sum_div_plan)
+                  WHEN base_tab.id_sotr IS NOT NULL THEN MAX(base_tab.sum_plan)
+                  WHEN base_tab.name_brigade IS NOT NULL THEN NULL
+                  ELSE NULL
           END AS sum_plan,
           CASE
-                    WHEN base_tab.id_sotr IS NOT NULL THEN MAX(base_tab.sum_fact)
-                    WHEN base_tab.name_brigade IS NOT NULL THEN MAX(base_tab.sum_br_fact)
-                    ELSE MAX(base_tab.sum_div_fact)
+                  WHEN base_tab.id_sotr IS NOT NULL THEN MAX(base_tab.sum_fact)
+                  WHEN base_tab.name_brigade IS NOT NULL THEN NULL
+                  ELSE NULL
           END AS sum_fact,
 
 /*поколоночный вывод информации в ячейки*/
@@ -232,17 +248,19 @@ FROM base_tab
 /*формулы группировки по сотруднику, а так же бригаде и подразделению - для строк итого*/
 GROUP BY 
 GROUPING SETS (
-(object_tab, card_tab, object_sotr, card_sotr, base_tab.id_sotr, base_tab.fio_sotr, base_tab.id_div, base_tab.name_div, base_tab.name_post, base_tab.name_brigade)
+(base_tab.id_sotr, base_tab.fio_sotr, base_tab.id_div, base_tab.name_div,  base_tab.sort_inbrigade, base_tab.name_post, base_tab.fired_date, base_tab.name_brigade)
 , (base_tab.name_brigade, base_tab.name_div)
 , base_tab.name_div
 )
+HAVING (base_tab.fired_date is null OR base_tab.fired_date > ( SELECT fdm_tab FROM vars )) AND (MAX(base_tab.sum_plan) != 0 OR MAX(base_tab.sum_plan) is null)
 
-ORDER BY
-name_div, 
-name_brigade, 
-fio_sotr
 )
 
-select T.* from T 
+SELECT 
+    CASE WHEN T.row_type = 'sotr' THEN ROW_NUMBER() OVER (PARTITION BY T.row_type = 'sotr' ORDER BY name_div, lv_div, name_brigade, lv_br, sort_inbrigade, fio_sotr) END AS npp,
+    CASE WHEN T.row_type = 'sotr' THEN ROW_NUMBER() OVER (PARTITION BY T.row_type = 'sotr', name_brigade ORDER BY name_div, lv_div, name_brigade, lv_br, sort_inbrigade, fio_sotr) END AS nppb,
+    T.* 
+FROM T 
 /*убираем строку итого для строки дней*/
 WHERE not (T.name_div = '0' AND T.id_sotr is null)
+ORDER BY name_div, lv_div, name_brigade, lv_br, sort_inbrigade, fio_sotr

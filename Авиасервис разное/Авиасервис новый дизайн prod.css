@@ -109,6 +109,7 @@
   	align-items:center;
   	&:has(.cell-btn, .cell-icon) {
     	justify-content:center;
+      overflow:unset;
   	}
   	/* кнопка внутри ячейки*/
   	& .cell-btn {
@@ -274,6 +275,16 @@ background-color: rgba(80, 130, 230, 1) !important;
 	top:0
 }
 
+.el-form-item__error {
+    color: #F56C6C;
+    font-size: 12px;
+    line-height: 1;
+    padding-top: 4px;
+    position: absolute;
+    top: calc(100% - 15px) !important;
+    left: 0;
+}
+
 .xref_multi_field_label {
     top: 0;
 }
@@ -361,6 +372,17 @@ background-color: rgba(80, 130, 230, 1) !important;
 			}
 		}
   	}
+  	&.position_bottom{
+		background-color: rgba(240, 240, 240, 0);
+		& .tab{
+      		white-space: nowrap;
+      		padding: 5px 20px 10px 20px;
+  			border-top: 1px solid #ebeef5;	
+      		&.active {
+				border-top: 3px solid rgba(20, 149, 255, 0.35);
+			}
+		}
+  	}
   	&.position_right{
       	width:140px;
 		background-color: rgba(240, 240, 240, 1);
@@ -398,6 +420,12 @@ background-color: rgba(80, 130, 230, 1) !important;
 	border: 1px solid rgba(220,230,245,1);
 	border-radius:8px;
 }
+
+.detail-container {
+background: unset !important;
+border:unset !important;
+}
+
 /*заголовок первого уровня*/
 .h1 {
 	overflow:hidden;
@@ -410,6 +438,41 @@ background-color: rgba(80, 130, 230, 1) !important;
 	overflow:hidden;
 	cursor:default;
 	color: rgb(44, 44, 60);
+}
+
+/*всплывающие подсказки*/
+
+.custom_tooltip {
+  position: relative; /* Для позиционирования подсказки */
+  display: inline-block;
+  //border-bottom: 1px dotted blue; /* Визуальный намек на подсказку */
+}
+
+.custom_tooltip .tooltiptext {
+  visibility: hidden;
+  width: auto;
+  background-color: #333;
+  color: #fff;
+  font-size:13px;
+  text-align: center;
+  border-radius: 6px;
+  padding: 0px 10px;
+  
+  /* Позиционирование подсказки */
+  position: absolute;
+  z-index: 9999;
+  //bottom: 125%;
+  left: 0%;
+  transform: translateX(-120%);
+  
+  /* Плавное появление */
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.custom_tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
 }
 
 .el-button--primary.is-plain {
@@ -434,3 +497,9 @@ background-color: rgba(80, 130, 230, 1) !important;
     color: #ecf5ff;
  	background: #409eff;
 }
+
+/*.derevo .a-tree 
+.header_fixed{
+position:absolute;
+display: none;
+}*/
