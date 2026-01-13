@@ -3,6 +3,8 @@ WITH
 vars AS ( SELECT
       /*mode - режим учёта места работы. 1 - из графика, 2 - из оргструктуры*/ 
      {mode}::int as "mode",    
+      /* unlegal - показывать неоформленных */
+     {unlegal}::boolean as "unlegal",    
      {division}::int as "division",
      {period}::date as "period",
      (    SELECT (
@@ -55,6 +57,7 @@ source_tab AS (
           0 AS "id_sotr",
           NULL AS "fio_sotr",
           NULL AS "name_post",
+          NULL AS "fired_date",
           '0' AS "name_div",
           NULL AS "id_div",
           NULL AS "name_brigade",
@@ -83,7 +86,8 @@ SELECT
           ( SELECT month_tab FROM vars ) as "month_tab",
           o.id AS "id_sotr",
           o.attr_424_ AS "fio_sotr",
-          post.attr_504_ AS "name_post",
+          post.attr_504_||CASE WHEN o.attr_1685_ THEN ' (неоф)' ELSE '' END||CASE WHEN o.attr_1496_ is not null THEN ' (ув)' ELSE '' END AS "name_post",
+          o.attr_1496_ AS "fired_date",
           division.attr_1545_ AS "name_div",
           division.id AS "id_div",
           brigade.attr_1793_ AS "name_brigade",
@@ -131,7 +135,24 @@ LEFT JOIN registry.object_1792_ notes ON o.id = notes.attr_1952_
       AND NOT notes.is_deleted
 	  AND notes.attr_1951_  
 WHERE NOT o.is_deleted
-      AND CASE
+	/*Новикова О.А. 09.10.25  по просьбе Баранова убираем из  табеля уволенных сотрудников, в неоформленных могут находиться сотрудники, которые уволены, но работают неофиц. - их показываем*/
+	/*показываем неоформленных, если установлен флаг unlegal.*/
+  	/*с проверкой на уволенность.*/
+  	/* AND CASE WHEN ( SELECT unlegal FROM vars ) THEN 
+                    CASE WHEN NOT (NOT o.attr_1685_ AND NOT ((o.attr_1496_ is null) OR (o.attr_1496_ >= ( SELECT period FROM vars )))) THEN TRUE 
+                         ELSE FALSE 
+                    END
+               ELSE CASE WHEN NOT o.attr_1685_ AND ((o.attr_1496_ is null) OR (o.attr_1496_ >= ( SELECT period FROM vars ))) THEN TRUE 
+                         ELSE FALSE 
+                    END
+          END*/
+  	/*без проверки а уволенность*/
+  	  AND CASE WHEN ( SELECT unlegal FROM vars ) THEN TRUE --если выбран показ неоформленных, показываем всех
+           	   ELSE CASE WHEN NOT o.attr_1685_ THEN TRUE --если выбрано скрывать неоформленных, показываем тех, кто не "не оформлен"
+                         ELSE FALSE 
+                    END
+          END
+      AND CASE 
                     WHEN (SELECT division FROM vars) IS NOT NULL THEN 
                     CASE
                               WHEN division.id = (SELECT division FROM vars) THEN TRUE
@@ -228,12 +249,21 @@ ORDER BY id_sotr, day_tab
 ),
 /*табель*/
 T AS (
-   SELECT DISTINCT base_tab.object_tab,
+   SELECT DISTINCT 
+   
+          base_tab.object_tab,
           base_tab.card_day,
           base_tab.card_period,
           base_tab.object_sotr,
           base_tab.card_sotr,
           base_tab.month_tab,
+          /*тип строки*/
+          CASE
+                  WHEN base_tab.id_sotr = 0 THEN 'dates'
+                  WHEN base_tab.id_sotr IS NOT NULL THEN 'sotr'
+                  WHEN base_tab.name_brigade IS NOT NULL THEN 'brigade'
+                  WHEN base_tab.name_div IS NOT NULL THEN 'division'
+          END AS "row_type",
           base_tab.id_sotr,
           base_tab.fio_sotr,
 		  /*выделение заголовков подразделений и бригад*/
@@ -256,6 +286,7 @@ T AS (
                   WHEN base_tab.name_div IS NOT NULL THEN '' || base_tab.name_div || ''
           END AS "first_column",
           base_tab.name_post,
+          base_tab.fired_date,
           base_tab.name_div,
           base_tab.id_div,
           base_tab.name_brigade,
@@ -352,21 +383,19 @@ FROM base_tab
 /*формулы группировки по сотруднику, а так же бригаде и подразделению - для строк итого*/
 GROUP BY 
 GROUPING SETS (
-(object_tab, card_day, card_period, object_sotr, card_sotr, base_tab.month_tab, base_tab.id_sotr, base_tab.fio_sotr, base_tab.id_div, base_tab.name_div, base_tab.sort_inbrigade, base_tab.name_post, base_tab.name_brigade)
+(object_tab, card_day, card_period, object_sotr, card_sotr, base_tab.month_tab, base_tab.id_sotr, base_tab.fio_sotr, base_tab.id_div, base_tab.name_div, base_tab.sort_inbrigade, base_tab.name_post, base_tab.fired_date, base_tab.name_brigade)
 , (base_tab.name_brigade, base_tab.name_div)
 , base_tab.name_div
 )
+HAVING (base_tab.fired_date is null OR base_tab.fired_date > ( SELECT fdm_tab FROM vars )) AND (MAX(base_tab.sum_plan) != 0 OR MAX(base_tab.sum_plan) is null)
 
-ORDER BY
-name_div,
-lv_div,
-name_brigade, 
-lv_br,
-sort_inbrigade,
-fio_sotr
 )
 
-SELECT * 
+SELECT 
+    CASE WHEN T.row_type = 'sotr' THEN ROW_NUMBER() OVER (PARTITION BY T.row_type = 'sotr' ORDER BY name_div, lv_div, name_brigade, lv_br, sort_inbrigade, fio_sotr) END AS npp,
+    CASE WHEN T.row_type = 'sotr' THEN ROW_NUMBER() OVER (PARTITION BY T.row_type = 'sotr', name_brigade ORDER BY name_div, lv_div, name_brigade, lv_br, sort_inbrigade, fio_sotr) END AS nppb,
+    T.* 
 FROM T 
 /*убираем строку итого для строки дней*/
 WHERE not (T.name_div = '0' AND T.id_sotr is null)
+ORDER BY name_div, lv_div, name_brigade, lv_br, sort_inbrigade, fio_sotr

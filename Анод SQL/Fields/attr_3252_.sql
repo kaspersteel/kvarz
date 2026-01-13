@@ -1,5 +1,5 @@
 --SELECT
-CASE o.attr_3171_
+CASE remnants_save.attr_2214_
           /*Круг/цилиндр*/
           WHEN 1 THEN (
           PI() * (remnants_save.attr_2212_ / 2 / 1000) ^ 2 * o.attr_3251_ / 1000
