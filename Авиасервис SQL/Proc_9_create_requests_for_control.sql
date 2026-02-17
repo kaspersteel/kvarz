@@ -1,23 +1,29 @@
 DECLARE 
-
 /*parameters JSONB := '{"id": 10, "role_id": 1, "user_id": 46}';*/
 do_user INT := (parameters ->> 'user_id')::INT;
-id_invoice INT := (parameters ->> 'id')::INT;
+id_invoice BIGINT := (parameters ->> 'id')::BIGINT;
 npp_request INT; -- очередной номер создаваемой заявки
-id_new_request INT; -- id созданной заявки
+id_new_request BIGINT; -- id созданной заявки
 tab_invoice RECORD; -- запись о материале в накладной
-x INT; -- id записи ед. хранения
+x BIGINT; -- id записи ед. хранения
 i INT := 1; -- счётчик записей в табличной части заявки
+/* переменные батч-цикла создания заявок */
+lh_ids_tab_invoice INT; -- количество принятых единиц по ключу (поставщик-материал-плавка-партия)
+v_batch_size INT := 10; -- количество образцов в одной заявке
+v_from INT := 1;
+v_to INT;
+v_slice BIGINT[];
 
 BEGIN
-	/*получение очередного номера заявки*/
-SELECT COALESCE(MAX(attr_279_) + 1, 1)
-INTO npp_request
-FROM registry.object_118_
-WHERE NOT is_deleted
-  AND DATE_PART('year', attr_121_) = DATE_PART('year', CURRENT_DATE);
 
-    /*получаем записи материалов со статусом "ВК" и группируем их в заявки по ключу (поставщик-материал-плавка-партия) */
+	/*получение очередного номера заявки*/
+    SELECT COALESCE(MAX(attr_279_) + 1, 1)
+           INTO npp_request
+    FROM registry.object_118_
+    WHERE NOT is_deleted
+          AND DATE_PART('year', attr_121_) = DATE_PART('year', CURRENT_DATE);
+
+/*получаем записи материалов со статусом "ВК" и группируем их в заявки по ключу (поставщик-материал-плавка-партия) */
 FOR tab_invoice IN (
    SELECT array_agg(tab.id ORDER BY tab.attr_110_, tab.id) AS ids_tab_invoice,
           tab.attr_94_ AS id_material,
@@ -29,7 +35,17 @@ FOR tab_invoice IN (
       AND NOT tab.is_deleted
  GROUP BY tab.attr_110_, tab.attr_94_, tab.attr_96_, tab.attr_267_
 ) LOOP
-/*создание заявки на ВК*/
+
+lh_ids_tab_invoice := array_length(tab_invoice.ids_tab_invoice, 1);
+
+/* запускаем батч-цикл создания заявок с делением количества образцов */
+WHILE v_from <= lh_ids_tab_invoice LOOP
+    /* конец части массива */
+	v_to := LEAST(v_from + v_batch_size - 1, lh_ids_tab_invoice);
+    /* батч-массив */
+    v_slice := tab_invoice.ids_tab_invoice[v_from:v_to];
+    
+    /*создание заявки на ВК*/
    INSERT INTO registry.object_118_ (
           attr_121_,
           attr_138_,
@@ -55,8 +71,9 @@ FOR tab_invoice IN (
 		  do_user
           )
 RETURNING id INTO id_new_request;
+
 /*создание таблицы заявки на ВК*/
-FOREACH x IN ARRAY tab_invoice.ids_tab_invoice LOOP
+FOREACH x IN ARRAY v_slice LOOP
    INSERT INTO registry.object_124_ (
           attr_126_, -- заявка
           attr_127_, -- ед. хран.
@@ -66,6 +83,7 @@ FOREACH x IN ARRAY tab_invoice.ids_tab_invoice LOOP
           attr_272_, -- №пп
           attr_285_, -- приходная накладная
      	  attr_289_, -- на печать
+     	  attr_762_, -- статус
 		  operation_user_id
           )
    SELECT id_new_request,
@@ -76,6 +94,7 @@ FOREACH x IN ARRAY tab_invoice.ids_tab_invoice LOOP
           i,
           id_invoice,
      	  TRUE,
+          3, -- статус "допуск"
  		  do_user
      FROM registry.object_30_ smp
 LEFT JOIN registry.object_58_ mat_dir ON mat_dir.id = smp.attr_94_ AND NOT mat_dir.is_deleted
@@ -91,6 +110,13 @@ LEFT JOIN LATERAL ( SELECT string_agg(concat_ws(', ', smp.attr_97_||'-'||gs.seq_
      WHERE id = x;
     	i := i + 1;
 	END LOOP;
+    /* начало новой части массива */
+    v_from := v_from + v_batch_size;
+    /* номер следующей заявки по тому же ключу (поставщик-материал-плавка-партия)*/
+    npp_request := npp_request + 1; 
+	i := 1;
+END LOOP;
+/* номер следующей заявки по новому ключу (поставщик-материал-плавка-партия)*/
 npp_request := npp_request + 1; 
 i := 1;
 END LOOP;
