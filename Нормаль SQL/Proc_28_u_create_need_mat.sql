@@ -8,21 +8,25 @@ DECLARE
     need_row_count INT;
     row_rec RECORD;
     row_num INT := 0;
+    need_n TEXT;
 BEGIN
-    -- ============================================
-    -- ОСНОВНОЙ КОД ПРОЦЕДУРЫ
-    -- ============================================
-    
-    -- Создаем шапку Потребности (реестр 621)
+/*Получение очередного номера потребности */
+    SELECT coalesce(max(attr_625_), 0) + 1 INTO need_n
+	FROM registry.object_621_
+	WHERE is_deleted IS NOT TRUE
+      AND attr_626_ >= date_trunc('year', current_date)::date
+      AND attr_626_ <  (date_trunc('year', current_date)::date + interval '1 year');
+
+/*Создаем шапку Потребности (реестр 621) */
     INSERT INTO registry.object_621_ (
         attr_623_,  -- спецификация
-        attr_625_,  -- номер (пустой)
+        attr_625_,  -- номер
         attr_626_,  -- дата
         attr_639_,  -- вид
         operation_user_id
     ) VALUES (
         spec_id,
-        NULL,
+        need_n,
         CURRENT_DATE,
         1,
         do_user
@@ -33,7 +37,7 @@ BEGIN
         RAISE EXCEPTION 'Не удалось создать потребность из спецификации %', spec_id;
     END IF;
 
-    -- Создаем табличную часть Потребности (реестр 622)
+/* Создаем табличную часть Потребности (реестр 622) */
     INSERT INTO registry.object_622_ (
         attr_624_,  -- потребность (шапка)
         attr_629_,  -- материал под высадку
