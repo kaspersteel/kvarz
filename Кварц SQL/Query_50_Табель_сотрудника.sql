@@ -66,7 +66,7 @@ LEFT JOIN registry.object_1502_ absence ON o.id = absence.attr_1503_
 base_tab AS (
 SELECT 
 source_tab.*,
-/*отдельные суммы по сотруднику, месяцу*/
+/*отдельные суммы по месяцу и году*/
 SUM( COALESCE( source_tab.h_plan, 0) ) OVER ( PARTITION BY EXTRACT(MONTH FROM source_tab.date_period::date)::int) AS "sum_plan",
 COALESCE( SUM( CASE WHEN source_tab.day_tab = 0 THEN source_tab.h_hand END) OVER ( PARTITION BY EXTRACT(MONTH FROM source_tab.date_period::date)::int),
           SUM( COALESCE( source_tab.h_hand, EXTRACT( HOUR FROM source_tab.h_asys ) )::INT ) OVER ( PARTITION BY EXTRACT(MONTH FROM source_tab.date_period::date)::int)) AS "sum_fact",
@@ -121,11 +121,11 @@ CROSS JOIN vars
 /*табель*/
 T AS (
       SELECT 
-          MAX(base_tab.object_tab)    AS object_tab,
-          MAX(base_tab.card_day)      AS card_day,
-          MAX(base_tab.card_period)   AS card_period,
+          base_tab.object_tab,
+          base_tab.card_day,
+          base_tab.card_period,
           base_tab.id_sotr,
-          MAX(base_tab.fio_sotr)      AS fio_sotr,
+          base_tab.fio_sotr,
           base_tab.month_tab,
           
           /*первая колонка таблицы — через GROUPING для надёжности*/
@@ -145,7 +145,7 @@ T AS (
           END as "sum_fact",
           
           CASE
-               WHEN GROUPING(base_tab.month_tab) = 0 AND MAX(base_tab.id_sotr) != 0 THEN MAX(
+               WHEN base_tab.id_sotr != 0 THEN MAX(
                     CASE
                          WHEN base_tab.day_tab = 0 THEN CASE
                               WHEN base_tab.h_hand IS NOT NULL THEN vars.c_hand
@@ -227,7 +227,7 @@ CROSS JOIN vars
 /*формулы группировки по сотруднику и месяцу, а также по сотруднику — для строки итого*/
 GROUP BY 
 GROUPING SETS (
-    (base_tab.month_tab, base_tab.id_sotr, base_tab.fio_sotr)
+    (object_tab, card_day, card_period, base_tab.month_tab, base_tab.id_sotr, base_tab.fio_sotr)
   , (base_tab.fio_sotr)
 ),
 vars.year_tab, vars.month_arr, vars.c_notwork, vars.c_work, vars.c_hand, vars.c_alert, vars.c_vacation, vars.c_absence, vars.c_holiday

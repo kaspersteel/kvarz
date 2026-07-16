@@ -225,15 +225,15 @@ CROSS JOIN vars
 /*табель*/
 T AS (
    SELECT 
-          /*поля, общие для всех группировок — берём из любого элемента группы*/
-          MAX(base_tab.object_tab)    AS object_tab,
-          MAX(base_tab.card_day)      AS card_day,
-          MAX(base_tab.card_period)   AS card_period,
-          MAX(base_tab.object_sotr)   AS object_sotr,
-          MAX(base_tab.card_sotr)     AS card_sotr,
-          MAX(base_tab.month_tab)     AS month_tab,
+          /*поля, общие для всех группировок*/
+          base_tab.object_tab,
+          base_tab.card_day,
+          base_tab.card_period,
+          base_tab.object_sotr,
+          base_tab.card_sotr,
+          base_tab.month_tab,
           
-          /*тип строки — через GROUPING для надёжности*/
+          /*тип строки*/
           CASE
               /*сначала проверяем служебное значение id_sotr = 0 — это строка дат*/
               WHEN base_tab.id_sotr = 0 THEN 'dates'
@@ -245,17 +245,18 @@ T AS (
               ELSE ''
           END AS "row_type",
           
-          /*поля сотрудника — NULL в итоговых строках*/
+          /*поля сотрудника*/
           base_tab.id_sotr,
-          MAX(base_tab.fio_sotr)        AS fio_sotr,
+          base_tab.fio_sotr,
           
           /*выделение заголовков подразделений и бригад*/
           CASE
-              WHEN MAX(base_tab.name_div) = '0' THEN NULL
+              WHEN base_tab.name_div = '0' THEN NULL
               WHEN base_tab.name_brigade IS NULL AND base_tab.id_sotr IS NULL THEN 1
               WHEN base_tab.name_brigade IS NULL THEN 2
               ELSE 3
           END AS "lv_div",
+          
           CASE
               WHEN base_tab.name_brigade IS NULL THEN NULL
               WHEN base_tab.id_sotr IS NULL THEN 1
@@ -264,30 +265,31 @@ T AS (
           
           /*первая колонка таблицы*/
           CASE
-              WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(base_tab.fio_sotr)
-              WHEN GROUPING(base_tab.name_brigade) = 0 THEN '' || base_tab.name_brigade || ''
-              WHEN GROUPING(base_tab.name_div) = 0 THEN '' || base_tab.name_div || ''
-              ELSE ''
+                  WHEN base_tab.id_sotr = 0 THEN ''
+                  WHEN base_tab.id_sotr IS NOT NULL THEN base_tab.fio_sotr
+                  WHEN base_tab.name_brigade IS NOT NULL THEN '' || base_tab.name_brigade || ''
+                  WHEN base_tab.name_div IS NOT NULL THEN '' || base_tab.name_div || ''
           END AS "first_column",
           
-          MAX(base_tab.name_post)       AS name_post,
-          MAX(base_tab.fired_date)      AS fired_date,
+          base_tab.name_post,
+          base_tab.fired_date,
           base_tab.name_div,
-          MAX(base_tab.id_div)          AS id_div,
+          base_tab.id_div,
           base_tab.name_brigade,
-          MAX(base_tab.sort_inbrigade)  AS sort_inbrigade,
+          base_tab.sort_inbrigade,
           
           CASE
               WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(base_tab.sum_plan)
               ELSE NULL
           END AS sum_plan,
+          
           CASE
               WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(base_tab.sum_fact)
               ELSE NULL
           END AS sum_fact,
+          
           CASE
-              WHEN GROUPING(base_tab.id_sotr) = 0 AND MAX(base_tab.id_sotr) != 0 
-              THEN MAX(
+              WHEN base_tab.id_sotr != 0 THEN MAX(
                   CASE
                       WHEN base_tab.day_tab = 0 THEN 
                           CASE WHEN base_tab.h_hand IS NOT NULL 
@@ -369,17 +371,16 @@ T AS (
    CROSS JOIN vars
    GROUP BY 
    GROUPING SETS (
-       (base_tab.month_tab, base_tab.id_sotr, base_tab.fio_sotr, base_tab.id_div, base_tab.name_div, base_tab.sort_inbrigade, base_tab.name_post, base_tab.fired_date, base_tab.name_brigade)
+       (object_tab, card_day, card_period, object_sotr, card_sotr, base_tab.month_tab, base_tab.id_sotr, base_tab.fio_sotr, base_tab.id_div, base_tab.name_div, base_tab.sort_inbrigade, base_tab.name_post, base_tab.fired_date,   base_tab.name_brigade)
      , (base_tab.name_brigade, base_tab.name_div)
      , (base_tab.name_div)
    ),
    vars.c_hand, vars.c_notwork, vars.fdm_tab, vars.c_alert, vars.c_work, vars.c_vacation, vars.c_absence, vars.c_holiday
    
    /*убираем уволенных и неработавших*/
-   HAVING (MAX(base_tab.fired_date) IS NULL OR MAX(base_tab.fired_date) > MAX(vars.fdm_tab)) 
-      AND (MAX(base_tab.sum_plan) != 0 OR MAX(base_tab.sum_plan) IS NULL)
+    HAVING (base_tab.fired_date is null OR base_tab.fired_date > vars.fdm_tab)
+           AND (MAX(base_tab.sum_plan) != 0 OR MAX(base_tab.sum_plan) is null)
 )
-
 SELECT 
     CASE WHEN T.row_type = 'sotr' THEN ROW_NUMBER() OVER (PARTITION BY T.row_type = 'sotr' ORDER BY name_div, lv_div, name_brigade, lv_br, sort_inbrigade, fio_sotr) END AS npp,
     CASE WHEN T.row_type = 'sotr' THEN ROW_NUMBER() OVER (PARTITION BY T.row_type = 'sotr', name_brigade ORDER BY name_div, lv_div, name_brigade, lv_br, sort_inbrigade, fio_sotr) END AS nppb,
