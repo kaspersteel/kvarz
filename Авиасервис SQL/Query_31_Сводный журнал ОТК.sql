@@ -1,35 +1,35 @@
-WITH invp_info AS (SELECT
-    ARRAY_AGG(DISTINCT tab.attr_654_) AS jotk_ids,
-    i.id AS id ,
-    i.attr_638_ AS type,
-    i.attr_952_ AS num_1c,
-    i.attr_961_ AS num_accent,
-    trim_scale(COALESCE(SUM(tab.attr_955_), 0)) AS amount
-FROM
-    registry.object_633_ i
-    JOIN registry.object_634_ tab ON tab.attr_640_ = i.id --AND NOT tab.attr_979_
-    AND NOT tab.is_deleted
-WHERE
-    NOT i.is_deleted
-GROUP BY
-    i.id
-ORDER BY i.id
+WITH invp_info AS (
+    SELECT DISTINCT
+        tab.attr_654_ AS jotk_id,
+        i.id AS id,
+        i.attr_638_ AS type,
+        i.attr_952_ AS num_1c,
+        i.attr_961_ AS num_accent,
+        trim_scale(COALESCE(tab.attr_955_, 0)) AS amount
+    FROM
+        registry.object_633_ i
+        JOIN registry.object_634_ tab ON tab.attr_640_ = i.id 
+            AND NOT tab.is_deleted
+    WHERE
+        NOT i.is_deleted
 )
 
-,invp_agg AS (    
-SELECT jotk_id,
-       				  ARRAY_AGG(invp_info.id ORDER BY invp_info.id) FILTER (WHERE invp_info.type = 1) AS "vysadka_ids",
-       				  ARRAY_AGG(invp_info.id ORDER BY invp_info.id) FILTER (WHERE invp_info.type = 2) AS "thermo_ids",
-       				  ARRAY_AGG(invp_info.id ORDER BY invp_info.id) FILTER (WHERE invp_info.type = 3) AS "pokrytie_ids",
-       				  ARRAY_AGG(invp_info.id ORDER BY invp_info.id) FILTER (WHERE invp_info.type = 4) AS "sklad_d_ids",
-       				  ARRAY_AGG(invp_info.id ORDER BY invp_info.id) FILTER (WHERE invp_info.type = 5) AS "sklad_g_ids",
-       				  ARRAY_AGG(CONCAT('№', COALESCE(invp_info.num_1c, invp_info.num_accent, 'б/н'), ' - ', invp_info.amount)) FILTER (WHERE invp_info.type = 1) AS "vysadka_nn",
-       				  ARRAY_AGG(CONCAT('№', COALESCE(invp_info.num_1c, invp_info.num_accent, 'б/н'), ' - ', invp_info.amount)) FILTER (WHERE invp_info.type = 2) AS "thermo_nn",
-       				  ARRAY_AGG(CONCAT('№', COALESCE(invp_info.num_1c, invp_info.num_accent, 'б/н'), ' - ', invp_info.amount)) FILTER (WHERE invp_info.type = 3) AS "pokrytie_nn",
-       				  ARRAY_AGG(CONCAT('№', COALESCE(invp_info.num_1c, invp_info.num_accent, 'б/н'), ' - ', invp_info.amount)) FILTER (WHERE invp_info.type = 4) AS "sklad_d_nn",
-       				  ARRAY_AGG(CONCAT('№', COALESCE(invp_info.num_1c, invp_info.num_accent, 'б/н'), ' - ', invp_info.amount)) FILTER (WHERE invp_info.type = 5) AS "sklad_g_nn"
-FROM invp_info, UNNEST (invp_info.jotk_ids) jotk_id
-GROUP BY jotk_id)
+, invp_agg AS (    
+    SELECT 
+        jotk_id,
+        ARRAY_AGG(id ORDER BY id) FILTER (WHERE type = 1) AS "vysadka_ids",
+        ARRAY_AGG(id ORDER BY id) FILTER (WHERE type = 2) AS "thermo_ids",
+        ARRAY_AGG(id ORDER BY id) FILTER (WHERE type = 3) AS "pokrytie_ids",
+        ARRAY_AGG(id ORDER BY id) FILTER (WHERE type = 4) AS "sklad_d_ids",
+        ARRAY_AGG(id ORDER BY id) FILTER (WHERE type = 5) AS "sklad_g_ids",
+        ARRAY_AGG(CONCAT('№', COALESCE(num_1c, num_accent, 'б/н'), ' - ', amount)) FILTER (WHERE type = 1) AS "vysadka_nn",
+        ARRAY_AGG(CONCAT('№', COALESCE(num_1c, num_accent, 'б/н'), ' - ', amount)) FILTER (WHERE type = 2) AS "thermo_nn",
+        ARRAY_AGG(CONCAT('№', COALESCE(num_1c, num_accent, 'б/н'), ' - ', amount)) FILTER (WHERE type = 3) AS "pokrytie_nn",
+        ARRAY_AGG(CONCAT('№', COALESCE(num_1c, num_accent, 'б/н'), ' - ', amount)) FILTER (WHERE type = 4) AS "sklad_d_nn",
+        ARRAY_AGG(CONCAT('№', COALESCE(num_1c, num_accent, 'б/н'), ' - ', amount)) FILTER (WHERE type = 5) AS "sklad_g_nn"
+    FROM invp_info
+    GROUP BY jotk_id
+)
 
 , base AS (
 SELECT 
