@@ -49,11 +49,21 @@
                               units_eq.attr_2943_
                     ) AS cur_task_m,
 					
-					
+                    position_of_task.attr_3231_ AS given,
+                    position_of_task.attr_3244_ AS status,
+                    
                     ed_hran.attr_1675_ AS ed_hran_cur_bal_m,
                     ed_hran.attr_2209_ AS ed_hran_cur_bal_l,
-                    position_of_task.attr_3235_ AS expected_bal_m,
-                    position_of_task.attr_3236_ AS expected_bal_l,
+                    
+                    position_of_task.attr_3235_ AS expected_bal_fixed_m,
+                    position_of_task.attr_3236_ AS expected_bal_fixed_l,
+                    
+                    position_of_task.attr_3233_ AS current_bal_fixed_m,
+                    position_of_task.attr_3234_ AS current_bal_fixed_l,
+                    
+                    (ed_hran.attr_1675_ - (SELECT SUM(x.attr_2108_) FROM registry.object_2094_ x WHERE NOT x.is_deleted AND x.attr_3175_ = position_of_task.id)) AS expected_bal_m,
+                    (ed_hran.attr_2209_ - (SELECT SUM(x.attr_2626_) FROM registry.object_2094_ x WHERE NOT x.is_deleted AND x.attr_3175_ = position_of_task.id)) AS expected_bal_l,
+
                     CASE WHEN position_of_task.attr_3244_ = 2 AND position_of_task.attr_3244_ is not null THEN position_of_task.attr_3252_ END AS return_m,
                     CASE WHEN position_of_task.attr_3244_ = 2 AND position_of_task.attr_3244_ is not null THEN position_of_task.attr_3251_ END AS return_l,
 					position_of_task.attr_3191_ AS sdal,
@@ -73,7 +83,7 @@
                 AND comp_orders.is_deleted <> TRUE
               WHERE task.is_deleted <> TRUE
                 AND position_of_task.attr_3169_ IS NOT NULL
-                AND task.id = '{super_id}'
+                AND task.id =  '{super_id}'
            GROUP BY ed_hran.id,
                     ed_hran.attr_2214_,
                     ed_hran.attr_1663_,
@@ -84,9 +94,9 @@
                     position_of_task.id
           )
 		 
-		 SELECT sprav_tape_mat.id,
+		 SELECT sprav_type_mat.id, given, status,
           CASE
-                    WHEN sprav_tape_mat.id = 6 THEN 'шт'
+                    WHEN sprav_type_mat.id = 6 THEN 'шт'
                     ELSE CASE
                               WHEN form_sort = 2 THEN 'кг'
                               ELSE 'кг/мм'
@@ -94,31 +104,42 @@
           END AS units,
           name_ed_hran,
           CASE
-                    WHEN sprav_tape_mat.id = 6 THEN cur_task_m::text
+                    WHEN sprav_type_mat.id = 6 THEN cur_task_m::text
                     ELSE CASE
                               WHEN form_sort = 2 THEN cur_task_m::text
-                              ELSE cur_task_m || '/' || cur_task_l
+                              ELSE cur_task_m || '/\n' || cur_task_l
                     END
           END AS limits,
           CASE
-                    WHEN sprav_tape_mat.id = 6 THEN cur_task_m::text
+                    WHEN sprav_type_mat.id = 6 THEN cur_task_m::text
                     ELSE CASE
-                              WHEN form_sort = 2 THEN ed_hran_cur_bal_m::text
-                              ELSE ed_hran_cur_bal_m || '/' || ed_hran_cur_bal_l
-                    END
+                              WHEN given IS TRUE THEN current_bal_fixed_m || '/\n' || current_bal_fixed_l
+                              ELSE CASE
+                                        WHEN form_sort = 2 THEN ed_hran_cur_bal_m::text
+                                        ELSE ed_hran_cur_bal_m || '/\n' || ed_hran_cur_bal_l
+                                   END
+                         END
+                    
           END AS released,
           CASE
-                    WHEN sprav_tape_mat.id = 6 THEN '0'
-                    ELSE CASE
-                              WHEN form_sort = 2 THEN expected_bal_m::text
-                              ELSE expected_bal_m || '/' || expected_bal_l
-                    END
+                    WHEN sprav_type_mat.id = 6 THEN '0'
+                    ELSE /*CASE
+                              WHEN status = 2 THEN '-' 
+                              WHEN status IS NULL OR status = 1 THEN CASE
+                                                                          WHEN form_sort = 2 THEN expected_bal_fixed_m::text
+                                                                          ELSE expected_bal_fixed_m || '/\n' || expected_bal_fixed_l
+                                                                     END
+                         END*/
+                              CASE
+                                         WHEN form_sort = 2 THEN expected_bal_fixed_m::text
+                                         ELSE expected_bal_fixed_m || '/\n' || expected_bal_fixed_l
+                              END
           END AS expected_balance,
           CASE
-                    WHEN sprav_tape_mat.id = 6 THEN '0'
+                    WHEN sprav_type_mat.id = 6 THEN '0'
                     ELSE CASE
                               WHEN form_sort = 2 THEN return_m::text
-                              ELSE return_m || '/' || return_l
+                              ELSE return_m || '/\n' || return_l
                     END
           END AS returned,
           mas_orders,
@@ -129,6 +150,6 @@
 		  prinyal_sotr.attr_1894_ AS prinyal_fio
 		  
      FROM  base
-LEFT JOIN registry.object_1344_ sprav_tape_mat ON base.type_mat = sprav_tape_mat.id
+LEFT JOIN registry.object_1344_ sprav_type_mat ON base.type_mat = sprav_type_mat.id
 LEFT JOIN registry.object_17_ sdal_sotr ON base.sdal = sdal_sotr.id
 LEFT JOIN registry.object_17_ prinyal_sotr ON base.prinyal = prinyal_sotr.id
