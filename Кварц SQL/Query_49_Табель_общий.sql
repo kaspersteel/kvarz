@@ -9,26 +9,29 @@ vars AS ( SELECT
      {period}::date as "period",
      (    SELECT (
              SELECT ARRAY_AGG(DISTINCT divs)
-               FROM UNNEST(odd_org.sub_divs || org.sub_divs) AS "divs"
+               FROM UNNEST(
+                       COALESCE(odd_org.sub_divs, ARRAY[]::int[]) || 
+                       COALESCE(org.sub_divs,   ARRAY[]::int[])
+                    ) AS "divs"
           )
      FROM registry.object_15_ users
 LEFT JOIN LATERAL (
-             SELECT ARRAY_AGG(attr_65_) AS "sub_divs"
+             SELECT COALESCE(ARRAY_AGG(attr_65_), ARRAY[]::int[]) AS "sub_divs"
                FROM registry.object_36_ o
-              WHERE o.ID = ANY (users.attr_1815_)
+              WHERE o.ID = ANY (COALESCE(users.attr_1815_, ARRAY[]::int[]))
                 AND NOT o.is_deleted
           ) "org" ON TRUE
 LEFT JOIN LATERAL (
-             SELECT ARRAY_AGG(DISTINCT odd_sub_org.attr_65_) AS "sub_divs"
+             SELECT COALESCE(ARRAY_AGG(DISTINCT odd_sub_org.attr_65_), ARRAY[]::int[]) AS "sub_divs"
                FROM registry.object_36_ odd_org
           LEFT JOIN registry.object_36_ odd_up_org ON odd_up_org.ID = odd_org.attr_1753_
                 AND odd_up_org.attr_65_ != odd_org.attr_65_
                 AND NOT odd_up_org.is_deleted
           LEFT JOIN registry.object_15_ odd_users ON odd_users.attr_506_ = odd_org.attr_285_
                 AND NOT odd_users.is_deleted
-          LEFT JOIN registry.object_36_ odd_sub_org ON odd_sub_org.ID = ANY (odd_users.attr_1815_)
+          LEFT JOIN registry.object_36_ odd_sub_org ON odd_sub_org.ID = ANY (COALESCE(odd_users.attr_1815_, ARRAY[]::int[]))
                 AND NOT odd_sub_org.is_deleted
-              WHERE odd_org.attr_65_ = ANY (users.attr_1914_)
+              WHERE odd_org.attr_65_ = ANY (COALESCE(users.attr_1914_, ARRAY[]::int[]))
                 AND NOT odd_org.is_deleted
                 AND odd_up_org.id IS NOT NULL
           ) "odd_org" ON TRUE
@@ -53,7 +56,6 @@ source_tab AS (
           NULL AS "card_period",
           NULL AS "object_sotr",
           NULL AS "card_sotr",
-          ( SELECT month_tab FROM vars ) as "month_tab",
           0 AS "id_sotr",
           NULL AS "fio_sotr",
           NULL AS "name_post",
@@ -73,7 +75,7 @@ source_tab AS (
 	    NULL AS "note_color",
           days AS "date_period",
           holidays.id AS "holyday"
-     FROM GENERATE_SERIES( ( SELECT fdm_tab FROM vars ), ( SELECT ldm_tab FROM vars ), '1 day' ) days
+     FROM GENERATE_SERIES( (SELECT fdm_tab FROM vars), (SELECT ldm_tab FROM vars), '1 day' ) days
 LEFT JOIN registry.object_757_ holidays ON holidays.attr_789_ = days
       AND NOT holidays.is_deleted
 UNION ALL
@@ -83,7 +85,6 @@ SELECT
           249 AS "card_period",
           419 AS "object_sotr",
           222 AS "card_sotr",
-          ( SELECT month_tab FROM vars ) as "month_tab",
           o.id AS "id_sotr",
           o.attr_424_ AS "fio_sotr",
           post.attr_504_||CASE WHEN o.attr_1685_ THEN ' (неоф)' ELSE '' END||CASE WHEN o.attr_1496_ is not null THEN ' (ув)' ELSE '' END AS "name_post",
@@ -105,21 +106,26 @@ SELECT
           NULL AS "date_period",
           NULL AS "holyday"
      FROM registry.object_419_ o
+CROSS JOIN vars
 LEFT JOIN registry.object_1774_ tabel ON o.id = tabel.attr_1775_
       AND NOT tabel.is_deleted
 LEFT JOIN registry.object_503_ post ON o.attr_505_ = post.id
       AND NOT post.is_deleted
-LEFT JOIN registry.object_1544_ division ON CASE WHEN (SELECT mode FROM vars) = 1 THEN tabel.attr_1817_ WHEN (SELECT mode FROM vars) = 2 THEN o.attr_1546_ END = division.id
+LEFT JOIN registry.object_1544_ division ON division.id = CASE vars.mode WHEN 1 THEN tabel.attr_1817_ WHEN 2 THEN o.attr_1546_ END
       AND NOT division.is_deleted
-LEFT JOIN registry.object_1790_ brigade ON CASE WHEN (SELECT mode FROM vars) = 1 THEN tabel.attr_1818_ WHEN (SELECT mode FROM vars) = 2 THEN o.attr_1804_ END = brigade.id
+LEFT JOIN registry.object_1790_ brigade ON brigade.id = CASE vars.mode WHEN 1 THEN tabel.attr_1818_ WHEN 2 THEN o.attr_1804_ END
       AND NOT brigade.is_deleted
 /*подключаем суммарное время из AS потому что пропуск может прикладываться несколько раз за день*/
 LEFT JOIN (
-             SELECT DISTINCT attr_1786_ AS "ref_id",  attr_1787_::date AS "ref_date", SUM(attr_1789_) OVER ( PARTITION BY attr_1786_, attr_1787_::date ) AS "sum_h"
+             SELECT attr_1786_ AS "ref_id",  
+                    attr_1787_::date AS "ref_date", 
+                    SUM(attr_1789_) AS "sum_h"
                FROM registry.object_1785_
               WHERE NOT is_deleted
+                AND attr_1787_ >= (SELECT fdm_tab FROM vars)
+                AND attr_1787_ <  (SELECT ldm_tab FROM vars) + INTERVAL '1 day'
+              GROUP BY attr_1786_, attr_1787_::date
 		  ) asyst ON o.id = asyst.ref_id AND tabel.attr_1776_ = asyst.ref_date
-
 LEFT JOIN registry.object_1690_ gr_otp ON o.id = gr_otp.attr_1692_
       AND tabel.attr_1776_ >= gr_otp.attr_1693_::date
       AND tabel.attr_1776_ <= gr_otp.attr_1694_::date
@@ -135,149 +141,128 @@ LEFT JOIN registry.object_1792_ notes ON o.id = notes.attr_1952_
       AND NOT notes.is_deleted
 	  AND notes.attr_1951_  
 WHERE NOT o.is_deleted
-	/*Новикова О.А. 09.10.25  по просьбе Баранова убираем из  табеля уволенных сотрудников, в неоформленных могут находиться сотрудники, которые уволены, но работают неофиц. - их показываем*/
+	/*Новикова О.А. 09.10.25  по просьбе Баранова убираем из табеля уволенных сотрудников, в неоформленных могут находиться сотрудники, которые уволены, но работают неофиц. - их показываем*/
 	/*показываем неоформленных, если установлен флаг unlegal.*/
   	/*с проверкой на уволенность.*/
-  	/* AND CASE WHEN ( SELECT unlegal FROM vars ) THEN 
-                    CASE WHEN NOT (NOT o.attr_1685_ AND NOT ((o.attr_1496_ is null) OR (o.attr_1496_ >= ( SELECT period FROM vars )))) THEN TRUE 
-                         ELSE FALSE 
-                    END
-               ELSE CASE WHEN NOT o.attr_1685_ AND ((o.attr_1496_ is null) OR (o.attr_1496_ >= ( SELECT period FROM vars ))) THEN TRUE 
-                         ELSE FALSE 
-                    END
-          END*/
-  	/*без проверки а уволенность*/
-  	  AND CASE WHEN ( SELECT unlegal FROM vars ) THEN TRUE --если выбран показ неоформленных, показываем всех
-           	   ELSE CASE WHEN NOT o.attr_1685_ THEN TRUE --если выбрано скрывать неоформленных, показываем тех, кто не "не оформлен"
-                         ELSE FALSE 
-                    END
-          END
-      AND CASE 
-                    WHEN (SELECT division FROM vars) IS NOT NULL THEN 
-                    CASE
-                              WHEN division.id = (SELECT division FROM vars) THEN TRUE
-                              ELSE FALSE
-                    END
-                    ELSE CASE
-                              WHEN ARRAY[division.id] && (SELECT subdivs FROM vars) THEN TRUE
-                              ELSE FALSE
-                         END
-          END
-      AND CASE
-                    WHEN DATE_TRUNC('month', tabel.attr_1776_::date) = DATE_TRUNC( 'month', ( SELECT period FROM vars ) ) THEN TRUE
-                    ELSE FALSE
-          END
-			ORDER BY id_sotr, day_tab
-),
-/*расчёт сумм*/
-sum1_tab AS (
-SELECT
-source_tab.*,																								
-/*отдельные суммы по сотруднику, бригаде, подразделению*/
-CASE WHEN source_tab.id_sotr != 0 THEN SUM( COALESCE( source_tab.h_plan, 0) ) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) END AS "sum_plan",
-CASE WHEN source_tab.id_sotr != 0 
-     THEN COALESCE( SUM( CASE WHEN source_tab.day_tab = 0 THEN source_tab.h_hand END) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) , 
-                    EXTRACT( HOUR FROM (SUM( COALESCE( make_time(source_tab.h_hand, 0 , 0), source_tab.h_asys )) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) ) + INTERVAL '30 minutes') )::INT
-END AS "sum_fact"
-/*,
-SUM( COALESCE( source_tab.h_plan, 0) ) OVER ( PARTITION BY source_tab.name_brigade ) AS "sum_br_plan",
-SUM( COALESCE( source_tab.h_plan, 0) ) OVER ( PARTITION BY source_tab.name_div ) AS "sum_div_plan"*/
-FROM source_tab
-ORDER BY id_sotr, day_tab
-),
-/*расчёт дополнительных сумм*/
-sum2_tab AS (
-SELECT
-sum1_tab.*
-/*требовалось для расчета итого,																								
-SUM( CASE WHEN sum1_tab.day_tab = 0 THEN sum1_tab.sum_fact END ) OVER ( PARTITION BY sum1_tab.name_brigade )  AS "sum_br_fact",
-SUM( CASE WHEN sum1_tab.day_tab = 0 THEN sum1_tab.sum_fact END ) OVER ( PARTITION BY sum1_tab.name_div )  AS "sum_div_fact"*/
-
-FROM sum1_tab
-ORDER BY id_sotr, day_tab
+  	/* AND (vars.unlegal OR (NOT o.attr_1685_ AND (o.attr_1496_ IS NULL OR o.attr_1496_ >= vars.period))) */
+  	/*без проверки на уволенность*/
+  	AND (vars.unlegal OR NOT o.attr_1685_)
+      /*защита от NULL в массивах: COALESCE(division.id, 0) и COALESCE(vars.subdivs, ARRAY[]::int[])*/
+      AND (
+             (vars.division IS NOT NULL AND division.id = vars.division)
+             OR
+             (vars.division IS NULL AND COALESCE(division.id, 0) = ANY(COALESCE(vars.subdivs, ARRAY[]::int[])))
+          )
+      /*sargable фильтр по месяцу*/
+      AND tabel.attr_1776_ >= vars.fdm_tab
+      AND tabel.attr_1776_ <  vars.ldm_tab + INTERVAL '1 day'
+      /*ORDER BY id_sotr, day_tab - закомментировано для тестирования*/
 ),
 
 /*базовая таблица табеля*/
 base_tab AS (
 SELECT 
-sum2_tab.*,
+source_tab.*,
+vars.month_tab as "month_tab",
+/*отдельные суммы по сотруднику, бригаде, подразделению*/
+CASE WHEN source_tab.id_sotr != 0 THEN SUM( COALESCE( source_tab.h_plan, 0) ) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) END AS "sum_plan",
+CASE WHEN source_tab.id_sotr != 0 
+     THEN COALESCE( SUM( CASE WHEN source_tab.day_tab = 0 THEN source_tab.h_hand END) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) , 
+                    EXTRACT( HOUR FROM (SUM( COALESCE( make_time(source_tab.h_hand, 0 , 0), source_tab.h_asys )) OVER ( PARTITION BY source_tab.id_sotr, source_tab.name_div, source_tab.name_brigade ) ) + INTERVAL '30 minutes') )::INT
+END AS "sum_fact",
+/*
+SUM( COALESCE( source_tab.h_plan, 0) ) OVER ( PARTITION BY source_tab.name_brigade ) AS "sum_br_plan",
+SUM( COALESCE( source_tab.h_plan, 0) ) OVER ( PARTITION BY source_tab.name_div ) AS "sum_div_plan", */
+
 /*сборка HTML-кода для ячеек таблицы*/
-CASE WHEN sum2_tab.day_tab != 0 THEN
-CASE WHEN sum2_tab.id_sotr = 0 THEN '<div style="background-color:'||CASE WHEN sum2_tab.holyday is not null THEN (SELECT c_holiday FROM vars) ELSE 'RGB(0 255 0 / 0)' END||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||TO_CHAR(sum2_tab.date_period, 'TMDy')||'</div></div> ' 
-     ELSE CASE WHEN make_date((SELECT year_tab FROM vars), (SELECT month_tab FROM vars), sum2_tab.day_tab::int ) <= CURRENT_DATE THEN 
-               CASE WHEN sum2_tab.h_hand is not null THEN '<div style="background-color:'||(SELECT c_hand FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||sum2_tab.h_hand::TEXT||'</div></div> ' 
-                    ELSE CASE WHEN sum2_tab.h_asys = '00:00:00'::time THEN 
-  					CASE sum2_tab.absence 
-                                   WHEN 1 THEN '<div style="background-color:'||(SELECT c_absence FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'О'||'</div></div> ' 
-                                   WHEN 4 THEN '<div style="background-color:'||(SELECT c_absence FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'О'||'</div></div> ' 
-                                   WHEN 5 THEN '<div style="background-color:'||(SELECT c_absence FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'О'||'</div></div> ' 
-                                   WHEN 2 THEN '<div style="background-color:'||(SELECT c_absence FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'А'||'</div></div> ' 
-                                   WHEN 3 THEN '<div style="background-color:'||(SELECT c_absence FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'Б'||'</div></div> ' 
-                                   ELSE CASE WHEN sum2_tab.otp_plan = 1 THEN '<div style="background-color:'||(SELECT c_vacation FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'Оп'||'</div></div> ' 
-                                             ELSE CASE WHEN sum2_tab.note_litera is not null THEN '<div style="background-color:'||sum2_tab.note_color||'40; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||sum2_tab.note_litera||'</div></div> ' 
-													   ELSE CASE WHEN sum2_tab.h_plan is not null THEN '<div style="background-color:'||(SELECT c_alert FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'|| EXTRACT( HOUR FROM sum2_tab.h_asys + INTERVAL '30 minutes' )::INT ||'</div></div> ' 
-																 ELSE '<div style="background-color:'||(SELECT c_notwork FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||''||'</div></div> ' 
+CASE WHEN source_tab.day_tab != 0 THEN
+CASE WHEN source_tab.id_sotr = 0 THEN '<div style="background-color:'||CASE WHEN source_tab.holyday is not null THEN vars.c_holiday ELSE 'RGB(0 255 0 / 0)' END||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||TO_CHAR(source_tab.date_period, 'TMDy')||'</div></div> ' 
+     ELSE CASE WHEN make_date(vars.year_tab, vars.month_tab, source_tab.day_tab::int ) <= CURRENT_DATE THEN 
+               CASE WHEN source_tab.h_hand is not null THEN '<div style="background-color:'||vars.c_hand||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||source_tab.h_hand::TEXT||'</div></div> ' 
+                    ELSE CASE WHEN source_tab.h_asys = '00:00:00'::time THEN 
+  					CASE source_tab.absence 
+                                   WHEN 1 THEN '<div style="background-color:'||vars.c_absence||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'О'||'</div></div> ' 
+                                   WHEN 4 THEN '<div style="background-color:'||vars.c_absence||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'О'||'</div></div> ' 
+                                   WHEN 5 THEN '<div style="background-color:'||vars.c_absence||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'О'||'</div></div> ' 
+                                   WHEN 2 THEN '<div style="background-color:'||vars.c_absence||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'А'||'</div></div> ' 
+                                   WHEN 3 THEN '<div style="background-color:'||vars.c_absence||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'Б'||'</div></div> ' 
+                                   ELSE CASE WHEN source_tab.otp_plan = 1 THEN '<div style="background-color:'||vars.c_vacation||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'Оп'||'</div></div> ' 
+                                             ELSE CASE WHEN source_tab.note_litera is not null THEN '<div style="background-color:'||source_tab.note_color||'40; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||source_tab.note_litera||'</div></div> ' 
+													   ELSE CASE WHEN source_tab.h_plan is not null THEN '<div style="background-color:'||vars.c_alert||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'|| EXTRACT( HOUR FROM source_tab.h_asys + INTERVAL '30 minutes' )::INT ||'</div></div> ' 
+																 ELSE '<div style="background-color:'||vars.c_notwork||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||''||'</div></div> ' 
 															END
 												  END
 										END 
                               END 
-                              ELSE CASE WHEN sum2_tab.absence is not null OR sum2_tab.otp_plan is not null THEN '<div style="background-color:'||(SELECT c_alert FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'|| EXTRACT( HOUR FROM sum2_tab.h_asys + INTERVAL '30 minutes' )::INT ||'</div></div> '
-                                        ELSE CASE WHEN EXTRACT( HOUR FROM sum2_tab.h_asys + INTERVAL '30 minutes' )::INT != COALESCE( sum2_tab.h_plan, 0) THEN '<div style="background-color:'||(SELECT c_alert FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'|| EXTRACT( HOUR FROM sum2_tab.h_asys + INTERVAL '30 minutes' )::INT ||'</div></div> ' 
-                                   		        ELSE  '<div style="background-color:'||(SELECT c_work FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'|| EXTRACT( HOUR FROM sum2_tab.h_asys + INTERVAL '30 minutes' )::INT ||'</div></div> ' 
+                              ELSE CASE WHEN source_tab.absence is not null OR source_tab.otp_plan is not null THEN '<div style="background-color:'||vars.c_alert||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'|| EXTRACT( HOUR FROM source_tab.h_asys + INTERVAL '30 minutes' )::INT ||'</div></div> '
+                                        ELSE CASE WHEN EXTRACT( HOUR FROM source_tab.h_asys + INTERVAL '30 minutes' )::INT != COALESCE( source_tab.h_plan, 0) THEN '<div style="background-color:'||vars.c_alert||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'|| EXTRACT( HOUR FROM source_tab.h_asys + INTERVAL '30 minutes' )::INT ||'</div></div> ' 
+                                   		        ELSE  '<div style="background-color:'||vars.c_work||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'|| EXTRACT( HOUR FROM source_tab.h_asys + INTERVAL '30 minutes' )::INT ||'</div></div> ' 
   							   END
                                    END
                          END 
                END
-               ELSE CASE sum2_tab.absence 
-                         WHEN 1 THEN '<div style="background-color:'||(SELECT c_absence FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'О'||'</div></div> ' 
-                         WHEN 4 THEN '<div style="background-color:'||(SELECT c_absence FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'О'||'</div></div> ' 
-                         WHEN 5 THEN '<div style="background-color:'||(SELECT c_absence FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'О'||'</div></div> ' 
-                         WHEN 2 THEN '<div style="background-color:'||(SELECT c_absence FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'А'||'</div></div> ' 
-                         WHEN 3 THEN '<div style="background-color:'||(SELECT c_absence FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'Б'||'</div></div> ' 
-                         ELSE CASE WHEN sum2_tab.otp_plan = 1 THEN '<div style="background-color:'||(SELECT c_vacation FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'Оп'||'</div></div> ' 
-                                   ELSE CASE WHEN sum2_tab.note_litera is not null THEN '<div style="background-color:'||sum2_tab.note_color||'40; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||sum2_tab.note_litera||'</div></div> ' 
-											 ELSE CASE WHEN sum2_tab.h_plan is null THEN '<div style="background-color:'||(SELECT c_notwork FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||''||'</div></div> ' 
-													   ELSE '<div style="background-color:'||(SELECT c_work FROM vars)||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'Д'||'</div></div> ' 
+               ELSE CASE source_tab.absence 
+                         WHEN 1 THEN '<div style="background-color:'||vars.c_absence||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'О'||'</div></div> ' 
+                         WHEN 4 THEN '<div style="background-color:'||vars.c_absence||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'О'||'</div></div> ' 
+                         WHEN 5 THEN '<div style="background-color:'||vars.c_absence||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'О'||'</div></div> ' 
+                         WHEN 2 THEN '<div style="background-color:'||vars.c_absence||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'А'||'</div></div> ' 
+                         WHEN 3 THEN '<div style="background-color:'||vars.c_absence||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'Б'||'</div></div> ' 
+                         ELSE CASE WHEN source_tab.otp_plan = 1 THEN '<div style="background-color:'||vars.c_vacation||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'Оп'||'</div></div> ' 
+                                   ELSE CASE WHEN source_tab.note_litera is not null THEN '<div style="background-color:'||source_tab.note_color||'40; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||source_tab.note_litera||'</div></div> ' 
+											 ELSE CASE WHEN source_tab.h_plan is null THEN '<div style="background-color:'||vars.c_notwork||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||''||'</div></div> ' 
+													   ELSE '<div style="background-color:'||vars.c_work||'; height: 25px;"><div style="font-weight: 400; padding: 0px 5px;">'||'Д'||'</div></div> ' 
 												  END
 										END
 							  END 
                     END 
           END
 END END as "html"
-FROM sum2_tab
-ORDER BY id_sotr, day_tab
+FROM source_tab
+CROSS JOIN vars
+/*ORDER BY id_sotr, day_tab - закомментировано для тестирования*/
 ),
+
 /*табель*/
 T AS (
-   SELECT DISTINCT 
-   
+   SELECT 
+          /*поля, общие для всех группировок*/
           base_tab.object_tab,
           base_tab.card_day,
           base_tab.card_period,
           base_tab.object_sotr,
           base_tab.card_sotr,
           base_tab.month_tab,
+          
           /*тип строки*/
           CASE
-                  WHEN base_tab.id_sotr = 0 THEN 'dates'
-                  WHEN base_tab.id_sotr IS NOT NULL THEN 'sotr'
-                  WHEN base_tab.name_brigade IS NOT NULL THEN 'brigade'
-                  WHEN base_tab.name_div IS NOT NULL THEN 'division'
+              /*сначала проверяем служебное значение id_sotr = 0 — это строка дат*/
+              WHEN base_tab.id_sotr = 0 THEN 'dates'
+              /*потом проверяем, входит ли id_sotr в текущий GROUPING SET*/
+              WHEN GROUPING(base_tab.id_sotr) = 0 THEN 'sotr'
+              /*если id_sotr не в группировке, смотрим на brigade/division*/
+              WHEN GROUPING(base_tab.name_brigade) = 0 THEN 'brigade'
+              WHEN GROUPING(base_tab.name_div) = 0 AND GROUPING(base_tab.name_brigade) = 1 THEN 'division'
+              ELSE ''
           END AS "row_type",
+          
+          /*поля сотрудника*/
           base_tab.id_sotr,
           base_tab.fio_sotr,
-		  /*выделение заголовков подразделений и бригад*/
-	    CASE
-			WHEN base_tab.name_div = '0' THEN NULL
-			WHEN base_tab.name_brigade IS NULL AND base_tab.id_sotr IS NULL THEN 1
-			WHEN base_tab.name_brigade IS NULL THEN 2
-			ELSE 3
+          
+          /*выделение заголовков подразделений и бригад*/
+          CASE
+              WHEN base_tab.name_div = '0' THEN NULL
+              WHEN base_tab.name_brigade IS NULL AND base_tab.id_sotr IS NULL THEN 1
+              WHEN base_tab.name_brigade IS NULL THEN 2
+              ELSE 3
           END AS "lv_div",
-	    CASE
-			WHEN base_tab.name_brigade IS NULL THEN NULL
-			WHEN base_tab.id_sotr IS NULL THEN 1
-                  ELSE 2
+          
+          CASE
+              WHEN base_tab.name_brigade IS NULL THEN NULL
+              WHEN base_tab.id_sotr IS NULL THEN 1
+              ELSE 2
           END AS "lv_br",
+          
           /*первая колонка таблицы*/
           CASE
                   WHEN base_tab.id_sotr = 0 THEN ''
@@ -285,112 +270,117 @@ T AS (
                   WHEN base_tab.name_brigade IS NOT NULL THEN '' || base_tab.name_brigade || ''
                   WHEN base_tab.name_div IS NOT NULL THEN '' || base_tab.name_div || ''
           END AS "first_column",
+          
           base_tab.name_post,
           base_tab.fired_date,
           base_tab.name_div,
           base_tab.id_div,
           base_tab.name_brigade,
-		  base_tab.sort_inbrigade,
-          /*array_agg (base_tab.h_plan ORDER BY base_tab.day_tab) "arr_plan", 
-          array_agg (base_tab.h_asys ORDER BY base_tab.day_tab) "arr_asys", отладочная информация*/
+          base_tab.sort_inbrigade,
+          
           CASE
-                  WHEN base_tab.id_sotr IS NOT NULL THEN MAX(base_tab.sum_plan)
-                  WHEN base_tab.name_brigade IS NOT NULL THEN NULL
-                  ELSE NULL
+              WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(base_tab.sum_plan)
+              ELSE NULL
           END AS sum_plan,
+          
           CASE
-                  WHEN base_tab.id_sotr IS NOT NULL THEN MAX(base_tab.sum_fact)
-                  WHEN base_tab.name_brigade IS NOT NULL THEN NULL
-                  ELSE NULL
+              WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(base_tab.sum_fact)
+              ELSE NULL
           END AS sum_fact,
+          
           CASE
-                  WHEN base_tab.id_sotr != 0 THEN MAX(
-                        CASE
-                              WHEN base_tab.day_tab = 0 THEN CASE
-                                                                  WHEN base_tab.h_hand IS NOT NULL THEN ( SELECT c_hand FROM vars )
-                                                                  ELSE ( SELECT c_notwork FROM vars )
-                                                             END
-                        END )
-          ELSE ( SELECT c_notwork FROM vars )
-END AS "sum_fact_color",
-/*поколоночный вывод ID записей в реестре табеля*/
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 0 THEN base_tab.id_tab END) END as "id_period",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 1 THEN base_tab.id_tab END) END as "id_day1",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 2 THEN base_tab.id_tab END) END as "id_day2",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 3 THEN base_tab.id_tab END) END as "id_day3",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 4 THEN base_tab.id_tab END) END as "id_day4",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 5 THEN base_tab.id_tab END) END as "id_day5",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 6 THEN base_tab.id_tab END) END as "id_day6",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 7 THEN base_tab.id_tab END) END as "id_day7",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 8 THEN base_tab.id_tab END) END as "id_day8",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 9 THEN base_tab.id_tab END) END as "id_day9",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 10 THEN base_tab.id_tab END) END as "id_day10",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 11 THEN base_tab.id_tab END) END as "id_day11",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 12 THEN base_tab.id_tab END) END as "id_day12",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 13 THEN base_tab.id_tab END) END as "id_day13",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 14 THEN base_tab.id_tab END) END as "id_day14",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 15 THEN base_tab.id_tab END) END as "id_day15",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 16 THEN base_tab.id_tab END) END as "id_day16",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 17 THEN base_tab.id_tab END) END as "id_day17",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 18 THEN base_tab.id_tab END) END as "id_day18",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 19 THEN base_tab.id_tab END) END as "id_day19",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 20 THEN base_tab.id_tab END) END as "id_day20",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 21 THEN base_tab.id_tab END) END as "id_day21",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 22 THEN base_tab.id_tab END) END as "id_day22",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 23 THEN base_tab.id_tab END) END as "id_day23",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 24 THEN base_tab.id_tab END) END as "id_day24",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 25 THEN base_tab.id_tab END) END as "id_day25",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 26 THEN base_tab.id_tab END) END as "id_day26",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 27 THEN base_tab.id_tab END) END as "id_day27",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 28 THEN base_tab.id_tab END) END as "id_day28",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 29 THEN base_tab.id_tab END) END as "id_day29",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 30 THEN base_tab.id_tab END) END as "id_day30",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 31 THEN base_tab.id_tab END) END as "id_day31",
-/*поколоночный вывод HTML-кода в ячейки*/
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 1 THEN base_tab.html END) END as "column1",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 2 THEN base_tab.html END) END as "column2",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 3 THEN base_tab.html END) END as "column3",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 4 THEN base_tab.html END) END as "column4",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 5 THEN base_tab.html END) END as "column5",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 6 THEN base_tab.html END) END as "column6",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 7 THEN base_tab.html END) END as "column7",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 8 THEN base_tab.html END) END as "column8",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 9 THEN base_tab.html END) END as "column9",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 10 THEN base_tab.html END) END as "column10",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 11 THEN base_tab.html END) END as "column11",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 12 THEN base_tab.html END) END as "column12",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 13 THEN base_tab.html END) END as "column13",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 14 THEN base_tab.html END) END as "column14",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 15 THEN base_tab.html END) END as "column15",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 16 THEN base_tab.html END) END as "column16",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 17 THEN base_tab.html END) END as "column17",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 18 THEN base_tab.html END) END as "column18",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 19 THEN base_tab.html END) END as "column19",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 20 THEN base_tab.html END) END as "column20",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 21 THEN base_tab.html END) END as "column21",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 22 THEN base_tab.html END) END as "column22",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 23 THEN base_tab.html END) END as "column23",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 24 THEN base_tab.html END) END as "column24",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 25 THEN base_tab.html END) END as "column25",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 26 THEN base_tab.html END) END as "column26",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 27 THEN base_tab.html END) END as "column27",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 28 THEN base_tab.html END) END as "column28",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 29 THEN base_tab.html END) END as "column29",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 30 THEN base_tab.html END) END as "column30",
-CASE WHEN base_tab.id_sotr is not null THEN MAX (CASE WHEN base_tab.day_tab = 31 THEN base_tab.html END) END as "column31"
-						
-FROM base_tab
-/*формулы группировки по сотруднику, а так же бригаде и подразделению - для строк итого*/
-GROUP BY 
-GROUPING SETS (
-(object_tab, card_day, card_period, object_sotr, card_sotr, base_tab.month_tab, base_tab.id_sotr, base_tab.fio_sotr, base_tab.id_div, base_tab.name_div, base_tab.sort_inbrigade, base_tab.name_post, base_tab.fired_date, base_tab.name_brigade)
-, (base_tab.name_brigade, base_tab.name_div)
-, base_tab.name_div
-)
-HAVING (base_tab.fired_date is null OR base_tab.fired_date > ( SELECT fdm_tab FROM vars )) AND (MAX(base_tab.sum_plan) != 0 OR MAX(base_tab.sum_plan) is null)
+              WHEN base_tab.id_sotr != 0 THEN MAX(
+                  CASE
+                      WHEN base_tab.day_tab = 0 THEN 
+                          CASE WHEN base_tab.h_hand IS NOT NULL 
+                               THEN vars.c_hand
+                               ELSE vars.c_notwork
+                          END
+                  END)
+              ELSE vars.c_notwork
+          END AS "sum_fact_color",
+          
+          /*поколоночный вывод ID записей*/
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 0  THEN base_tab.id_tab END) END AS "id_period",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 1  THEN base_tab.id_tab END) END AS "id_day1",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 2  THEN base_tab.id_tab END) END AS "id_day2",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 3  THEN base_tab.id_tab END) END AS "id_day3",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 4  THEN base_tab.id_tab END) END AS "id_day4",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 5  THEN base_tab.id_tab END) END AS "id_day5",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 6  THEN base_tab.id_tab END) END AS "id_day6",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 7  THEN base_tab.id_tab END) END AS "id_day7",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 8  THEN base_tab.id_tab END) END AS "id_day8",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 9  THEN base_tab.id_tab END) END AS "id_day9",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 10 THEN base_tab.id_tab END) END AS "id_day10",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 11 THEN base_tab.id_tab END) END AS "id_day11",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 12 THEN base_tab.id_tab END) END AS "id_day12",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 13 THEN base_tab.id_tab END) END AS "id_day13",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 14 THEN base_tab.id_tab END) END AS "id_day14",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 15 THEN base_tab.id_tab END) END AS "id_day15",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 16 THEN base_tab.id_tab END) END AS "id_day16",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 17 THEN base_tab.id_tab END) END AS "id_day17",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 18 THEN base_tab.id_tab END) END AS "id_day18",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 19 THEN base_tab.id_tab END) END AS "id_day19",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 20 THEN base_tab.id_tab END) END AS "id_day20",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 21 THEN base_tab.id_tab END) END AS "id_day21",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 22 THEN base_tab.id_tab END) END AS "id_day22",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 23 THEN base_tab.id_tab END) END AS "id_day23",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 24 THEN base_tab.id_tab END) END AS "id_day24",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 25 THEN base_tab.id_tab END) END AS "id_day25",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 26 THEN base_tab.id_tab END) END AS "id_day26",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 27 THEN base_tab.id_tab END) END AS "id_day27",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 28 THEN base_tab.id_tab END) END AS "id_day28",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 29 THEN base_tab.id_tab END) END AS "id_day29",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 30 THEN base_tab.id_tab END) END AS "id_day30",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 31 THEN base_tab.id_tab END) END AS "id_day31",
+          
+          /*поколоночный вывод HTML-кода*/
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 1  THEN base_tab.html END) END AS "column1",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 2  THEN base_tab.html END) END AS "column2",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 3  THEN base_tab.html END) END AS "column3",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 4  THEN base_tab.html END) END AS "column4",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 5  THEN base_tab.html END) END AS "column5",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 6  THEN base_tab.html END) END AS "column6",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 7  THEN base_tab.html END) END AS "column7",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 8  THEN base_tab.html END) END AS "column8",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 9  THEN base_tab.html END) END AS "column9",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 10 THEN base_tab.html END) END AS "column10",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 11 THEN base_tab.html END) END AS "column11",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 12 THEN base_tab.html END) END AS "column12",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 13 THEN base_tab.html END) END AS "column13",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 14 THEN base_tab.html END) END AS "column14",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 15 THEN base_tab.html END) END AS "column15",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 16 THEN base_tab.html END) END AS "column16",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 17 THEN base_tab.html END) END AS "column17",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 18 THEN base_tab.html END) END AS "column18",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 19 THEN base_tab.html END) END AS "column19",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 20 THEN base_tab.html END) END AS "column20",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 21 THEN base_tab.html END) END AS "column21",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 22 THEN base_tab.html END) END AS "column22",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 23 THEN base_tab.html END) END AS "column23",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 24 THEN base_tab.html END) END AS "column24",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 25 THEN base_tab.html END) END AS "column25",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 26 THEN base_tab.html END) END AS "column26",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 27 THEN base_tab.html END) END AS "column27",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 28 THEN base_tab.html END) END AS "column28",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 29 THEN base_tab.html END) END AS "column29",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 30 THEN base_tab.html END) END AS "column30",
+          CASE WHEN GROUPING(base_tab.id_sotr) = 0 THEN MAX(CASE WHEN base_tab.day_tab = 31 THEN base_tab.html END) END AS "column31"
 
+   FROM base_tab
+   CROSS JOIN vars
+   GROUP BY 
+   GROUPING SETS (
+       (object_tab, card_day, card_period, object_sotr, card_sotr, base_tab.month_tab, base_tab.id_sotr, base_tab.fio_sotr, base_tab.id_div, base_tab.name_div, base_tab.sort_inbrigade, base_tab.name_post, base_tab.fired_date,   base_tab.name_brigade)
+     , (base_tab.name_brigade, base_tab.name_div)
+     , (base_tab.name_div)
+   ),
+   vars.c_hand, vars.c_notwork, vars.fdm_tab, vars.c_alert, vars.c_work, vars.c_vacation, vars.c_absence, vars.c_holiday
+   
+   /*убираем уволенных и неработавших*/
+    HAVING (base_tab.fired_date is null OR base_tab.fired_date > vars.fdm_tab)
+           AND (MAX(base_tab.sum_plan) != 0 OR MAX(base_tab.sum_plan) is null)
 )
-
 SELECT 
     CASE WHEN T.row_type = 'sotr' THEN ROW_NUMBER() OVER (PARTITION BY T.row_type = 'sotr' ORDER BY name_div, lv_div, name_brigade, lv_br, sort_inbrigade, fio_sotr) END AS npp,
     CASE WHEN T.row_type = 'sotr' THEN ROW_NUMBER() OVER (PARTITION BY T.row_type = 'sotr', name_brigade ORDER BY name_div, lv_div, name_brigade, lv_br, sort_inbrigade, fio_sotr) END AS nppb,
