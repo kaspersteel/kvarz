@@ -22,12 +22,22 @@ WITH invp_info AS (
         ARRAY_AGG(id ORDER BY id) FILTER (WHERE type = 3) AS "pokrytie_ids",
         ARRAY_AGG(id ORDER BY id) FILTER (WHERE type = 4) AS "sklad_d_ids",
         ARRAY_AGG(id ORDER BY id) FILTER (WHERE type = 5) AS "sklad_g_ids",
+        ARRAY_AGG(invp_amount ORDER BY id) FILTER (WHERE type = 1) AS "vysadka_amounts",
+        ARRAY_AGG(invp_amount ORDER BY id) FILTER (WHERE type = 2) AS "thermo_amounts",
+        ARRAY_AGG(invp_amount ORDER BY id) FILTER (WHERE type = 3) AS "pokrytie_amounts",
+        ARRAY_AGG(invp_amount ORDER BY id) FILTER (WHERE type = 4) AS "sklad_d_amounts",
+        ARRAY_AGG(invp_amount ORDER BY id) FILTER (WHERE type = 5) AS "sklad_g_amounts",
         ARRAY_AGG(CONCAT('№', COALESCE(num_1c, num_accent, 'б/н'), ' - ', amount)) FILTER (WHERE type = 1) AS "vysadka_nn",
         ARRAY_AGG(CONCAT('№', COALESCE(num_1c, num_accent, 'б/н'), ' - ', amount)) FILTER (WHERE type = 2) AS "thermo_nn",
         ARRAY_AGG(CONCAT('№', COALESCE(num_1c, num_accent, 'б/н'), ' - ', amount)) FILTER (WHERE type = 3) AS "pokrytie_nn",
         ARRAY_AGG(CONCAT('№', COALESCE(num_1c, num_accent, 'б/н'), ' - ', amount)) FILTER (WHERE type = 4) AS "sklad_d_nn",
         ARRAY_AGG(CONCAT('№', COALESCE(num_1c, num_accent, 'б/н'), ' - ', amount)) FILTER (WHERE type = 5) AS "sklad_g_nn"
-    FROM invp_info
+    FROM (
+        SELECT
+            invp_info.*,
+            SUM(invp_info.amount) OVER (PARTITION BY invp_info.id) AS invp_amount
+        FROM invp_info
+    ) invp_info
     GROUP BY jotk_id
 )
 
@@ -67,14 +77,19 @@ SELECT
   CASE WHEN umk.attr_198_ IS NULL THEN 131 ELSE 152 END AS "i_new_card",
   1 AS "i_new_id",
   invp_agg.vysadka_ids[1] AS "vysadka_id",
+  invp_agg.vysadka_amounts[1] AS "vysadka_amount",
   invp_agg.vysadka_nn[1] AS "vysadka_n",
   invp_agg.thermo_ids[1] AS "thermo_id",
+  invp_agg.thermo_amounts[1] AS "thermo_amount",
   invp_agg.thermo_nn[1] AS "thermo_n",
   invp_agg.pokrytie_ids[1] AS "pokrytie_id",
+  invp_agg.pokrytie_amounts[1] AS "pokrytie_amount",
   invp_agg.pokrytie_nn[1] AS "pokrytie_n",
   invp_agg.sklad_g_ids[1] AS "sklad_g_id",
+  invp_agg.sklad_g_amounts[1] AS "sklad_g_amount",
   invp_agg.sklad_g_nn[1] AS "sklad_g_n",
   invp_agg.sklad_d_ids[1] AS "sklad_d_id",
+  invp_agg.sklad_d_amounts[1] AS "sklad_d_amount",
   invp_agg.sklad_d_nn[1] AS "sklad_d_n",
   next_to_umk.attr_182_ AS "next_techop",
   
